@@ -19,6 +19,7 @@ if (isset($_SESSION['success'])) {
 }
 
 $productController = new ProductController($conn);
+$orderController = new OrderController($conn);
 
 $searchTerm = '';
 $limit = isset($_POST['limit']) ? max(1, (int)$_POST['limit']) : $productController->countProducts();   // Số lượng sản phẩm hiển thị mặc định là ALL
@@ -50,6 +51,25 @@ if (isset($_GET['action']) && $_GET['action'] === 'export-products') {
     $productController->exportProducts();
 }
 
+// Kiểm tra xem form đã được submit chưa
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
+    // Lấy dữ liệu từ form, kiểm tra sự tồn tại và làm sạch dữ liệu đầu vào
+    $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : null;
+    $customer_name = isset($_POST['customer_name']) ? trim(htmlspecialchars($_POST['customer_name'])) : '';
+    $total_price = isset($_POST['total']) ? floatval($_POST['total']) : 0;
+    $order_status = isset($_POST['status']) ? trim(htmlspecialchars($_POST['status'])) : '';
+
+    // Kiểm tra xem order_id có hợp lệ không
+    if ($order_id && !empty($customer_name) && $total_price >= 0 && !empty($order_status)) {
+        // Gọi phương thức updateOrder trong controller
+        $updated = $orderController->updateOrder($order_id, $customer_name, $total_price, $order_status);
+        $_SESSION['success'] = "Order $order_id updated successfully.";
+        header("Location: /admin/list");
+        exit;
+    } else {
+        $_SESSION['error'] = "Invalid order data. Please check the inputs.";
+    }
+}
 ?>
 
 <!-- Hiển thị thông báo thành công nếu có -->
@@ -73,13 +93,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'export-products') {
 
             <!-- Nút xuất/nhập dữ liệu -->
             <div class="d-flex align-items-center mb-3 flex-wrap">
-                <!-- Xuất dữ liệu -->
-                <button class="btn btn-outline-success me-4 mb-2" onclick="window.location.href='/admin/export-products'">
-                    Export to CSV
-                </button>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
-                <!-- Nhập dữ liệu -->
+                <button class="btn btn-outline-success me-4 mb-2" onclick="window.location.href='/admin/export-products'">Export to CSV</button>
+
                 <form method="POST" action="/admin/import-products" enctype="multipart/form-data" class="d-flex align-items-center flex-wrap">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <label for="product_file" class="form-label mb-0 me-3 align-self-center">Upload CSV:</label>
                     <input type="file" name="product_file" id="product_file" class="form-control w-auto me-3 mb-2" accept=".csv" required>
                     <button type="submit" class="btn btn-primary mb-2">Import</button>
@@ -148,8 +167,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'export-products') {
                             </td>
                             <td class="px-3 py-2 border-b text-center">
                                 <div class="d-flex justify-content-center flex-wrap">
-                                    <a href="/admin/edit/id=<?= $product['id'] ?>" class="btn btn-warning me-2 mb-2">Edit</a>
-                                    <a href="javascript:void(0);" onclick="confirmDelete(<?= $product['id'] ?>)" class="btn btn-danger mb-2">Delete</a>
+                                    <a href="/admin/edit-product/id=<?= $product['id'] ?>" class="btn btn-warning me-2 mb-2">Edit</a>
+                                    <form action="/admin/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                        <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
+                                        <button type="submit" class="btn btn-danger mb-2">Delete</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -192,11 +214,137 @@ if (isset($_GET['action']) && $_GET['action'] === 'export-products') {
     </div>
 </div>
 
+<!-- Shipment Management -->
+<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Order Management</h1>
+
+<!-- Form Chỉnh Sửa Đơn Hàng (Mặc Định Ẩn) -->
+<div id="edit-order-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
+    <!-- <h3 class="text-3xl font-bold text-center text-gray-800">Edit Order</h3> -->
+    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border border-gray-300">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+        <input type="hidden" name="order_id" id="editOrderId">
+
+        <div class="flex flex-col md:flex-row justify-evenly gap-4">
+            <!-- Customer Name -->
+            <div class="w-full md:w-1/3 flex flex-col">
+                <label for="editCustomerName" class="block text-blue-700 font-semibold">Customer Name</label>
+                <input type="text" id="editCustomerName" name="customer_name"
+                    class="w-full p-3 border border-gray-300 rounded-md" required>
+            </div>
+
+            <!-- Total Price -->
+            <div class="w-full md:w-1/3 flex flex-col">
+                <label for="editTotalPrice" class="block text-blue-700 font-semibold">Total Price</label>
+                <input type="number" step="0.01" id="editTotalPrice" name="total"
+                    class="w-full p-3 border border-gray-300 rounded-md" required>
+            </div>
+
+            <!-- Status -->
+            <div class="w-full md:w-1/3 flex flex-col">
+                <label for="editStatus" class="block text-blue-700 font-semibold">Status</label>
+                <select id="editStatus" name="status"
+                    class="w-full p-3 border border-gray-300 rounded-md">
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-center space-x-4">
+            <button type="submit" name="edit_order" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md">Save Changes</button>
+            <button type="button" id="cancelEdit" class="bg-red-400 hover:bg-red-500 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg mb-4 w-full lg:w-11/12">
+    <div class="table-responsive">
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-gray-100 text-gray-800 text-center">
+                    <th class="px-3 py-2 border-b">Order ID</th>
+                    <th class="px-3 py-2 border-b">Customer</th>
+                    <th class="px-3 py-2 border-b">Total Price</th>
+                    <th class="px-3 py-2 border-b">Status</th>
+                    <th class="px-3 py-2 border-b">Created At</th>
+                    <th class="px-3 py-2 border-b">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $orderController = new OrderController($conn);
+                $orders = $orderController->getAllOrders();
+
+                if (count($orders) > 0):
+                    foreach ($orders as $order): ?>
+                        <tr class="hover:bg-gray-50 text-center">
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['id']) ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['customer_name']) ?></td>
+                            <td class="px-3 py-2 border-b text-green-600 font-bold">$<?= number_format($order['total'], 2) ?></td>
+                            <td class="px-3 py-2 border-b">
+                                <?php if ($order['status'] === 'completed'): ?>
+                                    <span class="text-green-500 font-bold">Completed</span>
+                                <?php elseif ($order['status'] === 'pending'): ?>
+                                    <span class="text-yellow-500 font-bold">Pending</span>
+                                <?php elseif ($order['status'] === 'processing'): ?>
+                                    <span class="text-blue-500 font-bold">Processing</span>
+                                <?php else: ?>
+                                    <span class="text-red-500 font-bold">Cancelled</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['created_at']) ?></td>
+                            <td class="px-3 py-2 border-b">
+                                <div class="d-flex justify-content-center flex-wrap">
+                                    <button type="button" class="btn btn-warning me-2 mb-2 edit-btn"
+                                        data-id="<?= $order['id'] ?>"
+                                        data-customer="<?= htmlspecialchars($order['customer_name']) ?>"
+                                        data-total="<?= $order['total'] ?>"
+                                        data-status="<?= $order['status'] ?>">
+                                        Edit
+                                    </button>
+                                    <form action="/admin/delete-order" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');">
+                                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+                                        <button type="submit" class="btn btn-danger mb-2">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach;
+                else: ?>
+                    <tr>
+                        <td colspan="6" class="text-center text-gray-500 py-4">No orders found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <script>
-    function confirmDelete(productId) {
-        const confirmDelete = confirm("Are you sure you want to delete this product?");
-        if (confirmDelete) {
-            window.location.href = `/admin/delete&id=${productId}`;
-        }
+    function toggleEditForm(orderId, customer, total, status) {
+        const form = document.getElementById('edit-order-form');
+        document.getElementById('editOrderId').value = orderId;
+        document.getElementById('editCustomerName').value = customer;
+        document.getElementById('editTotalPrice').value = total;
+        document.getElementById('editStatus').value = status;
+
+        // Hiển thị form (nếu đang ẩn)
+        form.classList.remove('hidden');
+        window.scrollTo({
+            top: form.offsetTop,
+            behavior: 'smooth'
+        });
     }
+
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            toggleEditForm(this.dataset.id, this.dataset.customer, this.dataset.total, this.dataset.status);
+        });
+    });
+
+    document.getElementById('cancelEdit').addEventListener('click', function() {
+        document.getElementById('edit-order-form').classList.add('hidden');
+    });
 </script>

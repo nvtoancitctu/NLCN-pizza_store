@@ -69,6 +69,9 @@ switch ($page) {
     case 'delete':
         include '../app/views/admin/delete.php';
         break;
+    case 'delete-order':
+        include '../app/views/admin/delete-order.php';
+        break;
     case 'export':
         include '../app/views/admin/export.php';
         break;

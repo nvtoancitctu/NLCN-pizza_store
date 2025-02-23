@@ -23,10 +23,9 @@ RewriteRule ^contact$ /index.php?page=contact [L]
 # Quản trị admin
 RewriteRule ^admin/list$ /index.php?page=list [L]
 RewriteRule ^admin/add$ /index.php?page=add [L]
-RewriteRule ^admin/edit$ /index.php?page=edit [L]
-RewriteRule ^admin/edit/id=([0-9]+)$ /index.php?page=edit&id=$1 [L]
-RewriteRule ^admin/delete$ /index.php?page=delete [L]
-RewriteRule ^admin/delete&id=([0-9]+)$ /index.php?page=delete&id=$1 [L]
+RewriteRule ^admin/edit-product/id=([0-9]+)$ /index.php?page=edit&id=$1 [L]
+RewriteRule ^admin/delete-product$ /index.php?page=delete [L]
+RewriteRule ^admin/delete-order$ /index.php?page=delete-order [L]
 
 # Export và Import dữ liệu admin
 RewriteRule ^admin/export$ /index.php?page=export [L]

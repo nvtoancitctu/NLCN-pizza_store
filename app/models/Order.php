@@ -224,6 +224,108 @@ class Order
         return $product['price'];
     }
 
+    /** Lấy danh sách tất cả đơn hàng */
+    public function getAllOrders()
+    {
+        $query = "SELECT o.id, u.name AS customer_name, o.total, o.status, o.created_at 
+                FROM orders o
+                JOIN users u ON o.user_id = u.id
+                ORDER BY o.created_at ASC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /** Xóa đơn hàng */
+    public function deleteOrder($id)
+    {
+        $query = "DELETE FROM " . $this->table . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([$id]);
+    }
+
+    /** 
+     * Cập nhật đơn hàng an toàn, tuân thủ các tiêu chuẩn bảo mật 
+     * @param int $order_id - ID của đơn hàng cần cập nhật
+     * @param string $name - Tên khách hàng (được làm sạch)
+     * @param float $total - Tổng tiền đơn hàng
+     * @param string $status - Trạng thái đơn hàng (được kiểm tra hợp lệ)
+     * @return bool - Trả về true nếu cập nhật thành công, ngược lại trả về false
+     */
+    public function updateOrder($order_id, $name, $total, $status)
+    {
+        // Kiểm tra order_id hợp lệ (phải là số nguyên dương)
+        if (!filter_var($order_id, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]])) {
+            return false;
+        }
+
+        // Làm sạch dữ liệu đầu vào để tránh XSS
+        $name = htmlspecialchars(strip_tags(trim($name)));
+
+        // Kiểm tra total hợp lệ (phải là số dương)
+        if (!filter_var($total, FILTER_VALIDATE_FLOAT) || $total < 0) {
+            return false;
+        }
+
+        // Danh sách trạng thái hợp lệ
+        $valid_statuses = ['pending', 'processing', 'completed', 'cancelled'];
+        if (!in_array($status, $valid_statuses, true)) {
+            return false;
+        }
+
+        try {
+            $sql = "UPDATE orders SET total = :total, status = :status WHERE id = :order_id";
+            $stmt = $this->conn->prepare($sql);
+
+            $stmt->bindParam(':total', $total, PDO::PARAM_STR);
+            $stmt->bindParam(':status', $status, PDO::PARAM_STR);
+            $stmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+
+            if (!$stmt->execute()) {
+                print_r($stmt->errorInfo()); // Debug lỗi SQL
+                return false;
+            }
+
+            $sql = "UPDATE users SET customer_name = :name WHERE id = (SELECT user_id FROM orders WHERE id = :order_id)";
+            $stmt = $this->conn->prepare($sql);
+
+            $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+            $stmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+
+            return true;
+        } catch (PDOException $e) {
+            error_log("Lỗi cập nhật đơn hàng: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getOrderById($order_id)
+    {
+        // Kiểm tra xem order_id có hợp lệ không
+        if (!$order_id || $order_id <= 0) {
+            return null;
+        }
+
+        try {
+            $sql = "SELECT o.id, u.name AS customer_name, o.total, o.status, o.created_at 
+                    FROM orders o 
+                    JOIN users u ON o.user_id = u.id 
+                    WHERE o.id = :order_id LIMIT 1";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Lấy dữ liệu từ DB
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $order ?: null; // Trả về null nếu không tìm thấy đơn hàng
+        } catch (PDOException $e) {
+            error_log("Error fetching order: " . $e->getMessage());
+            return null;
+        }
+    }
 
     /**
      * Lấy chi tiết đơn hàng bao gồm các sản phẩm và tổng giá trị

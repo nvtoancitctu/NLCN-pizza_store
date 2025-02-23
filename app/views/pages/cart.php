@@ -57,7 +57,7 @@ if (isset($_GET['action'])) {
 }
 ?>
 
-<h1 class="text-center mt-8 text-3xl font-bold text-blue-700 tracking-wide">Your Cart</h1></br>
+<h1 class="text-center mt-8 text-4xl font-bold text-blue-700 tracking-wide">YOUR CART</h1></br>
 
 <div class="container mx-auto">
     <?php if (!empty($cartItems)): ?>

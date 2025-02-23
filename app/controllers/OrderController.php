@@ -24,6 +24,30 @@ class OrderController
     return $this->orderModel->addOrderItem($order_id, $product_id, $quantity, $price, $size);
   }
 
+  // Lấy tất cả đơn hàng
+  public function getAllOrders()
+  {
+    return $this->orderModel->getAllOrders();
+  }
+
+  // Lấy tất cả đơn hàng
+  public function deleteOrder($id)
+  {
+    return $this->orderModel->deleteOrder($id);
+  }
+
+  // Cập nhật đơn hàng
+  public function updateOrder($order_id, $name, $total, $status)
+  {
+    return $this->orderModel->updateOrder($order_id, $name, $total, $status);
+  }
+
+  // Lấy đơn hàng theo ID
+  public function getOrderById($order_id)
+  {
+    return $this->orderModel->getOrderById($order_id);
+  }
+
   // Lấy chi tiết của đơn hàng cụ thể
   public function getOrderDetails($order_id, $user_id)
   {

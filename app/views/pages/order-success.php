@@ -75,9 +75,11 @@ $orderDetails = $orderController->getOrderDetails($order_id, $user_id); // Gọi
           </ul>
         </div>
         <!-- Nút Back to Home -->
-        <div class="text-center">
+        <div class="flex justify-center gap-4 mt-6">
           <button type="button" class="font-semibold inline-block bg-blue-500 text-white px-8 py-3 rounded-full shadow-md hover:bg-blue-600"
             onclick="window.location.href='/home'">Back to Home</button>
+          <button type="button" class="font-semibold inline-block bg-green-500 text-white px-8 py-3 rounded-full shadow-md hover:bg-green-600"
+            onclick="window.location.href='/account'">Go to Profile</button>
         </div>
       </div>
     </div>

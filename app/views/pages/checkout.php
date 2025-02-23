@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
 ?>
 
 <!-- Thông tin thanh toán -->
-<h1 class="text-center mt-8 text-3xl font-bold text-blue-700 tracking-wide">Checkout</h1>
+<h1 class="text-center mt-8 text-4xl font-bold text-blue-700 tracking-wide">CHECK OUT</h1>
 
 <div class="container mx-auto px-4 mt-4">
   <form method="POST" action="/checkout" id="checkout-form" class="bg-white shadow-lg border rounded-lg p-8 max-w-4xl mx-auto mb-6">
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
       <!-- Cột bên trái: Thông tin giỏ hàng và địa chỉ giao hàng -->
       <div class="space-y-6">
         <!-- Thông tin giỏ hàng -->
-        <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
+        <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Your Cart</h2>
           <div class="space-y-4">
             <?php foreach ($cartItems as $item): ?>
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
           </div>
         </div>
         <!-- Thông tin giao hàng -->
-        <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
+        <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Shipping Information</h2>
           <textarea name="address" id="address" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
         </div>
@@ -96,16 +96,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
       <!-- Cột bên phải: Tổng số tiền và thanh toán -->
       <div class="space-y-6">
         <!-- Phương thức thanh toán -->
-        <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
+        <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Payment Method</h2>
-          <select name="payment_method" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+          <select name="payment_method" id="payment_method" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required onchange="toggleBankTransfer()">
+            <option value="" selected disabled hidden>-- Select Payment Method --</option>
             <option value="bank_transfer">Bank Transfer</option>
             <option value="cash_on_delivery">Cash on Delivery</option>
           </select>
+
+          <!-- QR Code + Upload hình -->
+          <div id="bank_transfer_section" class="hidden mt-4 bg-white p-4 rounded-lg shadow">
+            <p class="font-semibold text-gray-800">Scan QR Code to Pay:</p>
+            <img src="/images/qr-code.png" alt="QR Code" class="w-3/5 h-auto mx-auto my-2">
+
+            <label class="block text-gray-700 font-semibold mt-4">Upload Payment Proof:</label>
+            <input type="file" name="payment_proof" class="w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+          </div>
         </div>
 
         <!-- Tổng số tiền -->
-        <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
+        <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
           <div class="space-y-3">
             <div class="flex justify-between">
@@ -137,13 +147,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
 
 <script>
   function confirmCheckout(event) {
+    event.preventDefault(); // Ngăn form gửi ngay lập tức
+
+    const address = document.getElementById('address').value.trim();
+    const paymentMethod = document.querySelector('select[name="payment_method"]').value;
+
+    if (!address) {
+      alert("Please enter your shipping address.");
+      return;
+    }
+
+    if (!paymentMethod) {
+      alert("Please select a payment method.");
+      return;
+    }
+
     const confirmOrder = confirm("Are you sure you want to place an order?");
     if (confirmOrder) {
-      // Gửi biểu mẫu với ID xác định
       document.getElementById('checkout-form').submit();
+    }
+  }
+
+  function toggleBankTransfer() {
+    const paymentMethod = document.getElementById('payment_method').value;
+    const bankTransferSection = document.getElementById('bank_transfer_section');
+
+    if (paymentMethod === 'bank_transfer') {
+      bankTransferSection.classList.remove('hidden');
     } else {
-      // Ngăn chặn submit nếu người dùng nhấn "Hủy"
-      event.preventDefault();
+      bankTransferSection.classList.add('hidden');
     }
   }
 </script>
