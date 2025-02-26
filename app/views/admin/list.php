@@ -70,6 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
         $_SESSION['error'] = "Invalid order data. Please check the inputs.";
     }
 }
+
+// Cập nhật số ngày khóa tài khoản
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['days'])) {
+    $userController = new UserController($conn);
+    $userController->blockUser($_POST['user_id'], $_POST['days']);
+    header("Location: /admin/list");
+}
 ?>
 
 <!-- Hiển thị thông báo thành công nếu có -->
@@ -79,9 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
     </script>
 <?php endif; ?>
 
+<!-- Quản lý sản phẩm, thống kê, xuất file csv -->
 <h1 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">Product Management</h1>
 
-<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg mb-4 w-full lg:w-11/12">
+<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="row mb-4">
         <!-- Nút chức năng -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
@@ -167,10 +175,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
                             </td>
                             <td class="px-3 py-2 border-b text-center">
                                 <div class="d-flex justify-content-center flex-wrap">
-                                    <a href="/admin/edit-product/id=<?= $product['id'] ?>" class="btn btn-warning me-2 mb-2">Edit</a>
+                                    <a href="/admin/edit-product/id=<?= $product['id'] ?>" class="btn btn-warning me-2">Edit</a>
                                     <form action="/admin/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');">
                                         <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                                        <button type="submit" class="btn btn-danger mb-2">Delete</button>
+                                        <button type="submit" class="btn btn-danger">Delete</button>
                                     </form>
                                 </div>
                             </td>
@@ -219,47 +227,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 
 <!-- Form Chỉnh Sửa Đơn Hàng (Mặc Định Ẩn) -->
 <div id="edit-order-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
-    <!-- <h3 class="text-3xl font-bold text-center text-gray-800">Edit Order</h3> -->
     <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border border-gray-300">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-        <input type="hidden" name="order_id" id="editOrderId">
 
-        <div class="flex flex-col md:flex-row justify-evenly gap-4">
-            <!-- Customer Name -->
-            <div class="w-full md:w-1/3 flex flex-col">
-                <label for="editCustomerName" class="block text-blue-700 font-semibold">Customer Name</label>
-                <input type="text" id="editCustomerName" name="customer_name"
-                    class="w-full p-3 border border-gray-300 rounded-md" required>
+        <!-- Bố cục 2 cột -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Cột 1: Customer Name, Total Price, Status -->
+            <div class="space-y-4">
+                <div>
+                    <label for="editOrderId" class="block text-blue-700 font-semibold">Order ID</label>
+                    <input type="text" id="editOrderId" name="order_id" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label for="editPaymentMethod" class="block text-blue-700 font-semibold">Payment Method</label>
+                    <input type="text" id="editPaymentMethod" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                    <input type="hidden" name="payment_method" id="hiddenPaymentMethod">
+                </div>
+                <div>
+                    <label for="editCustomerName" class="block text-blue-700 font-semibold">Customer Name</label>
+                    <input type="text" id="editCustomerName" name="customer_name" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label for="editTotalPrice" class="block text-blue-700 font-semibold">Total Price</label>
+                    <input type="number" step="0.01" id="editTotalPrice" name="total" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label for="editStatus" class="block text-blue-700 font-semibold">Status</label>
+                    <select id="editStatus" name="status" class="w-full p-3 border border-gray-300 rounded-md">
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
             </div>
 
-            <!-- Total Price -->
-            <div class="w-full md:w-1/3 flex flex-col">
-                <label for="editTotalPrice" class="block text-blue-700 font-semibold">Total Price</label>
-                <input type="number" step="0.01" id="editTotalPrice" name="total"
-                    class="w-full p-3 border border-gray-300 rounded-md" required>
-            </div>
-
-            <!-- Status -->
-            <div class="w-full md:w-1/3 flex flex-col">
-                <label for="editStatus" class="block text-blue-700 font-semibold">Status</label>
-                <select id="editStatus" name="status"
-                    class="w-full p-3 border border-gray-300 rounded-md">
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
+            <!-- Cột 2: Bank Transfer Image -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-blue-700 font-semibold">Bank Transfer Image</label>
+                    <div id="bankTransferImageContainer" class="w-full flex items-center justify-center hidden" style="min-height:200px;">
+                        <img id="bankTransferImage" class="border rounded-md shadow-md" style="width:35%;">
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="flex justify-center space-x-4">
+        <!-- Nút Thao Tác -->
+        <div class="flex justify-center space-x-4 mt-6">
             <button type="submit" name="edit_order" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md">Save Changes</button>
             <button type="button" id="cancelEdit" class="bg-red-400 hover:bg-red-500 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
         </div>
     </form>
 </div>
 
-<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg mb-4 w-full lg:w-11/12">
+<!-- Bảng chi tiết đơn hàng -->
+<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="table-responsive">
         <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
             <thead>
@@ -269,6 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
                     <th class="px-3 py-2 border-b">Total Price</th>
                     <th class="px-3 py-2 border-b">Status</th>
                     <th class="px-3 py-2 border-b">Created At</th>
+                    <th class="px-3 py-2 border-b">Payment Method</th>
                     <th class="px-3 py-2 border-b">Actions</th>
                 </tr>
             </thead>
@@ -295,18 +320,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
                                 <?php endif; ?>
                             </td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['created_at']) ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['payment_method']) ?></td>
                             <td class="px-3 py-2 border-b">
                                 <div class="d-flex justify-content-center flex-wrap">
-                                    <button type="button" class="btn btn-warning me-2 mb-2 edit-btn"
+                                    <button type="button" class="btn btn-warning me-2 edit-btn"
                                         data-id="<?= $order['id'] ?>"
                                         data-customer="<?= htmlspecialchars($order['customer_name']) ?>"
                                         data-total="<?= $order['total'] ?>"
-                                        data-status="<?= $order['status'] ?>">
+                                        data-status="<?= $order['status'] ?>"
+                                        data-payment="<?= htmlspecialchars($order['payment_method']) ?>"
+                                        data-image="<?= isset($order['images']) ? htmlspecialchars($order['images']) : '' ?>">
                                         Edit
                                     </button>
                                     <form action="/admin/delete-order" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');">
                                         <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                        <button type="submit" class="btn btn-danger mb-2">Delete</button>
+                                        <button type="submit" class="btn btn-danger">Delete</button>
                                     </form>
                                 </div>
                             </td>
@@ -323,14 +351,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 </div>
 
 <script>
-    function toggleEditForm(orderId, customer, total, status) {
+    function toggleEditForm(orderId, customer, total, status, payment, image) {
         const form = document.getElementById('edit-order-form');
         document.getElementById('editOrderId').value = orderId;
         document.getElementById('editCustomerName').value = customer;
         document.getElementById('editTotalPrice').value = total;
         document.getElementById('editStatus').value = status;
+        document.getElementById('editPaymentMethod').value = payment;
+        document.getElementById('hiddenPaymentMethod').value = payment;
 
-        // Hiển thị form (nếu đang ẩn)
+        const bankTransferImageContainer = document.getElementById('bankTransferImageContainer');
+        const bankTransferImage = document.getElementById('bankTransferImage');
+
+        if (payment.toLowerCase() === "bank_transfer" && image) {
+            bankTransferImage.src = "/banking_images/" + image;
+            bankTransferImageContainer.classList.remove("hidden");
+        } else {
+            bankTransferImageContainer.classList.add("hidden");
+            bankTransferImage.src = "";
+        }
+
+        // Hiển thị form
         form.classList.remove('hidden');
         window.scrollTo({
             top: form.offsetTop,
@@ -340,7 +381,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 
     document.querySelectorAll('.edit-btn').forEach(button => {
         button.addEventListener('click', function() {
-            toggleEditForm(this.dataset.id, this.dataset.customer, this.dataset.total, this.dataset.status);
+            toggleEditForm(
+                this.dataset.id,
+                this.dataset.customer,
+                this.dataset.total,
+                this.dataset.status,
+                this.dataset.payment,
+                this.dataset.image
+            );
         });
     });
 
@@ -348,3 +396,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
         document.getElementById('edit-order-form').classList.add('hidden');
     });
 </script>
+
+<!-- Quản lý tài khoản -->
+<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">
+    Account Management
+</h1>
+
+<div class="container-fluid mx-auto p-6 mb-4 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+    <div class="table-responsive">
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-gray-100 text-gray-800 text-center">
+                    <th class="px-3 py-2 border-b">ID</th>
+                    <th class="px-3 py-2 border-b">Name</th>
+                    <th class="px-3 py-2 border-b">Email</th>
+                    <th class="px-3 py-2 border-b">Phone</th>
+                    <th class="px-3 py-2 border-b">Address</th>
+                    <th class="px-3 py-2 border-b">Role</th>
+                    <th class="px-3 py-2 border-b">Created At</th>
+                    <th class="px-3 py-2 border-b">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $userController = new UserController($conn);
+                $users = $userController->getAllUsers();
+
+                if (count($users) > 0):
+                    foreach ($users as $user) : ?>
+                        <tr class="hover:bg-gray-50 text-center">
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['id']) ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['name']) ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['email']) ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['phone'] ?? 'NULL') ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['address'] ?? 'NULL') ?></td>
+                            <td class="px-3 py-2 border-b text-center"><?= htmlspecialchars($user['role']) ?></td>
+                            <td class="px-3 py-2 border-b text-center"><?= htmlspecialchars($user['created_at']) ?></td>
+                            <td class="px-3 py-2 border-b">
+                                <form method="POST" action="/admin/list">
+                                    <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+                                    <select name="days">
+                                        <option value="1">1 day</option>
+                                        <option value="3">3 days</option>
+                                        <option value="7">7 days</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-danger">Block</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach;
+                else: ?>
+                    <tr>
+                        <td colspan="8" class="text-center text-gray-500 py-4">No users found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -34,21 +34,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   $email = $_POST['email'];
   $password = $_POST['password'];
 
-  // Kiểm tra đăng nhập
-  $user = $userController->login($email, $password);
+  $result = $userController->login($email, $password);
 
-  if ($user) {
+  if (is_array($result) && isset($result['error'])) {
+    // Hiển thị lỗi nếu tài khoản bị khóa
+    $error = $result['error'];
+  } elseif (is_array($result) && isset($result['success'])) {
     // Đăng nhập thành công
-    $_SESSION['user_id'] = $user['id'];       // Lưu ID người dùng vào session
-    $_SESSION['user_name'] = $user['name'];   // Lưu tên người dùng vào session
-    $_SESSION['user_email'] = $user['email']; // Lưu email người dùng vào session
-    $_SESSION['user_role'] = $user['role'];   // Lưu role người dùng vào session
-
     $_SESSION['success'] = "Login successful! Welcome to Lover's Hub Pizza Store.";
-    header("Location: /home"); // Điều hướng về trang chủ
+    header("Location: /home");
     exit();
   } else {
-    // Thông tin đăng nhập sai
+    // Sai email hoặc mật khẩu
     $error = "Invalid email or password.";
   }
 }

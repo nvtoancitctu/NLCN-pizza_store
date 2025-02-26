@@ -71,8 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <div class="flex justify-center mb-8">
-    <div class="w-full max-w-4xl">
-        <form action="/admin/edit-product/id=<?= htmlspecialchars($product['id']) ?>" method="POST" enctype="multipart/form-data" class="bg-gray-50 border border-gray-200 rounded-lg px-8 pt-6 pb-8">
+    <div class="w-full max-w-4xl rounded-lg border-2 border-blue-600">
+        <form action="/admin/edit-product/id=<?= htmlspecialchars($product['id']) ?>" method="POST" enctype="multipart/form-data"
+            class="bg-white border border-gray-200 rounded-lg px-8 pt-6 pb-8">
             <!-- CSRF Token -->
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
@@ -80,16 +81,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Cột 1 -->
                 <div>
                     <div class="mb-4">
-                        <label for="name" class="block text-gray-800 text-sm font-medium mb-2">Product Name</label>
-                        <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:border-blue-500" required>
+                        <label for="name" class="block text-blue-600 text-sm font-medium mb-2">Product Name</label>
+                        <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>"
+                            class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
                     </div>
                     <div class="mb-4">
-                        <label for="price" class="block text-gray-800 text-sm font-medium mb-2">Price</label>
-                        <input type="number" name="price" value="<?= htmlspecialchars($product['price']) ?>" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:border-blue-500" min="0" step="0.01" placeholder="Enter price (e.g., 15.50)" required>
+                        <label for="price" class="block text-blue-600 text-sm font-medium mb-2">Price</label>
+                        <input type="number" name="price" value="<?= htmlspecialchars($product['price']) ?>"
+                            class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" min="0" step="0.01" placeholder="Enter price (e.g., 15.50)" required>
                     </div>
                     <div class="mb-4">
-                        <label for="category_id" class="block text-gray-800 text-sm font-medium mb-2">Category</label>
-                        <select name="category_id" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:border-blue-500" required>
+                        <label for="category_id" class="block text-blue-600 text-sm font-medium mb-2">Category</label>
+                        <select name="category_id" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
                             <?php foreach ($categories as $category): ?>
                                 <option value="<?= htmlspecialchars($category['id']) ?>" <?= $category['id'] == $product['category_id'] ? 'selected' : '' ?>><?= htmlspecialchars($category['name']) ?></option>
                             <?php endforeach; ?>
@@ -99,15 +102,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Cột 2 -->
                 <div>
                     <div class="mb-4">
-                        <label for="discount" class="block text-gray-800 text-sm font-medium mb-2">Discount Price</label>
-                        <input type="number" name="discount" value="<?= htmlspecialchars($product['discount']) ?>" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:border-blue-500" min="0" step="0.01" placeholder="Enter discount (e.g., 15.50)">
+                        <label for="discount" class="block text-blue-600 text-sm font-medium mb-2">Discount Price</label>
+                        <input type="number" name="discount" value="<?= htmlspecialchars($product['discount']) ?>"
+                            class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" min="0" step="0.01" placeholder="Enter discount (e.g., 15.50)">
                     </div>
                     <div class="mb-4">
-                        <label for="discount_end_time" class="block text-gray-800 text-sm font-medium mb-2">Discount End Time (UTC)</label>
-                        <input type="datetime-local" id="discount_end_time" name="discount_end_time" value="<?= htmlspecialchars($product['discount_end_time']) ?>" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:border-blue-500">
+                        <label for="discount_end_time" class="block text-blue-600 text-sm font-medium mb-2">Discount End Time (UTC)</label>
+                        <input type="datetime-local" id="discount_end_time" name="discount_end_time" value="<?= htmlspecialchars($product['discount_end_time']) ?>"
+                            class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
                     </div>
                     <div class="mb-4">
-                        <label for="image" class="block text-gray-800 text-sm font-medium mb-2">Product Image</label>
+                        <label for="image" class="block text-blue-600 text-sm font-medium mb-2">Product Image</label>
 
                         <!-- Hiển thị ảnh cũ -->
                         <?php if (!empty($product['image'])): ?>
@@ -129,8 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <!-- Textarea Description -->
             <div class="mb-4">
-                <label for="description" class="block text-gray-800 text-sm font-medium mb-2">Description</label>
-                <textarea name="description" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:border-blue-500"><?= htmlspecialchars($product['description']) ?></textarea>
+                <label for="description" class="block text-blue-600 text-sm font-medium mb-2">Description</label>
+                <textarea name="description" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400"><?= htmlspecialchars($product['description']) ?></textarea>
             </div>
             <!-- Button Submit -->
             <div class="flex justify-center">

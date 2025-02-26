@@ -69,34 +69,77 @@ class User
         $this->conn->prepare($resetQuery)->execute();
 
         try {
-
-
             $stmt = $this->conn->prepare("INSERT INTO users (name, email, password) VALUES (:name, :email, :password)");
             $stmt->execute(['name' => $name, 'email' => $email, 'password' => $hashedPassword]);
-
             return "Registration successful!";
         } catch (PDOException $e) {
             return "Error during registration: " . $e->getMessage();
         }
     }
 
+    // Cài thời gian khóa tài khoản người dùng
+    public function blockUser($userId, $days)
+    {
+        if (!is_numeric($days) || $days < 1) {
+            return false; // Ngăn chặn giá trị không hợp lệ
+        }
+
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+
+        $blockedUntil = date('Y-m-d H:i:s', strtotime("+$days days"));
+
+        $query = "UPDATE users SET blocked_until = :blocked_until WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute(['blocked_until' => $blockedUntil, 'id' => $userId]);
+
+        return $stmt->rowCount();
+    }
+
     /**
-     * Kiểm tra thông tin đăng nhập
+     * Kiểm tra thông tin đăng nhập, kiểm tra tài khoản có bị khóa không?
      * @param string $email - Địa chỉ email
      * @param string $password - Mật khẩu
      * @return mixed - Thông tin người dùng nếu thành công, false nếu thất bại
      */
     public function login($email, $password)
     {
-        $query = "SELECT * FROM " . $this->table . " WHERE email = ?";
+        $query = "SELECT id, name, email, role, blocked_until, password FROM users WHERE email = :email";
         $stmt = $this->conn->prepare($query);
-        $stmt->execute([$email]);
+        $stmt->execute(['email' => $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user && password_verify($password, $user['password'])) {
-            return $user;
+        if (!$user) {
+            return false; // Không tìm thấy user
         }
-        return false;
+
+        // Kiểm tra tài khoản có bị khóa không
+        if (isset($user['blocked_until']) && strtotime($user['blocked_until']) > time()) {
+            return ["error" => "Your account is blocked until " . $user['blocked_until']];
+        }
+
+        // Kiểm tra mật khẩu
+        if (password_verify($password, $user['password'])) {
+            unset($user['password']); // Không lưu password vào session
+
+            // Lưu thông tin vào session
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_role'] = $user['role'];
+
+            return ["success" => true];
+        }
+
+        return false; // Sai mật khẩu
+    }
+
+    // Lấy tất cả thông tin người dùng
+    public function getAllUsers()
+    {
+        $query = "SELECT * FROM " . $this->table;
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Trả về danh sách người dùng
     }
 
     /**

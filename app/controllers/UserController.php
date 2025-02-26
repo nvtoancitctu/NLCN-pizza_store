@@ -23,6 +23,18 @@ class UserController
     return $this->userModel->login($email, $password);
   }
 
+  // Khóa tài khoản
+  public function blockUser($userId, $days)
+  {
+    return $this->userModel->blockUser($userId, $days);
+  }
+
+  // Lấy tất cả thông tin người dùng
+  public function getAllUsers()
+  {
+    return $this->userModel->getAllUsers();
+  }
+
   // Lấy thông tin người dùng theo ID
   public function getUserById($id)
   {

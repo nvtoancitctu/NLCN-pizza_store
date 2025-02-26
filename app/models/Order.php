@@ -20,32 +20,68 @@ class Order
      * @return int - ID của đơn hàng vừa tạo
      * @throws InvalidArgumentException - Nếu $items không phải là mảng
      */
-    public function createOrder($user_id, $items, $payment_method, $address)
+    public function createOrder($user_id, $items, $payment_method, $address, $image)
     {
         // Kiểm tra xem $items có phải là mảng không
         if (!is_array($items)) {
             throw new InvalidArgumentException('Items must be an array');
         }
 
-        // Thực hiện truy vấn để tạo đơn hàng
-        $query = "INSERT INTO orders (user_id, total, payment_method, address) VALUES (?, 0, ?, ?)";
+        // Reset AUTO_INCREMENT nếu cần thiết
+        $query = "SELECT COUNT(*) FROM orders";
         $stmt = $this->conn->prepare($query);
-        $stmt->execute([$user_id, $payment_method, $address]);
+        $stmt->execute();
+        $rowCount = $stmt->fetchColumn();
+
+        if ($rowCount == 0) {
+            $resetQuery = "ALTER TABLE orders AUTO_INCREMENT = 1";
+        } else {
+            $maxIdQuery = "SELECT MAX(id) FROM orders";
+            $stmt = $this->conn->prepare($maxIdQuery);
+            $stmt->execute();
+            $maxId = $stmt->fetchColumn();
+            $resetQuery = "ALTER TABLE orders AUTO_INCREMENT = " . ($maxId + 1);
+        }
+        $this->conn->prepare($resetQuery)->execute();
+
+        // Tạo đơn hàng với hình ảnh ban đầu (nếu có)
+        $query = "INSERT INTO orders (user_id, total, payment_method, address, images) VALUES (?, 0, ?, ?, ?)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$user_id, $payment_method, $address, $image]);
 
         // Lấy ID đơn hàng vừa được tạo
         $order_id = $this->conn->lastInsertId();
 
+        // Nếu có hình ảnh, đổi tên ảnh theo định dạng: order_id + "_" + YYYY-MM-DD + extension
+        if (!empty($image)) {
+            $ext = pathinfo($image, PATHINFO_EXTENSION);
+            $newImageName = $order_id . "_" . date("Y-m-d") . "." . $ext;
+            $oldPath = "banking_images/" . $image;
+            $newPath = "banking_images/" . $newImageName;
+            if (file_exists($oldPath)) {
+                // Đổi tên file trên server
+                if (rename($oldPath, $newPath)) {
+                    // Cập nhật trường images trong bảng orders với tên ảnh mới
+                    $updateImageQuery = "UPDATE orders SET images = :image WHERE id = :order_id";
+                    $updateStmt = $this->conn->prepare($updateImageQuery);
+                    $updateStmt->bindParam(':image', $newImageName, PDO::PARAM_STR);
+                    $updateStmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
+                    $updateStmt->execute();
+                    // Cập nhật biến $image nếu cần sử dụng sau này
+                    $image = $newImageName;
+                }
+            }
+        }
+
         // Thêm các sản phẩm vào bảng order_items
         foreach ($items as $item) {
-            $productPrice = $this->getProductPrice($item['product_id']); // Lấy giá gốc
+            $productPrice = $this->getProductPrice($item['product_id']); // Lấy giá gốc của sản phẩm
             $this->addOrderItem($order_id, $item['product_id'], $item['quantity'], $productPrice, $item['size']);
             $this->updateProductPriceInOrderItems($order_id, $item['product_id'], $item['size']); // Cập nhật giá theo size và khuyến mãi
         }
 
-        // Tính tổng giá trị đơn hàng trực tiếp từ bảng order_items
-        $totalQuery = "SELECT SUM(price * quantity) AS total 
-                   FROM order_items 
-                   WHERE order_id = :order_id";
+        // Tính tổng giá trị đơn hàng từ bảng order_items
+        $totalQuery = "SELECT SUM(price * quantity) AS total FROM order_items WHERE order_id = :order_id";
         $totalStmt = $this->conn->prepare($totalQuery);
         $totalStmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
         $totalStmt->execute();
@@ -56,9 +92,7 @@ class Order
         $total += $shippingFee;
 
         // Cập nhật tổng tiền vào bảng orders
-        $updateOrderQuery = "UPDATE orders 
-                         SET total = :total 
-                         WHERE id = :order_id";
+        $updateOrderQuery = "UPDATE orders SET total = :total WHERE id = :order_id";
         $updateOrderStmt = $this->conn->prepare($updateOrderQuery);
         $updateOrderStmt->bindParam(':total', $total, PDO::PARAM_STR);
         $updateOrderStmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
@@ -227,7 +261,7 @@ class Order
     /** Lấy danh sách tất cả đơn hàng */
     public function getAllOrders()
     {
-        $query = "SELECT o.id, u.name AS customer_name, o.total, o.status, o.created_at 
+        $query = "SELECT o.id, u.name AS customer_name, o.total, o.status, o.created_at, o.payment_method, o.images 
                 FROM orders o
                 JOIN users u ON o.user_id = u.id
                 ORDER BY o.created_at ASC";
@@ -241,6 +275,20 @@ class Order
     /** Xóa đơn hàng */
     public function deleteOrder($id)
     {
+        // Truy vấn để lấy tên file ảnh từ CSDL
+        $stmt = $this->conn->prepare("SELECT images FROM orders WHERE id = ?");
+        $stmt->execute([$id]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($order && !empty($order['images'])) {
+            $imagePath = "banking_images/" . $order['images'];
+
+            // Kiểm tra xem file có tồn tại không, nếu có thì xóa
+            if (file_exists($imagePath)) {
+                unlink($imagePath); // Xóa file ảnh
+            }
+        }
+
         $query = "DELETE FROM " . $this->table . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([$id]);

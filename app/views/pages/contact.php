@@ -53,22 +53,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="mb-6">
             <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Your Name:</label>
             <input type="text" id="name" name="name" value="<?= htmlspecialchars($user_name) ?>"
-                class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required> <!-- Mặc định điền tên người dùng nếu đã đăng nhập -->
+                class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required> <!-- Mặc định điền tên người dùng nếu đã đăng nhập -->
         </div>
         <!-- Trường nhập email, mặc định là email người dùng từ session -->
         <div class="mb-6">
             <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Your Email:</label>
             <input type="email" id="email" name="email" value="<?= htmlspecialchars($user_email) ?>"
-                class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required> <!-- Mặc định điền email người dùng nếu đã đăng nhập -->
+                class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required> <!-- Mặc định điền email người dùng nếu đã đăng nhập -->
         </div>
         <!-- Trường nhập tin nhắn -->
         <div class="mb-6">
             <label for="message" class="block text-gray-700 text-sm font-bold mb-2">Message:</label>
             <textarea id="message" name="message" rows="2"
-                class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required></textarea>
+                class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required></textarea>
         </div>
         <!-- Nút gửi tin nhắn -->
         <div class="text-center">

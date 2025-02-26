@@ -14,7 +14,7 @@ if (!isset($_SESSION['user_id'])) {
 // Khởi tạo các controller
 $cartController = new CartController($conn);
 $orderController = new OrderController($conn);
-$userController = new UserController($conn); // Thêm UserController để lấy thông tin người dùng
+$userController = new UserController($conn);
 
 // Lấy user_id từ phiên
 $user_id = $_SESSION['user_id'];
@@ -40,10 +40,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
   }
 
   $address = trim(strip_tags($_POST['address'])); // Làm sạch địa chỉ
-  $payment_method = $_POST['payment_method']; // Lấy phương thức thanh toán (cần xác thực đầu vào này)
+  $payment_method = $_POST['payment_method'];
+
+  $image = !empty($_POST['image']) ? $_POST['image'] : null; // Lấy giá trị hình ảnh hoặc có hoặc trả về null
+
+  if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+    $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+    $file_ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+
+    if (in_array(strtolower($file_ext), $allowed)) {
+      $image = $_FILES['image']['name'];
+      if (move_uploaded_file($_FILES['image']['tmp_name'], "banking_images/$image")) {
+        // Image uploaded successfully
+      } else {
+        $error = "Failed to upload the image. Please try again.";
+      }
+    } else {
+      $error = "Invalid file format. Only JPG, JPEG, PNG, and GIF are allowed.";
+    }
+  }
 
   // Gọi OrderController để tạo một đơn hàng mới
-  $order_id = $orderController->createOrder($user_id, $cartItems, $payment_method, $address);
+  $order_id = $orderController->createOrder($user_id, $cartItems, $payment_method, $address, $image);
 
   // Xóa giỏ hàng sau khi đặt hàng thành công
   $cartController->clearCart($user_id);
@@ -52,13 +70,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
   header("Location: /order-success/order_id=$order_id");
   exit();
 }
+
 ?>
 
 <!-- Thông tin thanh toán -->
 <h1 class="text-center mt-8 text-4xl font-bold text-blue-700 tracking-wide">CHECK OUT</h1>
 
 <div class="container mx-auto px-4 mt-4">
-  <form method="POST" action="/checkout" id="checkout-form" class="bg-white shadow-lg border rounded-lg p-8 max-w-4xl mx-auto mb-6">
+  <form method="POST" action="/checkout" id="checkout-form" enctype="multipart/form-data" class="bg-white shadow-lg border rounded-lg p-8 max-w-4xl mx-auto mb-6">
     <!-- CSRF Token -->
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
     <!-- Bố cục chia thành hai cột -->
@@ -110,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
             <img src="/images/qr-code.png" alt="QR Code" class="w-3/5 h-auto mx-auto my-2">
 
             <label class="block text-gray-700 font-semibold mt-4">Upload Payment Proof:</label>
-            <input type="file" name="payment_proof" class="w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <input type="file" name="image" id="image" class="w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
           </div>
         </div>
 

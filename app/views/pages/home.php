@@ -81,6 +81,13 @@ $product = $productController->getProductDetails($product_id);
   }
 </style>
 
+<!-- Hiển thị thông báo thành công nếu có -->
+<?php if (!empty($success)): ?>
+  <script>
+    alert("<?= addslashes($success) ?>");
+  </script>
+<?php endif; ?>
+
 <div class="container mx-auto px-12">
   <!-- Jumbotron -->
   <div class="bg-gradient-to-l from-blue-400 to-green-400 text-white text-center p-10 rounded-2xl shadow-2xl mt-8">

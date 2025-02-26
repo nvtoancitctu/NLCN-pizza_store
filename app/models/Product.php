@@ -129,6 +129,20 @@ class Product
      */
     public function deleteProduct($id)
     {
+        // Truy vấn để lấy tên file ảnh từ CSDL
+        $stmt = $this->conn->prepare("SELECT image FROM products WHERE id = ?");
+        $stmt->execute([$id]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($product && !empty($product['image'])) {
+            $imagePath = "images/" . $product['image'];
+
+            // Kiểm tra xem file có tồn tại không, nếu có thì xóa
+            if (file_exists($imagePath)) {
+                unlink($imagePath); // Xóa file ảnh
+            }
+        }
+
         $query = "DELETE FROM " . $this->table . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([$id]);
