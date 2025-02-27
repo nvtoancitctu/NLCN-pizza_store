@@ -29,6 +29,12 @@ class UserController
     return $this->userModel->blockUser($userId, $days);
   }
 
+  // Khóa tài khoản
+  public function unblockUser($user_id)
+  {
+    return $this->userModel->unblockUser($user_id);
+  }
+
   // Lấy tất cả thông tin người dùng
   public function getAllUsers()
   {

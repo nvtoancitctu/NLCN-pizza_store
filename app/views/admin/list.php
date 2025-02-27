@@ -63,20 +63,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
     if ($order_id && !empty($customer_name) && $total_price >= 0 && !empty($order_status)) {
         // Gọi phương thức updateOrder trong controller
         $updated = $orderController->updateOrder($order_id, $customer_name, $total_price, $order_status);
-        $_SESSION['success'] = "Order $order_id updated successfully.";
+        $_SESSION['success'] = "Order $order_id is updated successfully.";
         header("Location: /admin/list");
         exit;
-    } else {
-        $_SESSION['error'] = "Invalid order data. Please check the inputs.";
     }
 }
 
 // Cập nhật số ngày khóa tài khoản
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['days'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     $userController = new UserController($conn);
-    $userController->blockUser($_POST['user_id'], $_POST['days']);
-    header("Location: /admin/list");
+    $user_id = $_POST['user_id'];
+
+    // Cập nhật số ngày block user 
+    if (isset($_POST['block_user'])) {
+        $_POST['days'] = intval($_POST['days']);
+        $days = $_POST['days'];
+
+        if ($days > 0) {
+            $userController->blockUser($user_id, $days);
+            $_SESSION['success'] = "User $user_id is blocked for $days days successfully.";
+        } else {
+            $_SESSION['success'] = "Please enter a valid block duration (minimum 1 day).";
+        }
+    } elseif (isset($_POST['check_block'])) {
+        // Kiểm tra block days
+        $message = $userController->unblockUser($user_id);
+        $_SESSION['success'] = $message;
+    }
+
+    header('Location: /admin/list');
+    exit();
 }
+
 ?>
 
 <!-- Hiển thị thông báo thành công nếu có -->
@@ -244,15 +262,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['da
                     <input type="hidden" name="payment_method" id="hiddenPaymentMethod">
                 </div>
                 <div>
-                    <label for="editCustomerName" class="block text-blue-700 font-semibold">Customer Name</label>
+                    <label for="editCustomerName" class="block text-red-500 font-semibold">Customer Name</label>
                     <input type="text" id="editCustomerName" name="customer_name" class="w-full p-3 border border-gray-300 rounded-md" required>
                 </div>
                 <div>
-                    <label for="editTotalPrice" class="block text-blue-700 font-semibold">Total Price</label>
+                    <label for="editTotalPrice" class="block text-red-500 font-semibold">Total Price</label>
                     <input type="number" step="0.01" id="editTotalPrice" name="total" class="w-full p-3 border border-gray-300 rounded-md" required>
                 </div>
                 <div>
-                    <label for="editStatus" class="block text-blue-700 font-semibold">Status</label>
+                    <label for="editStatus" class="block text-red-500 font-semibold">Status</label>
                     <select id="editStatus" name="status" class="w-full p-3 border border-gray-300 rounded-md">
                         <option value="pending">Pending</option>
                         <option value="processing">Processing</option>
@@ -277,7 +295,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['da
         <!-- Nút Thao Tác -->
         <div class="flex justify-center space-x-4 mt-6">
             <button type="submit" name="edit_order" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md">Save Changes</button>
-            <button type="button" id="cancelEdit" class="bg-red-400 hover:bg-red-500 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
+            <button type="button" id="cancelEdit" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
         </div>
     </form>
 </div>
@@ -398,11 +416,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['da
 </script>
 
 <!-- Quản lý tài khoản -->
-<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">
-    Account Management
-</h1>
+<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Account Management</h1>
 
-<div class="container-fluid mx-auto p-6 mb-4 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<!-- Form Block User (Ẩn Mặc Định) -->
+<div id="block-user-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
+    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border border-gray-300">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+        <input type="hidden" name="user_id" id="blockUserId">
+
+        <!-- Grid 2 cột -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Cột 1: User ID, Name, Role -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-blue-700 font-semibold">User ID</label>
+                    <input type="text" id="blockUserDisplayId" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block text-blue-700 font-semibold">Role</label>
+                    <input type="text" id="blockUserRole" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block text-blue-700 font-semibold">Blocked Until</label>
+                    <input type="text" id="blockUserBlockedUntil" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+            </div>
+
+            <!-- Cột 2: Email, Blocked Until, Block Days -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-blue-700 font-semibold">Name</label>
+                    <input type="text" id="blockUserName" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block text-blue-700 font-semibold">Email</label>
+                    <input type="text" id="blockUserEmail" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block text-red-500 font-semibold">Block Days</label>
+                    <input type="number" name="days" id="blockDays" min="1" class="w-full p-3 border border-gray-300 rounded-md">
+                </div>
+            </div>
+        </div>
+        <!-- Nút Confirm và Cancel -->
+        <div class="flex justify-center space-x-4 mt-6">
+            <button type="submit" name="block_user" class="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-lg shadow-md">Confirm Block</button>
+            <button type="button" id="cancelBlock" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
+            <button type="submit" name="check_block" class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-6 rounded-lg shadow-md">Check</button>
+        </div>
+    </form>
+</div>
+
+<div class="container-fluid mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+    <!-- Bảng danh sách người dùng -->
     <div class="table-responsive">
         <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
             <thead>
@@ -412,8 +478,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['da
                     <th class="px-3 py-2 border-b">Email</th>
                     <th class="px-3 py-2 border-b">Phone</th>
                     <th class="px-3 py-2 border-b">Address</th>
-                    <th class="px-3 py-2 border-b">Role</th>
                     <th class="px-3 py-2 border-b">Created At</th>
+                    <th class="px-3 py-2 border-b">Blocked Until</th>
                     <th class="px-3 py-2 border-b">Action</th>
                 </tr>
             </thead>
@@ -430,18 +496,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['da
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['email']) ?></td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['phone'] ?? 'NULL') ?></td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['address'] ?? 'NULL') ?></td>
-                            <td class="px-3 py-2 border-b text-center"><?= htmlspecialchars($user['role']) ?></td>
-                            <td class="px-3 py-2 border-b text-center"><?= htmlspecialchars($user['created_at']) ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['created_at']) ?></td>
+                            <td class="px-3 py-2 border-b text-red-500 font-bold"><?= htmlspecialchars($user['blocked_until'] ?? 'NULL') ?></td>
                             <td class="px-3 py-2 border-b">
-                                <form method="POST" action="/admin/list">
-                                    <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                                    <select name="days">
-                                        <option value="1">1 day</option>
-                                        <option value="3">3 days</option>
-                                        <option value="7">7 days</option>
-                                    </select>
-                                    <button type="submit" class="btn btn-danger">Block</button>
-                                </form>
+                                <button class="block-btn bg-red-500 text-white px-4 py-2 rounded-md"
+                                    data-id="<?= htmlspecialchars($user['id']) ?>"
+                                    data-name="<?= htmlspecialchars($user['name']) ?>"
+                                    data-email="<?= htmlspecialchars($user['email']) ?>"
+                                    data-role="<?= htmlspecialchars($user['role']) ?>"
+                                    data-block="<?= htmlspecialchars($user['blocked_until'] ?? 'NULL') ?>">
+                                    Block
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach;
@@ -454,3 +519,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'], $_POST['da
         </table>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const blockButtons = document.querySelectorAll(".block-btn");
+        const blockForm = document.getElementById("block-user-form");
+        const cancelBlock = document.getElementById("cancelBlock");
+
+        // Các input cần cập nhật giá trị
+        const blockUserId = document.getElementById("blockUserId");
+        const blockUserDisplayId = document.getElementById("blockUserDisplayId");
+        const blockUserName = document.getElementById("blockUserName");
+        const blockUserEmail = document.getElementById("blockUserEmail");
+        const blockUserRole = document.getElementById("blockUserRole");
+        const blockUserBlockedUntil = document.getElementById("blockUserBlockedUntil");
+        const blockDays = document.getElementById("blockDays");
+
+        blockButtons.forEach(button => {
+            button.addEventListener("click", function() {
+                const userId = this.getAttribute("data-id");
+                const userName = this.getAttribute("data-name");
+                const userEmail = this.getAttribute("data-email");
+                const userRole = this.getAttribute("data-role");
+                const blockedUntil = this.getAttribute("data-block");
+
+                // Gán giá trị vào form
+                blockUserId.value = userId;
+                blockUserDisplayId.value = userId;
+                blockUserName.value = userName;
+                blockUserEmail.value = userEmail;
+                blockUserRole.value = userRole;
+                blockUserBlockedUntil.value = (blockedUntil !== "NULL" && blockedUntil) ? blockedUntil : "Not Blocked";
+                blockDays.value = ""; // Reset ngày block
+
+                // Hiển thị form block
+                blockForm.classList.remove("hidden");
+            });
+        });
+
+        cancelBlock.addEventListener("click", function() {
+            blockForm.classList.add("hidden"); // Ẩn form khi bấm cancel
+        });
+    });
+</script>

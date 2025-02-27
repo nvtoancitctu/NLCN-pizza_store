@@ -95,6 +95,37 @@ class User
         return $stmt->rowCount();
     }
 
+    // Kiểm tra ngày giờ hết hạn của tài khoản
+    public function unblockUser($userId)
+    {
+        $query = "SELECT blocked_until FROM users WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && $user['blocked_until']) {
+
+            $blockedUntil = new DateTime($user['blocked_until'], new DateTimeZone('Asia/Ho_Chi_Minh'));
+            $now = new DateTime("now", new DateTimeZone('Asia/Ho_Chi_Minh'));
+
+            if ($blockedUntil > $now) {
+                $interval = $now->diff($blockedUntil);
+                $daysLeft = $interval->days;
+                $hoursLeft = $interval->h;
+                $minutesLeft = $interval->i;
+
+                return "This account is still blocked. Remaining time: $daysLeft days, $hoursLeft hours, $minutesLeft minutes.";
+            } else {
+
+                $updateQuery = "UPDATE users SET blocked_until = NULL WHERE id = ?";
+                $updateStmt = $this->conn->prepare($updateQuery);
+                $updateStmt->execute([$userId]);
+                return "This account has been unlocked.";
+            }
+        }
+        return "This account is not blocked.";
+    }
+
     /**
      * Kiểm tra thông tin đăng nhập, kiểm tra tài khoản có bị khóa không?
      * @param string $email - Địa chỉ email
