@@ -562,3 +562,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
         });
     });
 </script>
+
+<!-- Xử lý thông tin khi click logout -->
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    }
+
+    if (isset($_POST['logout'])) {
+        // Xóa tất cả biến session
+        session_unset();
+        session_destroy();
+
+        // Chặn trình duyệt lưu cache để tránh vấn đề redirect sai
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+
+        exit();
+    }
+}
+
+?>
+
+<!-- Logout Button -->
+<form method="POST" class="flex justify-center mb-8">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+    <button type="submit" name="logout" onclick="confirmLogout(event)"
+        class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
+        Logout</button>
+</form>
+
+<script>
+    function confirmLogout(event) {
+        // Hiển thị hộp thoại xác nhận
+        const userConfirmed = confirm("Are you sure you want to logout?");
+        if (userConfirmed) {
+            // Người dùng xác nhận thì submit form
+            document.getElementById('logout-form').submit();
+        } else {
+            // Ngăn chặn submit nếu người dùng nhấn "Hủy"
+            event.preventDefault();
+        }
+    }
+</script>

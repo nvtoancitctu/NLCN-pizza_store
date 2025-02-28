@@ -26,7 +26,7 @@ function getCartItemCount($conn, $user_id)
   <div class="container mx-auto px-4 py-3 flex justify-between items-center">
     <div class="flex items-center space-x-3">
       <img src="/images/logo.png" alt="Pizza Store" class="h-14 w-14">
-      <a href="/" class="text-3xl font-bold">Lover's Hub</a>
+      <a href="/home" class="text-3xl font-bold">Lover's Hub</a>
     </div>
 
     <!-- Mobile Menu Button -->
@@ -67,6 +67,9 @@ function getCartItemCount($conn, $user_id)
             <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
           </button>
           <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-36 bg-white text-black rounded-lg shadow-lg">
+            <?php if ($_SESSION['user_role'] === 'admin'): ?>
+              <a href="/admin/list" class="text-center block px-4 py-2 hover:bg-gray-200">Admin Panel</a>
+            <?php endif; ?>
             <a href="/account" class="text-center block px-4 py-2 hover:bg-gray-200">Profile</a>
             <form method="POST" id="logout-form">
               <button type="submit" name="logout" onclick="confirmLogout(event)" class="text-center block w-full text-left px-4 py-2 hover:bg-gray-200">Logout</button>
@@ -124,12 +127,21 @@ function getCartItemCount($conn, $user_id)
           <i class="fas fa-user"></i>
           <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
         </button>
-        <div id="mobile-user-dropdown" class="hidden">
-          <a href="/account" class="block px-3 py-2 text-white hover:bg-yellow-400">Profile</a>
-          <form method="POST" id="mobile-logout-form">
-            <button type="submit" name="logout" class="block w-full text-left px-3 py-2 text-white hover:bg-yellow-400">Logout</button>
-          </form>
-        </div>
+        <?php if (isset($_SESSION['user_name'])): ?>
+          <button class="block px-3 py-2 text-white hover:bg-yellow-400 flex items-center space-x-1" id="mobile-user-dropdown-toggle">
+            <i class="fas fa-user"></i>
+            <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+          </button>
+          <div id="mobile-user-dropdown" class="hidden">
+            <?php if ($_SESSION['user_role'] === 'admin'): ?>
+              <a href="/admin/list" class="block px-3 py-2 text-white hover:bg-yellow-400">Admin Panel</a>
+            <?php endif; ?>
+            <a href="/account" class="block px-3 py-2 text-white hover:bg-yellow-400">Profile</a>
+            <form method="POST" id="mobile-logout-form">
+              <button type="submit" name="logout" class="block w-full text-left px-3 py-2 text-white hover:bg-yellow-400">Logout</button>
+            </form>
+          </div>
+        <?php endif; ?>
       <?php else: ?>
         <li>
           <a href="/login" class="block px-3 py-2 text-white hover:bg-yellow-400 flex items-center space-x-1">

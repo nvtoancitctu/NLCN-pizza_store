@@ -41,9 +41,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $error = $result['error'];
   } elseif (is_array($result) && isset($result['success'])) {
     // Đăng nhập thành công
-    $_SESSION['success'] = "Login successful! Welcome to Lover's Hub Pizza Store.";
-    header("Location: /home");
-    exit();
+    if ($_SESSION['user_role'] == 'admin') {
+      $_SESSION['success'] = 'Welcome back my admin! Go to admin page.';
+      header("Location: /admin/list");
+      exit();
+    } else {
+      $_SESSION['success'] = "Login successful! Welcome to Lover's Hub Pizza Store.";
+      header("Location: /home");
+      exit();
+    }
   } else {
     // Sai email hoặc mật khẩu
     $error = "Invalid email or password.";
@@ -66,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <?php endif; ?>
 
 <!-- Giao diện người dùng -->
-<h1 class="text-center text-4xl font-bold mt-10 text-gray-900">Login</h1>
+<h1 class="text-center text-4xl font-bold mt-6 text-gray-900">Login</h1>
 <div class="container mx-auto max-w-md p-8 bg-white shadow-lg rounded-xl mt-8 mb-8">
   <form method="POST" action="/login">
     <!-- CSRF Token -->
@@ -74,13 +80,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <div class="mb-6">
       <label for="email" class="block text-gray-700 font-bold mb-2">Email:</label>
-      <input type="email" name="email" class="shadow-sm appearance-none border border-gray-300 rounded-md w-full p-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-150" required>
+      <input type="email" name="email" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
     </div>
     <!--  -->
     <div class="mb-6 relative">
       <label for="password" class="block text-gray-700 font-bold mb-2">Password:</label>
       <div class="relative">
-        <input type="password" name="password" id="passwordInput" class="shadow-sm appearance-none border border-gray-300 rounded-md w-full p-3 pr-10 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-150" required>
+        <input type="password" name="password" id="passwordInput" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
         <!-- Nút hiển thị / ẩn mật khẩu -->
         <button type="button" id="togglePassword" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700">
           <span id="eyeIcon">👁️</span>

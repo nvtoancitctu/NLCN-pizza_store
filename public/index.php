@@ -11,7 +11,7 @@ if (isset($_POST['logout'])) {
     session_unset();
     session_destroy();
     // Redirect to the home page but with a URL parameter to show the modal
-    header("Location: /");
+    header("Location: /login");
     exit();
 }
 
@@ -54,8 +54,14 @@ switch ($page) {
     case 'register':
         include '../app/views/pages/register.php';
         break;
+    case 'forgot-password':
+        include '../app/views/pages/forgot_password.php';
+        break;
     case 'order-success':
         include '../app/views/pages/order-success.php';
+        break;
+    case 'reset-password':
+        include '../app/views/admin/reset_password.php';
         break;
     case 'list':
         include '../app/views/admin/list.php';

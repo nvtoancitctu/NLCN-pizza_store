@@ -44,8 +44,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
+<!-- Hiển thị lỗi nếu có -->
+<?php if (!empty($error)): ?>
+    <script>
+        alert("<?= addslashes($error) ?>");
+    </script>
+<?php endif; ?>
+
 <!-- Giao diện Form đăng ký -->
-<h1 class="text-center text-4xl font-bold mt-10 text-gray-900">Register</h1>
+<h1 class="text-center text-4xl font-bold mt-6 text-gray-900">Register</h1>
 
 <div class="container mx-auto max-w-md p-8 bg-white shadow-lg rounded-xl mt-8 mb-8">
     <form method="POST" action="/register">
@@ -54,35 +61,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="mb-6">
             <label for="name" class="block text-gray-700 font-bold mb-2">Name:</label>
-            <input type="text" name="name" class="shadow-sm appearance-none border border-gray-300 rounded-md w-full p-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-150" required>
+            <input type="text" name="name" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
         </div>
 
         <div class="mb-6">
             <label for="email" class="block text-gray-700 font-bold mb-2">Email:</label>
-            <input type="email" name="email" class="shadow-sm appearance-none border border-gray-300 rounded-md w-full p-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-150" required>
+            <input type="email" name="email" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
         </div>
 
         <div class="mb-6">
             <label for="password" class="block text-gray-700 font-bold mb-2">Password:</label>
-            <input type="password" name="password" class="shadow-sm appearance-none border border-gray-300 rounded-md w-full p-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-150" required>
+            <div class="relative">
+                <input type="password" id="password" name="password" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-3 flex items-center text-gray-500">
+                    👁️
+                </button>
+            </div>
         </div>
 
         <div class="mb-6">
             <label for="confirm_password" class="block text-gray-700 font-bold mb-2">Confirm Password:</label>
-            <input type="password" name="confirm_password" class="shadow-sm appearance-none border border-gray-300 rounded-md w-full p-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-150" required>
+            <div class="relative">
+                <input type="password" id="confirm_password" name="confirm_password" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                <button type="button" onclick="togglePassword('confirm_password')" class="absolute inset-y-0 right-3 flex items-center text-gray-500">
+                    👁️
+                </button>
+            </div>
         </div>
 
-        <!-- Hiển thị lỗi nếu có -->
-        <?php if (!empty($error)): ?>
-            <script>
-                alert("<?= addslashes($error) ?>");
-            </script>
-        <?php endif; ?>
-
         <div class="text-center">
-            <button type="submit" class="w-3/5 text-center p-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md transition duration-200">Register</button>
+            <button type="submit" class="w-3/5 text-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md transition duration-200">Register</button>
         </div>
     </form>
 
     <p class="text-center mt-6 text-gray-600">Already have an account? <a href="/login" class="text-blue-600 hover:underline">Login here</a></p>
 </div>
+
+<script>
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        input.type = input.type === "password" ? "text" : "password";
+    }
+</script>

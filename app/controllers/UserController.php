@@ -50,15 +50,7 @@ class UserController
   // Cập nhật thông tin người dùng
   public function updateUserProfile($id, $name, $phone, $address)
   {
-    // Cập nhật thông tin người dùng
-    $result = $this->userModel->updateUserProfile($id, $name, $phone, $address);
-
-    // Trả về thông báo thành công hoặc lỗi
-    if ($result) {
-      return 'Profile updated successfully.';
-    } else {
-      return 'Error updating profile.';
-    }
+    return $this->userModel->updateUserProfile($id, $name, $phone, $address);
   }
 
   // Thêm contact

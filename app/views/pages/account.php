@@ -13,11 +13,11 @@ if (!isset($_SESSION['user_id'])) {
 
 // Lấy user_id từ session để sử dụng trong việc lấy dữ liệu đơn hàng
 $user_id = $_SESSION['user_id'];
+
 $orderController = new OrderController($conn);
 $orders = $orderController->getOrdersByUserId($user_id);
-$userController = new UserController($conn);
 
-// Lấy thông tin người dùng từ cơ sở dữ liệu
+$userController = new UserController($conn);
 $user = $userController->getUserById($user_id);
 
 // Xử lý điều kiện khi người dùng nhấn vào nút Admin Panel, Logout, hoặc cập nhật thông tin
@@ -34,8 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 
   if (isset($_POST['logout'])) {
-    // Đăng xuất và chuyển về trang đăng nhập
+    // Xóa tất cả biến session
+    session_unset();
     session_destroy();
+
+    // Chặn trình duyệt lưu cache để tránh vấn đề redirect sai
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
     header("Location: /login");
     exit();
   }
@@ -50,14 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $updated = $userController->updateUserProfile($user_id, $name, $phone, $address);
 
     if ($updated) {
-      // Cập nhật session với dữ liệu mới nếu cập nhật thành công
-      $_SESSION['user_name'] = $name;
-      $_SESSION['user_phone'] = $phone;
-      $_SESSION['user_address'] = $address;
       $message = "Profile updated successfully.";
     } else {
       $message = "Failed to update profile.";
     }
+    header("Location: /account");
+    exit();
   }
 }
 ?>
@@ -72,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Profile Section -->
 <div class="container mx-auto w-4/5 mt-10 mb-10">
   <h2 class="text-4xl font-bold text-center mb-8 text-gray-900">Profile</h2>
+
   <!-- Thông tin người dùng hiển thị dưới dạng lưới -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white shadow-md rounded-xl mx-auto mb-8 border border-gray-300">
     <!-- Name -->
@@ -101,6 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Admin Panel
           </button>
         </form>
+      <?php else: ?>
+        <button class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg transition duration-200">Customer</button>
       <?php endif; ?>
     </div>
 
@@ -112,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="text-gray-600"><?= htmlspecialchars($user['phone'] ?? 'N/A') ?></p>
       </div>
     </div>
+
     <!-- Address -->
     <div class="flex items-center space-x-4">
       <i class="fas fa-map-marker-alt text-3xl text-yellow-500"></i>
@@ -169,138 +175,144 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Order History Section -->
   <h3 class="text-3xl font-bold text-center mt-8 mb-8 text-gray-800">Order History</h3>
-  <?php foreach ($orders as $order): ?>
-    <?php
-    $orderdetails = $orderController->getOrderDetailsByOrderId($order['id']);
-    $orderStatus = strtolower($order['status'] ?? 'unknown');
-    $isCanceled = $orderStatus === 'cancelled';
-    ?>
-    <div class="relative bg-white p-8 rounded-2xl shadow-lg border border-gray-300 mb-8">
+  <?php if (empty($orders)): ?>
+    <p class="text-center text-gray-600 text-lg mt-8">No order history available.</p>
+  <?php else: ?>
+    <?php foreach ($orders as $order): ?>
+      <?php
+      $orderdetails = $orderController->getOrderDetailsByOrderId($order['id']);
+      $orderStatus = strtolower($order['status'] ?? 'unknown');
+      $isCanceled = $orderStatus === 'cancelled';
+      ?>
+      <div class="relative bg-white p-8 rounded-2xl shadow-lg border border-gray-300 mb-8">
 
-      <!-- Thông báo nếu đơn hàng bị hủy -->
-      <?php if ($isCanceled): ?>
-        <div class="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-md flex items-center justify-center z-20 rounded-2xl">
-          <div class="bg-yellow-100 border border-yellow-500 text-red-600 p-8 rounded-xl shadow-lg text-center w-2/5">
-            <p class="font-bold text-3xl">Order Canceled</p>
-            <p class="text-gray-800 mt-2">We will contact you shortly for further details.</p>
-          </div>
-        </div>
-      <?php endif; ?>
-
-      <!-- Nội dung đơn hàng -->
-      <div class="space-y-8 <?= $isCanceled ? 'opacity-50' : '' ?>">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
-            <i class="fas fa-receipt text-blue-500 text-xl"></i>
-            <div>
-              <p class="text-sm text-gray-600">Order ID</p>
-              <p class="font-semibold text-gray-800">#<?= htmlspecialchars($order['id']) ?></p>
+        <!-- Thông báo nếu đơn hàng bị hủy -->
+        <?php if ($isCanceled): ?>
+          <div class="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-md flex items-center justify-center z-20 rounded-2xl">
+            <div class="bg-yellow-100 border border-yellow-500 text-red-600 p-8 rounded-xl shadow-lg text-center w-2/5">
+              <p class="font-bold text-3xl">Order Canceled</p>
+              <p class="text-gray-800 mt-2">We will contact you shortly for further details.</p>
             </div>
           </div>
+        <?php endif; ?>
 
-          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
-            <i class="fas fa-map-marker-alt text-pink-500 text-xl"></i>
-            <div>
-              <p class="text-sm text-gray-600">Shipping Address</p>
-              <p class="font-semibold text-gray-800"><?= htmlspecialchars($order['address']) ?></p>
-            </div>
-          </div>
-
-          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
-            <i class="fas fa-calendar-alt text-indigo-500 text-xl"></i>
-            <div>
-              <p class="text-sm text-gray-600">Order Date</p>
-              <p class="font-semibold text-gray-800"><?= htmlspecialchars($order['created_at']) ?></p>
-            </div>
-          </div>
-
-          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
-            <i class="fas fa-dollar-sign text-green-500 text-xl"></i>
-            <div>
-              <p class="text-sm text-gray-600">Total Amount</p>
-              <p class="font-semibold text-gray-800">$<?= number_format($order['total'], 2) ?></p>
-            </div>
-          </div>
-
-          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
-            <i class="fas fa-credit-card text-purple-500 text-xl"></i>
-            <div>
-              <p class="text-sm text-gray-600">Payment Method</p>
-              <p class="font-semibold text-gray-800"><?= ucfirst(htmlspecialchars($order['payment_method'])) ?></p>
-            </div>
-          </div>
-
-          <?php
-          $statusColors = [
-            'pending' => 'text-yellow-500',
-            'processing' => 'text-blue-500',
-            'completed' => 'text-green-500',
-            'cancelled' => 'text-red-500'
-          ];
-          $statusColor = $statusColors[$orderStatus] ?? 'text-gray-500';
-          ?>
-
-          <div class="relative bg-white p-4 rounded-lg shadow-md border border-gray-300">
-            <div class="flex items-center space-x-3">
-              <i class="fas fa-truck <?= $statusColor ?> text-xl"></i>
+        <!-- Nội dung đơn hàng -->
+        <div class="space-y-8 <?= $isCanceled ? 'opacity-50' : '' ?>">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+              <i class="fas fa-receipt text-blue-500 text-xl"></i>
               <div>
-                <p class="text-sm text-gray-600">Status</p>
-                <p class="font-semibold <?= $statusColor ?> capitalize">
-                  <?= ucfirst(htmlspecialchars($orderStatus)) ?>
-                </p>
+                <p class="text-sm text-gray-600">Order ID</p>
+                <p class="font-semibold text-gray-800">#<?= htmlspecialchars($order['id']) ?></p>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+              <i class="fas fa-map-marker-alt text-pink-500 text-xl"></i>
+              <div>
+                <p class="text-sm text-gray-600">Shipping Address</p>
+                <p class="font-semibold text-gray-800"><?= htmlspecialchars($order['address']) ?></p>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+              <i class="fas fa-calendar-alt text-indigo-500 text-xl"></i>
+              <div>
+                <p class="text-sm text-gray-600">Order Date</p>
+                <p class="font-semibold text-gray-800"><?= htmlspecialchars($order['created_at']) ?></p>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+              <i class="fas fa-dollar-sign text-green-500 text-xl"></i>
+              <div>
+                <p class="text-sm text-gray-600">Total Amount</p>
+                <p class="font-semibold text-gray-800">$<?= number_format($order['total'], 2) ?></p>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+              <i class="fas fa-credit-card text-purple-500 text-xl"></i>
+              <div>
+                <p class="text-sm text-gray-600">Payment Method</p>
+                <p class="font-semibold text-gray-800"><?= ucfirst(htmlspecialchars($order['payment_method'])) ?></p>
+              </div>
+            </div>
+
+            <?php
+            $statusColors = [
+              'pending' => 'text-yellow-500',
+              'processing' => 'text-blue-500',
+              'completed' => 'text-green-500',
+              'cancelled' => 'text-red-500'
+            ];
+            $statusColor = $statusColors[$orderStatus] ?? 'text-gray-500';
+            ?>
+
+            <div class="relative bg-white p-4 rounded-lg shadow-md border border-gray-300">
+              <div class="flex items-center space-x-3">
+                <i class="fas fa-truck <?= $statusColor ?> text-xl"></i>
+                <div>
+                  <p class="text-sm text-gray-600">Status</p>
+                  <p class="font-semibold <?= $statusColor ?> capitalize">
+                    <?= ucfirst(htmlspecialchars($orderStatus)) ?>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Bảng chi tiết đơn hàng -->
-        <div class="overflow-x-auto">
-          <table class="w-full border border-gray-200 rounded-lg overflow-hidden alert alert-info">
-            <thead class="bg-gradient-to-r from-yellow-200 to-yellow-300 text-gray-700">
-              <tr>
-                <th class="px-6 py-3 text-left font-semibold uppercase">Product</th>
-                <th class="px-6 py-3 text-center font-semibold uppercase">Size</th>
-                <th class="px-6 py-3 text-center font-semibold uppercase">Quantity</th>
-                <th class="px-6 py-3 text-center font-semibold uppercase">Price</th>
-                <th class="px-6 py-3 text-center font-semibold uppercase">Total</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <?php foreach ($orderdetails as $item): ?>
-                <tr class="hover:bg-yellow-50 transition-all duration-200 ease-in-out">
-                  <td class="px-6 py-4 text-gray-800 font-medium">
-                    <?= htmlspecialchars($item['name']) ?>
-                  </td>
-                  <td class="px-6 py-4 text-center text-gray-600">
-                    <?= htmlspecialchars($item['size']) ?>
-                  </td>
-                  <td class="px-6 py-4 text-center text-gray-600">
-                    <?= htmlspecialchars($item['quantity']) ?>
-                  </td>
-                  <td class="px-6 py-4 text-center text-gray-600">
-                    <?php if ($item['price_to_display'] < $item['price']): ?>
-                      <span class="line-through text-gray-500 text-sm">$<?= number_format($item['price'], 2) ?></span>
-                      <span class="text-red-600 text-base font-semibold">$<?= number_format($item['price_to_display'], 2) ?></span>
-                    <?php else: ?>
-                      <span>$<?= number_format($item['price'], 2) ?></span>
-                    <?php endif; ?>
-                  </td>
-                  <td class="px-6 py-4 text-center font-semibold text-gray-800">
-                    $<?= number_format($item['total_price'], 2) ?>
-                  </td>
+          <!-- Bảng chi tiết đơn hàng -->
+          <div class="overflow-x-auto">
+            <table class="w-full border border-gray-200 rounded-lg overflow-hidden alert alert-info">
+              <thead class="bg-gradient-to-r from-yellow-200 to-yellow-300 text-gray-700">
+                <tr>
+                  <th class="px-6 py-3 text-left font-semibold uppercase">Product</th>
+                  <th class="px-6 py-3 text-center font-semibold uppercase">Size</th>
+                  <th class="px-6 py-3 text-center font-semibold uppercase">Quantity</th>
+                  <th class="px-6 py-3 text-center font-semibold uppercase">Price</th>
+                  <th class="px-6 py-3 text-center font-semibold uppercase">Total</th>
                 </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <?php foreach ($orderdetails as $item): ?>
+                  <tr class="hover:bg-yellow-50 transition-all duration-200 ease-in-out">
+                    <td class="px-6 py-4 text-gray-800 font-medium">
+                      <?= htmlspecialchars($item['name']) ?>
+                    </td>
+                    <td class="px-6 py-4 text-center text-gray-600">
+                      <?= htmlspecialchars($item['size']) ?>
+                    </td>
+                    <td class="px-6 py-4 text-center text-gray-600">
+                      <?= htmlspecialchars($item['quantity']) ?>
+                    </td>
+                    <td class="px-6 py-4 text-center text-gray-600">
+                      <?php if ($item['price_to_display'] < $item['price']): ?>
+                        <span class="line-through text-gray-500 text-sm">$<?= number_format($item['price'], 2) ?></span>
+                        <span class="text-red-600 text-base font-semibold">$<?= number_format($item['price_to_display'], 2) ?></span>
+                      <?php else: ?>
+                        <span>$<?= number_format($item['price'], 2) ?></span>
+                      <?php endif; ?>
+                    </td>
+                    <td class="px-6 py-4 text-center font-semibold text-gray-800">
+                      $<?= number_format($item['total_price'], 2) ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
-  <?php endforeach; ?>
+    <?php endforeach; ?>
+  <?php endif; ?>
 
   <!-- Logout Button -->
   <form method="POST" class="flex justify-center mt-8">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-    <button type="submit" name="logout" onclick="confirmLogout(event)" class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">Logout</button>
+    <button type="submit" name="logout" onclick="confirmLogout(event)"
+      class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
+      Logout</button>
   </form>
 </div>
 
