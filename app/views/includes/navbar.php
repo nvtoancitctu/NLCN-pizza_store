@@ -22,8 +22,10 @@ function getCartItemCount($conn, $user_id)
 }
 ?>
 
+<!-- Thanh điều hướng -->
 <nav class="bg-gradient-to-r from-red-600 to-blue-600 text-white shadow-lg navbar">
   <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+    <!-- Logo -->
     <div class="flex items-center space-x-3">
       <img src="/images/logo.png" alt="Pizza Store" class="h-14 w-14">
       <a href="/home" class="text-3xl font-bold">Lover's Hub</a>
@@ -66,13 +68,15 @@ function getCartItemCount($conn, $user_id)
             <i class="fas fa-user"></i>
             <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
           </button>
+
           <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-36 bg-white text-black rounded-lg shadow-lg">
             <?php if ($_SESSION['user_role'] === 'admin'): ?>
-              <a href="/admin/list" class="text-center block px-4 py-2 hover:bg-gray-200">Admin Panel</a>
+              <a href="/admin/list" class="text-center block px-4 py-2 hover:bg-gray-200 rounded-lg">Admin Panel</a>
             <?php endif; ?>
-            <a href="/account" class="text-center block px-4 py-2 hover:bg-gray-200">Profile</a>
+            <a href="/account" class="text-center block px-4 py-2 hover:bg-gray-200 rounded-lg">Profile</a>
             <form method="POST" id="logout-form">
-              <button type="submit" name="logout" onclick="confirmLogout(event)" class="text-center block w-full text-left px-4 py-2 hover:bg-gray-200">Logout</button>
+              <button type="submit" name="logout" onclick="confirmLogout(event)"
+                class="text-center block w-full text-left px-4 py-2 hover:bg-gray-200 rounded-lg">Logout</button>
             </form>
           </div>
         </div>

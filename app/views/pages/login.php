@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       <label for="email" class="block text-gray-700 font-bold mb-2">Email:</label>
       <input type="email" name="email" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
     </div>
-    <!--  -->
+
     <div class="mb-6 relative">
       <label for="password" class="block text-gray-700 font-bold mb-2">Password:</label>
       <div class="relative">
@@ -94,13 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       </div>
     </div>
 
-    <div class="mb-6 flex justify-between text-sm">
-      <!-- Liên kết quên mật khẩu -->
-      <a href="/forgot-password" class="text-blue-600 hover:underline">Forgot password?</a>
-    </div>
-
     <div class="text-center">
-      <button type="submit" class="w-3/5 text-center p-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md transition duration-200">Login</button>
+      <button type="submit" class="w-2/5 text-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md transition duration-200">Login</button>
     </div>
   </form>
   <p class="text-center mt-6 text-gray-600">Don't have an account? <a href="/register" class="text-blue-600 hover:underline">Register here</a></p>

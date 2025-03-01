@@ -265,6 +265,39 @@ class Product
         return $result['total'];
     }
 
+    /**
+     * Lấy danh sách ID sản phẩm yêu thích của người dùng
+     * 
+     * @param int $user_id ID của người dùng
+     * @return array Danh sách ID sản phẩm yêu thích
+     */
+    public function getFavoriteProductIds($user_id)
+    {
+        $sql = "SELECT product_id FROM favorites WHERE user_id = :user_id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    /**
+     * Lấy danh sách thông tin sản phẩm yêu thích của người dùng
+     * 
+     * @param int $user_id ID của người dùng
+     * @return array Danh sách sản phẩm yêu thích (bao gồm thông tin sản phẩm)
+     */
+    public function getFavoriteProductList($user_id)
+    {
+        $sql = "SELECT p.* FROM products p
+            JOIN favorites f ON p.id = f.product_id
+            WHERE f.user_id = :user_id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute(['user_id' => $user_id]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Các phương thức bổ sung khác...
     /**
      * Lấy sản phẩm theo danh mục với phân trang
@@ -297,6 +330,7 @@ class Product
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Xuất file csv
     public function exportProducts()
     {
         header('Content-Type: text/csv; charset=utf-8');
@@ -312,6 +346,7 @@ class Product
         exit();
     }
 
+    // Tạo sản phẩm mới bằng cách upload file csv
     public function importOrUpdateProduct($data)
     {
         // Kiểm tra và xử lý giá trị đầu vào từ file CSV

@@ -1,0 +1,25 @@
+<?php
+
+// Kiểm tra dữ liệu từ form
+if (!isset($_SESSION['user_id'], $_POST['product_id'], $_POST['csrf_token'])) {
+    die("Unauthorized request.");
+}
+
+$user_id = $_SESSION['user_id'];
+$product_id = intval($_POST['product_id']);
+$csrf_token = $_POST['csrf_token'];
+
+// Xác minh CSRF token
+if ($csrf_token !== $_SESSION['csrf_token']) {
+    die("CSRF validation failed.");
+}
+
+// Khởi tạo UserController
+$usercontroller = new UserController($conn);
+
+// Thay đổi trạng thái yêu thích (thêm hoặc xóa)
+$usercontroller->manageFavorite($user_id, $product_id);
+
+// Quay lại trang trước
+header("Location: " . $_SERVER['HTTP_REFERER']);
+exit;

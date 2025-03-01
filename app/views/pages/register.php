@@ -90,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <div class="text-center">
-            <button type="submit" class="w-3/5 text-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md transition duration-200">Register</button>
+            <button type="submit" class="w-2/5 text-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md transition duration-200">Register</button>
         </div>
     </form>
 

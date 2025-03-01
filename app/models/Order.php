@@ -349,6 +349,7 @@ class Order
         }
     }
 
+    // Lấy đơn hàng theo mã đơn hàng
     public function getOrderById($order_id)
     {
         // Kiểm tra xem order_id có hợp lệ không

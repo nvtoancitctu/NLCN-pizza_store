@@ -77,7 +77,9 @@ class User
         }
     }
 
+    // ------------------------------------------
     // Cài thời gian khóa tài khoản người dùng
+    // ------------------------------------------
     public function blockUser($userId, $days)
     {
         if (!is_numeric($days) || $days < 1) {
@@ -95,7 +97,9 @@ class User
         return $stmt->rowCount();
     }
 
+    // ------------------------------------------
     // Kiểm tra ngày giờ hết hạn của tài khoản
+    // ------------------------------------------
     public function unblockUser($userId)
     {
         $query = "SELECT blocked_until FROM users WHERE id = ?";
@@ -164,7 +168,9 @@ class User
         return false; // Sai mật khẩu
     }
 
+    // ------------------------------------------
     // Lấy tất cả thông tin người dùng
+    // ------------------------------------------
     public function getAllUsers()
     {
         $query = "SELECT * FROM " . $this->table;
@@ -249,5 +255,104 @@ class User
         }
 
         return true;
+    }
+
+    // ------------------------------------------
+    // Kiểm tra sản phẩm yêu thích
+    // ------------------------------------------
+    public function isFavorite($user_id, $product_id)
+    {
+        $sql = "SELECT COUNT(*) FROM favorites WHERE user_id = :user_id AND product_id = :product_id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute(['user_id' => $user_id, 'product_id' => $product_id]);
+        return $stmt->fetchColumn() > 0;
+    }
+
+    // Thêm sản phẩm yêu thích
+    public function addFavorite($user_id, $product_id)
+    {
+        // Kiểm tra nếu bảng products trống, thì reset AUTO_INCREMENT về 1
+        $query = "SELECT COUNT(*) FROM favorites";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $rowCount = $stmt->fetchColumn();
+
+        // Nếu bảng trống, reset AUTO_INCREMENT về 1
+        if ($rowCount == 0) {
+            $resetQuery = "ALTER TABLE favorites AUTO_INCREMENT = 1";
+        } else {
+            // Nếu bảng có dữ liệu, lấy giá trị MAX(id) và set AUTO_INCREMENT tiếp theo
+            $maxIdQuery = "SELECT MAX(id) FROM favorites";
+            $stmt = $this->conn->prepare($maxIdQuery);
+            $stmt->execute();
+            $maxId = $stmt->fetchColumn();
+
+            // Đặt AUTO_INCREMENT tiếp theo là MAX(id) + 1
+            $resetQuery = "ALTER TABLE favorites AUTO_INCREMENT = " . ($maxId + 1);
+        }
+
+        // Thực thi câu lệnh ALTER TABLE để thiết lập AUTO_INCREMENT
+        $this->conn->prepare($resetQuery)->execute();
+
+        $sql = "INSERT INTO favorites (user_id, product_id) VALUES (:user_id, :product_id)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute(['user_id' => $user_id, 'product_id' => $product_id]);
+    }
+
+    // Bỏ sản phẩm yêu thích
+    public function removeFavorite($user_id, $product_id)
+    {
+        $sql = "DELETE FROM favorites WHERE user_id = :user_id AND product_id = :product_id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute(['user_id' => $user_id, 'product_id' => $product_id]);
+    }
+
+    // ------------------------------------------
+    // Xử lý feedback
+    // ------------------------------------------
+    public function getFeedbacks()
+    {
+        $stmt = $this->conn->query("SELECT f.*, u.name AS user_name, p.name AS product_name FROM feedback f 
+            JOIN users u ON f.user_id = u.id
+            JOIN products p ON f.product_id = p.id
+            ORDER BY f.created_at DESC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Thêm feedback
+    public function addFeedback($userId, $productId, $message)
+    {
+        // Kiểm tra nếu bảng products trống, thì reset AUTO_INCREMENT về 1
+        $query = "SELECT COUNT(*) FROM feedback";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $rowCount = $stmt->fetchColumn();
+
+        // Nếu bảng trống, reset AUTO_INCREMENT về 1
+        if ($rowCount == 0) {
+            $resetQuery = "ALTER TABLE feedback AUTO_INCREMENT = 1";
+        } else {
+            // Nếu bảng có dữ liệu, lấy giá trị MAX(id) và set AUTO_INCREMENT tiếp theo
+            $maxIdQuery = "SELECT MAX(id) FROM feedback";
+            $stmt = $this->conn->prepare($maxIdQuery);
+            $stmt->execute();
+            $maxId = $stmt->fetchColumn();
+
+            // Đặt AUTO_INCREMENT tiếp theo là MAX(id) + 1
+            $resetQuery = "ALTER TABLE feeback AUTO_INCREMENT = " . ($maxId + 1);
+        }
+
+        // Thực thi câu lệnh ALTER TABLE để thiết lập AUTO_INCREMENT
+        $this->conn->prepare($resetQuery)->execute();
+
+        $stmt = $this->conn->prepare("INSERT INTO feedback (user_id, product_id, message) VALUES (?, ?, ?)");
+        return $stmt->execute([$userId, $productId, $message]);
+    }
+
+    // Xóa feedback
+    public function deleteFeedback($id)
+    {
+        $stmt = $this->conn->prepare("DELETE FROM feedback WHERE id = ?");
+        return $stmt->execute([$id]);
     }
 }

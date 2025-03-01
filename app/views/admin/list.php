@@ -280,13 +280,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 </div>
 
             </div>
-
+ 
             <!-- Cột 2: Bank Transfer Image -->
             <div class="space-y-4">
                 <div>
                     <label class="block text-blue-700 font-semibold">Bank Transfer Image</label>
                     <div id="bankTransferImageContainer" class="w-full flex items-center justify-center hidden" style="min-height:200px;">
-                        <img id="bankTransferImage" class="border rounded-md shadow-md" style="width:35%;">
+                        <img id="bankTransferImage" class="border rounded-md shadow-md h-auto w-4/12 mt-8">
                     </div>
                 </div>
             </div>

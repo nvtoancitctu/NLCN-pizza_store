@@ -36,6 +36,9 @@ switch ($page) {
     case 'products':
         include '../app/views/pages/products.php';
         break;
+    case 'toggle-favorite':
+        include '../app/views/pages/toggle_favorite.php';
+        break;
     case 'cart':
         include '../app/views/pages/cart.php';
         break;
