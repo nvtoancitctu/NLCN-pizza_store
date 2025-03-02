@@ -18,7 +18,7 @@ class CartController
   }
 
   // Lấy danh sách sản phẩm trong giỏ hàng của người dùng
-  public function viewCart($user_id)
+  public function getCartItems($user_id)
   {
     if (!$user_id) return []; // Nếu không có user_id, trả về mảng rỗng
     return $this->cartModel->getCartItems($user_id);

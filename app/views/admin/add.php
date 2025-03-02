@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="flex justify-center mb-8">
 
-    <div class="w-full max-w-4xl rounded-lg border-2 border-blue-600">
+    <div class="w-full max-w-4xl rounded-lg alert alert-info">
         <form action="/admin/add" method="POST" enctype="multipart/form-data" class="bg-gray-50 border border-gray-200 rounded-lg px-8 pt-6 pb-8">
             <!-- CSRF Token -->
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">

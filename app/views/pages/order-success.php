@@ -1,55 +1,53 @@
 <?php
 
-// Điều hướng đến trang login 
+// Điều hướng đến trang login nếu chưa đăng nhập
 if (!isset($_SESSION['user_id'])) {
   header("Location: /login");
-  exit(); // Dừng thực thi nếu không có user_id
+  exit();
 }
 
-// Khởi tạo orderController
+// Khởi tạo OrderController
 $orderController = new OrderController($conn);
 
 // Lấy user_id từ session
 $user_id = $_SESSION['user_id'];
-$order_id = isset($_GET['order_id']) && is_numeric($_GET['order_id']) ? (int) $_GET['order_id'] : null; // Lấy order_id từ URL
+$order_id = isset($_GET['order_id']) && is_numeric($_GET['order_id']) ? (int)$_GET['order_id'] : null;
 
 // Truy vấn lấy chi tiết đơn hàng
-$orderDetails = $orderController->getOrderDetails($order_id, $user_id); // Gọi phương thức để lấy chi tiết đơn hàng
+$orderDetails = $orderController->getOrderDetails($order_id, $user_id);
 ?>
 
-<div class="container w-4/5 mx-auto p-6 bg-white rounded-2xl shadow-xl mb-6 mt-6">
-  <h1 class="text-center text-3xl mb-6 font-extrabold text-blue-600">Order Confirmation</h1>
-
-  <?php if ($orderDetails): ?> <!-- Kiểm tra xem có chi tiết đơn hàng hay không -->
-    <!-- Bố cục chia thành hai cột -->
+<h1 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Order Confirmation</h1>
+<div class="container max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-lg mb-8 alert alert-info">
+  <?php if ($orderDetails): ?>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-      <!-- Cột bên trái: Chi tiết sản phẩm trong đơn hàng -->
-      <div class="bg-yellow-100 p-6 rounded-2xl shadow-sm">
+      <!-- Cột trái: Danh sách sản phẩm -->
+      <div class="bg-gray-100 p-6 rounded-2xl shadow-md">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">Your Items</h2>
         <div class="space-y-4">
           <?php foreach ($orderDetails['items'] as $item): ?>
-            <div class="flex items-center justify-between p-4 shadow-sm rounded-2xl bg-white">
+            <div class="flex items-center justify-between p-4 rounded-xl bg-white shadow-sm">
               <div class="flex items-center space-x-4">
-                <img src="/images/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-12 h-12 rounded-lg object-cover">
+                <img src="/images/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>"
+                  class="w-16 h-16 rounded-lg object-cover">
                 <div>
                   <p class="font-semibold text-gray-800"><?= htmlspecialchars($item['name']) ?></p>
-                  <p class="text-sm text-gray-600">Price: <?= htmlspecialchars($item['price']) ?></p>
-                  <p class="text-sm text-gray-600">Quantity: <?= htmlspecialchars($item['quantity']) ?></p>
+                  <p class="text-sm text-gray-600">Price: $<?= number_format($item['price'], 2) ?></p>
+                  <p class="text-sm text-gray-600">Qty: <?= htmlspecialchars($item['quantity']) ?></p>
                   <p class="text-sm text-gray-600">Size: <?= htmlspecialchars($item['size']) ?></p>
                 </div>
               </div>
-              <p class="font-semibold text-gray-800">
-                $<?= number_format($item['total_price'], 2) ?>
-              </p>
+              <p class="font-bold text-gray-900">$<?= number_format($item['total_price'], 2) ?></p>
             </div>
           <?php endforeach; ?>
         </div>
       </div>
 
-      <!-- Cột bên phải: Thông tin đơn hàng -->
+      <!-- Cột phải: Thông tin đơn hàng -->
       <div class="space-y-6">
-        <!-- Card thông tin đơn hàng -->
-        <div class="bg-yellow-100 p-6 rounded-2xl shadow-sm">
+
+        <!-- Thẻ tóm tắt đơn hàng -->
+        <div class="bg-gray-100 p-6 rounded-2xl shadow-md">
           <h2 class="text-xl font-semibold mb-4 text-gray-800">Order Summary</h2>
           <ul class="space-y-3">
             <li class="flex justify-between">
@@ -61,8 +59,18 @@ $orderDetails = $orderController->getOrderDetails($order_id, $user_id); // Gọi
               <span class="font-semibold text-gray-800"><?= htmlspecialchars($orderDetails['status']) ?></span>
             </li>
             <li class="flex justify-between">
-              <span class="text-gray-700">Total:</span>
-              <span class="font-semibold text-red-500">$<?= number_format($orderDetails['total'], 2) ?></span>
+              <span class="text-gray-700">Subtotal:</span>
+              <span class="font-semibold text-gray-900">$<?= number_format($orderDetails['total'], 2) ?></span>
+            </li>
+            <li class="flex justify-between">
+              <span class="text-gray-700">Shipping:</span>
+              <span class="font-semibold <?= ($orderDetails['shipping_fee'] == 0) ? 'text-green-500' : 'text-gray-900' ?>">
+                <?= ($orderDetails['shipping_fee'] == 0) ? "FREE" : "$" . number_format($orderDetails['shipping_fee'], 2) ?>
+              </span>
+            </li>
+            <li class="flex justify-between border-t pt-3">
+              <span class="text-gray-700 font-bold">Total:</span>
+              <span class="font-bold text-red-500 text-lg">$<?= number_format($orderDetails['total'] + $orderDetails['shipping_fee'], 2) ?></span>
             </li>
             <li class="flex justify-between">
               <span class="text-gray-700">Payment Method:</span>
@@ -74,20 +82,22 @@ $orderDetails = $orderController->getOrderDetails($order_id, $user_id); // Gọi
             </li>
           </ul>
         </div>
-        <!-- Nút Back to Home -->
+
+        <!-- Nút điều hướng -->
         <div class="flex justify-center gap-4 mt-6">
-          <button type="button" class="font-semibold inline-block bg-blue-500 text-white px-8 py-3 rounded-full shadow-md hover:bg-blue-600"
+          <button type="button"
+            class="font-semibold inline-block bg-blue-500 text-white px-8 py-3 rounded-full shadow-md hover:bg-blue-600 transition"
             onclick="window.location.href='/home'">Back to Home</button>
-          <button type="button" class="font-semibold inline-block bg-green-500 text-white px-8 py-3 rounded-full shadow-md hover:bg-green-600"
+          <button type="button"
+            class="font-semibold inline-block bg-green-500 text-white px-8 py-3 rounded-full shadow-md hover:bg-green-600 transition"
             onclick="window.location.href='/account'">Go to Profile</button>
         </div>
+
       </div>
     </div>
 
   <?php else: ?>
-    <!-- Nếu không có chi tiết đơn hàng -->
     <p class="text-center text-gray-500">Order not found or you are not authorized to view this order.</p>
   <?php endif; ?>
-</div>
 
-<!--  -->
+</div>

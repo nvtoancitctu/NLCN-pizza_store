@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!-- Giao diện Form đăng ký -->
 <h1 class="text-center text-4xl font-bold mt-6 text-gray-900">Register</h1>
 
-<div class="container mx-auto max-w-md p-8 bg-white shadow-lg rounded-xl mt-8 mb-8">
+<div class="container mx-auto max-w-md p-8 bg-white shadow-lg rounded-xl mt-8 mb-8 alert alert-info">
     <form method="POST" action="/register">
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">

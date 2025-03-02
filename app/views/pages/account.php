@@ -33,17 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
   }
 
-  if (isset($_POST['logout'])) {
-    // Xóa tất cả biến session
-    session_unset();
-    session_destroy();
-
-    // Chặn trình duyệt lưu cache để tránh vấn đề redirect sai
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Location: /login");
-    exit();
-  }
-
   if (isset($_POST['update_profile'])) {
     // Lấy dữ liệu từ form cập nhật
     $name = $_POST['name'];
@@ -72,11 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php endif; ?>
 
 <!-- Profile Section -->
-<div class="container mx-auto w-4/5 mt-10 mb-10">
-  <h2 class="text-4xl font-bold text-center mb-8 text-gray-900">Profile</h2>
+<div class="container mx-auto w-4/5">
+  <h2 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">PROFILE</h2>
 
   <!-- Thông tin người dùng hiển thị dưới dạng lưới -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white shadow-md rounded-xl mx-auto mb-8 border border-gray-300">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white shadow-md rounded-xl mx-auto mb-8 alert alert-info">
     <!-- Name -->
     <div class="flex items-center space-x-4">
       <i class="fas fa-user text-3xl text-yellow-500"></i>
@@ -138,8 +127,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Form Cập Nhật Thông Tin Người Dùng, mặc định bị ẩn -->
   <div id="update-profile-form" class="space-y-6 mt-4 hidden mx-auto">
-    <h3 class="text-3xl font-bold text-center mt-8 text-gray-800">Update Profile</h3>
-    <form action="/account" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border border-gray-300">
+    <h3 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Update Profile</h3>
+    <form action="/account" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md alert alert-info">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
       <div class="flex flex-col md:flex-row justify-between">
         <div class="w-full md:w-1/2 pr-0 md:pr-3 mb-4 md:mb-0">
@@ -174,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </script>
 
   <!-- Order History Section -->
-  <h3 class="text-3xl font-bold text-center mt-8 mb-8 text-gray-800">Order History</h3>
+  <h3 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Order History</h3>
   <?php if (empty($orders)): ?>
     <p class="text-center text-gray-600 text-lg mt-8">No order history available.</p>
   <?php else: ?>
@@ -184,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $orderStatus = strtolower($order['status'] ?? 'unknown');
       $isCanceled = $orderStatus === 'cancelled';
       ?>
-      <div class="relative bg-white p-8 rounded-2xl shadow-lg border border-gray-300 mb-8">
+      <div class="relative bg-white p-8 rounded-2xl shadow-lg alert alert-info mb-8">
 
         <!-- Thông báo nếu đơn hàng bị hủy -->
         <?php if ($isCanceled): ?>
@@ -199,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Nội dung đơn hàng -->
         <div class="space-y-8 <?= $isCanceled ? 'opacity-50' : '' ?>">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
               <i class="fas fa-receipt text-blue-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Order ID</p>
@@ -207,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
               <i class="fas fa-map-marker-alt text-pink-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Shipping Address</p>
@@ -215,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
               <i class="fas fa-calendar-alt text-indigo-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Order Date</p>
@@ -223,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
               <i class="fas fa-dollar-sign text-green-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Total Amount</p>
@@ -231,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-300 flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
               <i class="fas fa-credit-card text-purple-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Payment Method</p>
@@ -249,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statusColor = $statusColors[$orderStatus] ?? 'text-gray-500';
             ?>
 
-            <div class="relative bg-white p-4 rounded-lg shadow-md border border-gray-300">
+            <div class="relative bg-white p-4 rounded-lg alert alert-info">
               <div class="flex items-center space-x-3">
                 <i class="fas fa-truck <?= $statusColor ?> text-xl"></i>
                 <div>
@@ -308,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
 
   <!-- Logout Button -->
-  <form method="POST" class="flex justify-center mt-8">
+  <form method="POST" class="flex justify-center mb-8">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
     <button type="submit" name="logout" onclick="confirmLogout(event)"
       class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">

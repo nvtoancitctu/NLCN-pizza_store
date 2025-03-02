@@ -25,42 +25,49 @@ class Cart
     public function getCartItems($user_id)
     {
         $query = "SELECT 
-                  c.id, 
-                  c.product_id, 
-                  c.quantity, 
-                  c.size,
-                  p.name,
-                  p.price, 
-                  p.image,
-                  -- Tính giá hiển thị (không áp dụng tăng giá khi có khuyến mãi)
-                  CASE 
-                      WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) 
-                      THEN p.discount
-                      WHEN c.size = 'M' THEN p.price * 1.3
-                      WHEN c.size = 'L' THEN p.price * 1.7
-                      ELSE p.price
-                  END AS effective_price,
-                  -- Tính tổng giá từng sản phẩm
-                  CASE 
-                      WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) 
-                      THEN (p.discount * c.quantity)
-                      WHEN c.size = 'M' THEN (p.price * 1.3 * c.quantity)
-                      WHEN c.size = 'L' THEN (p.price * 1.7 * c.quantity)
-                      ELSE (p.price * c.quantity)
-                  END AS total_price,
-                  -- Tổng giá trị toàn bộ giỏ hàng
-                  SUM(
-                      CASE 
-                          WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) 
-                          THEN (p.discount * c.quantity)
-                          WHEN c.size = 'M' THEN (p.price * 1.3 * c.quantity)
-                          WHEN c.size = 'L' THEN (p.price * 1.7 * c.quantity)
-                          ELSE (p.price * c.quantity)
-                      END
-                  ) OVER() AS total_cart_price
-              FROM " . $this->table . " c 
-              JOIN products p ON c.product_id = p.id 
-              WHERE c.user_id = ?";
+        c.id, 
+        c.product_id, 
+        c.quantity, 
+        c.size,
+        p.price,
+        p.name, 
+        p.image,
+        -- Chọn giá hiển thị (ưu tiên discount nếu có)
+        CASE 
+            WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) 
+            THEN p.discount
+            ELSE p.price
+        END AS base_price,
+
+        -- Giá sau khi nhân hệ số size
+        CASE 
+            WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) AND c.size = 'M' 
+            THEN p.discount * 1.2
+            WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) AND c.size = 'L' 
+            THEN p.discount * 1.5
+            WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) 
+            THEN p.discount
+            WHEN c.size = 'M' THEN p.price * 1.2
+            WHEN c.size = 'L' THEN p.price * 1.5
+            ELSE p.price
+        END AS effective_price,
+
+        -- Tổng giá của từng sản phẩm
+        CASE 
+            WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) AND c.size = 'M' 
+            THEN (p.discount * 1.2 * c.quantity)
+            WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) AND c.size = 'L' 
+            THEN (p.discount * 1.5 * c.quantity)
+            WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) 
+            THEN (p.discount * c.quantity)
+            WHEN c.size = 'M' THEN (p.price * 1.2 * c.quantity)
+            WHEN c.size = 'L' THEN (p.price * 1.5 * c.quantity)
+            ELSE (p.price * c.quantity)
+        END AS total_price
+
+    FROM cart c 
+    JOIN products p ON c.product_id = p.id 
+    WHERE c.user_id = ?";
 
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$user_id]);
@@ -77,38 +84,19 @@ class Cart
      */
     public function addToCart($user_id, $product_id, $quantity, $size)
     {
-        // Kiểm tra nếu bảng cart trống, thì reset AUTO_INCREMENT về 1
-        $query = "SELECT COUNT(*) FROM cart";
+        // Kiểm tra xem sản phẩm với cùng size đã có trong giỏ hàng chưa
+        $query = "SELECT id, quantity FROM " . $this->table . " WHERE user_id = ? AND product_id = ? AND size = ?";
         $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        $rowCount = $stmt->fetchColumn();
+        $stmt->execute([$user_id, $product_id, $size]);
+        $cartItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Nếu bảng trống, reset AUTO_INCREMENT về 1
-        if ($rowCount == 0) {
-            $resetQuery = "ALTER TABLE cart AUTO_INCREMENT = 1";
-        } else {
-            // Nếu bảng có dữ liệu, lấy giá trị MAX(id) và set AUTO_INCREMENT tiếp theo
-            $maxIdQuery = "SELECT MAX(id) FROM cart";
-            $stmt = $this->conn->prepare($maxIdQuery);
-            $stmt->execute();
-            $maxId = $stmt->fetchColumn();
-
-            // Đặt AUTO_INCREMENT tiếp theo là MAX(id) + 1
-            $resetQuery = "ALTER TABLE cart AUTO_INCREMENT = " . ($maxId + 1);
-        }
-
-        // Thực thi câu lệnh ALTER TABLE để thiết lập AUTO_INCREMENT
-        $this->conn->prepare($resetQuery)->execute();
-
-        $query = "SELECT id FROM " . $this->table . " WHERE user_id = ? AND product_id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$user_id, $product_id]);
-
-        if ($stmt->rowCount() > 0) {
-            $query = "UPDATE " . $this->table . " SET quantity = quantity + ? WHERE user_id = ? AND product_id = ?";
+        if ($cartItem) {
+            // Nếu sản phẩm đã tồn tại với cùng size, cập nhật số lượng
+            $query = "UPDATE " . $this->table . " SET quantity = quantity + ? WHERE id = ?";
             $stmt = $this->conn->prepare($query);
-            return $stmt->execute([$quantity, $user_id, $product_id]);
+            return $stmt->execute([$quantity, $cartItem['id']]);
         } else {
+            // Nếu chưa có, thêm mới vào giỏ hàng
             $query = "INSERT INTO " . $this->table . " (user_id, product_id, quantity, size) VALUES (?, ?, ?, ?)";
             $stmt = $this->conn->prepare($query);
             return $stmt->execute([$user_id, $product_id, $quantity, $size]);
@@ -124,10 +112,43 @@ class Cart
      */
     public function updateCartItem($cart_id, $quantity, $size)
     {
-        // Câu lệnh SQL cập nhật cả quantity và size
-        $query = "UPDATE " . $this->table . " SET quantity = ?, size = ? WHERE id = ?";
+        // Lấy thông tin sản phẩm hiện tại trong giỏ hàng
+        $query = "SELECT user_id, product_id FROM " . $this->table . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$quantity, $size, $cart_id]);
+        $stmt->execute([$cart_id]);
+        $cartItem = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$cartItem) {
+            return false; // Nếu không tìm thấy sản phẩm, return false
+        }
+
+        $user_id = $cartItem['user_id'];
+        $product_id = $cartItem['product_id'];
+
+        // Kiểm tra xem có sản phẩm nào cùng product_id và size đã tồn tại không
+        $query = "SELECT id, quantity FROM " . $this->table . " WHERE user_id = ? AND product_id = ? AND size = ? AND id != ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$user_id, $product_id, $size, $cart_id]);
+        $existingItem = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingItem) {
+            // Nếu đã có sản phẩm cùng size, cộng dồn quantity rồi xóa dòng cũ
+            $newQuantity = $existingItem['quantity'] + $quantity;
+
+            $query = "UPDATE " . $this->table . " SET quantity = ? WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([$newQuantity, $existingItem['id']]);
+
+            // Xóa sản phẩm cũ
+            $query = "DELETE FROM " . $this->table . " WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            return $stmt->execute([$cart_id]);
+        } else {
+            // Nếu chưa có sản phẩm trùng, cập nhật size như bình thường
+            $query = "UPDATE " . $this->table . " SET quantity = ?, size = ? WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            return $stmt->execute([$quantity, $size, $cart_id]);
+        }
     }
 
     /**

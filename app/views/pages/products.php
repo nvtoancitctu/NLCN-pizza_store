@@ -67,7 +67,7 @@ if ($user_id) {
         <?php if (!empty($products)): ?>
             <?php foreach ($products as $product): ?>
                 <div class="p-2">
-                    <div class="rounded-lg shadow-lg bg-white transition-transform transform hover:scale-105">
+                    <div class="rounded-lg shadow-lg bg-white transition-transform transform hover:scale-105 alert alert-info">
                         <!-- Hình ảnh sản phẩm -->
                         <div class="flex justify-center">
                             <img src="/images/<?= htmlspecialchars($product['image']) ?>"

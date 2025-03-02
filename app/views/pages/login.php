@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <!-- Giao diện người dùng -->
 <h1 class="text-center text-4xl font-bold mt-6 text-gray-900">Login</h1>
-<div class="container mx-auto max-w-md p-8 bg-white shadow-lg rounded-xl mt-8 mb-8">
+<div class="container mx-auto max-w-md p-8 bg-white shadow-lg rounded-xl mt-8 mb-8 alert alert-info">
   <form method="POST" action="/login">
     <!-- CSRF Token -->
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">

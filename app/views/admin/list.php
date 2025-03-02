@@ -245,7 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
 <!-- Form Chỉnh Sửa Đơn Hàng (Mặc Định Ẩn) -->
 <div id="edit-order-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
-    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border border-gray-300">
+    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md alert alert-info">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
         <!-- Bố cục 2 cột -->
@@ -280,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 </div>
 
             </div>
- 
+
             <!-- Cột 2: Bank Transfer Image -->
             <div class="space-y-4">
                 <div>
@@ -420,7 +420,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
 <!-- Form Block User (Ẩn Mặc Định) -->
 <div id="block-user-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
-    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border border-gray-300">
+    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md alert alert-info">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="user_id" id="blockUserId">
 

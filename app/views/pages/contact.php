@@ -44,26 +44,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <!-- Form liên hệ được căn giữa trong container, với thiết kế responsive và hộp thoại -->
 <div class="container mx-auto p-6">
-    <h1 class="text-4xl text-center font-bold text-gray-900 mb-8">Contact Us</h1>
-    <form action="/contact" method="POST" class="bg-white p-10 rounded-xl shadow-lg max-w-lg mx-auto">
+    <h1 class="text-4xl font-extrabold mb-6 text-center text-blue-700 drop-shadow-lg">Contact Us</h1>
+    <form action="/contact" method="POST" class="bg-white p-10 rounded-xl shadow-lg max-w-lg mx-auto alert alert-info">
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
         <!-- Trường nhập tên, mặc định là tên người dùng từ session -->
         <div class="mb-6">
-            <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Your Name:</label>
+            <label for="name" class="block text-blue-700 text-sm font-bold mb-2">Your Name:</label>
             <input type="text" id="name" name="name" value="<?= htmlspecialchars($user_name) ?>"
                 class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required> <!-- Mặc định điền tên người dùng nếu đã đăng nhập -->
         </div>
         <!-- Trường nhập email, mặc định là email người dùng từ session -->
         <div class="mb-6">
-            <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Your Email:</label>
+            <label for="email" class="block text-blue-700 text-sm font-bold mb-2">Your Email:</label>
             <input type="email" id="email" name="email" value="<?= htmlspecialchars($user_email) ?>"
                 class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required> <!-- Mặc định điền email người dùng nếu đã đăng nhập -->
         </div>
         <!-- Trường nhập tin nhắn -->
         <div class="mb-6">
-            <label for="message" class="block text-gray-700 text-sm font-bold mb-2">Message:</label>
+            <label for="message" class="block text-blue-700 text-sm font-bold mb-2">Message:</label>
             <textarea id="message" name="message" rows="2"
                 class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required></textarea>
         </div>

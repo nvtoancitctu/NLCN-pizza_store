@@ -23,17 +23,17 @@ $user_id = $_SESSION['user_id'];
 $user = $userController->getUserById($user_id);
 
 // Lấy các sản phẩm trong giỏ hàng của người dùng
-$cartItems = $cartController->viewCart($user_id);
+$cartItems = $cartController->getCartItems($user_id);
 
 if (empty($cartItems)) {
-  header("Location: /index.php?page=cart&error=empty"); // Nếu giỏ hàng trống, điều hướng về trang giỏ hàng với thông báo lỗi
+  header("Location: /index.php?page=cart&error=empty");
   exit();
 }
 
 // Lấy tổng giá trị giỏ hàng từ `total_cart_price`
-$totalAmount = $cartItems[0]['total_cart_price'] ?? 0; // Sử dụng giá trị tổng giỏ hàng từ sản phẩm đầu tiên
+$totalAmount = array_sum(array_column($cartItems, 'total_price'));
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Kiểm tra xem có yêu cầu đặt hàng hay không
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   // Check CSRF token
   if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
     die('Invalid CSRF token');
@@ -74,10 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
 ?>
 
 <!-- Thông tin thanh toán -->
-<h1 class="text-center mt-8 text-4xl font-bold text-blue-700 tracking-wide">CHECK OUT</h1>
+<h1 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">CHECK OUT</h1>
 
-<div class="container mx-auto px-4 mt-4">
-  <form method="POST" action="/checkout" id="checkout-form" enctype="multipart/form-data" class="bg-white shadow-lg border rounded-lg p-8 max-w-4xl mx-auto mb-6">
+<div class="container mx-auto px-4">
+  <form method="POST" action="/checkout" id="checkout-form" enctype="multipart/form-data"
+    class="bg-white shadow-lg alert alert-info rounded-lg p-8 max-w-4xl mx-auto mb-6">
     <!-- CSRF Token -->
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
     <!-- Bố cục chia thành hai cột -->
@@ -110,6 +111,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
           <h2 class="text-xl font-bold mb-4 text-gray-800">Shipping Information</h2>
           <textarea name="address" id="address" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
         </div>
+        <!-- Lưu ý đơn hàng -->
+        <p class="text-gray-800 p-2 text-sm">
+          <strong>NOTE:</strong>
+          <br>• Size M costs +20% and Size L costs +50% of the base price, including discounted prices.
+          <br>• All orders with an invoice under $100 will have a shipping fee of $1.50.
+        </p>
       </div>
 
       <!-- Cột bên phải: Tổng số tiền và thanh toán -->
@@ -134,6 +141,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
         </div>
 
         <!-- Tổng số tiền -->
+        <!-- Xác định phí vận chuyển -->
+        <?php
+        $shippingFee = ($totalAmount >= 100) ? 0 : 1.5;
+        $totalWithShipping = $totalAmount + $shippingFee;
+        ?>
+
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
           <div class="space-y-3">
@@ -143,11 +156,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
             </div>
             <div class="flex justify-between">
               <p class="text-gray-700">Shipping</p>
-              <p class="font-semibold text-gray-800">$2.99</p>
+              <p class="font-semibold text-gray-800">
+                <?= ($shippingFee == 0) ? "<span class='text-green-500 font-bold'>FREE</span>" : "$" . number_format($shippingFee, 2) ?>
+              </p>
             </div>
             <div class="flex justify-between border-t pt-3">
               <p class="text-gray-700 font-bold">Total</p>
-              <p class="font-bold text-red-500">$<?= number_format($totalAmount + 2.99, 2) ?></p>
+              <p class="font-bold text-red-500">$<?= number_format($totalWithShipping, 2) ?></p>
             </div>
           </div>
         </div>
@@ -156,8 +171,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) { // Ki�
 
         <!-- Nút thao tác -->
         <div class="flex flex-col space-y-4">
-          <button type="submit" onclick="confirmCheckout(event)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 w-full">Place Order</button>
-          <button type="button" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 w-full" onclick="window.location.href='/cart'">Cancel</button>
+          <button type="submit" onclick="confirmCheckout(event)"
+            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 w-full">
+            Place Order
+          </button>
+          <button type="button" onclick="window.location.href='/cart'"
+            class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 w-full">
+            Cancel
+          </button>
         </div>
       </div>
     </div>
