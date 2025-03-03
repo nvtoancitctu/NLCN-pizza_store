@@ -6,8 +6,6 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-$orderController = new OrderController($conn);
-
 // Kiểm tra yêu cầu POST
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['order_id'])) {
     $order_id = intval($_POST['order_id']); // Chuyển thành số nguyên để tránh lỗi

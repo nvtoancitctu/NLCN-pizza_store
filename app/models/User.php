@@ -310,17 +310,7 @@ class User
     // ------------------------------------------
     // Xử lý feedback
     // ------------------------------------------
-    public function getFeedbacks()
-    {
-        $stmt = $this->conn->query("SELECT f.*, u.name AS user_name, p.name AS product_name FROM feedback f 
-            JOIN users u ON f.user_id = u.id
-            JOIN products p ON f.product_id = p.id
-            ORDER BY f.created_at DESC");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    // Thêm feedback
-    public function addFeedback($userId, $productId, $message)
+    public function handleAddFeedback($user_id, $name, $email, $order_id, $user_message)
     {
         // Kiểm tra nếu bảng products trống, thì reset AUTO_INCREMENT về 1
         $query = "SELECT COUNT(*) FROM feedback";
@@ -339,20 +329,49 @@ class User
             $maxId = $stmt->fetchColumn();
 
             // Đặt AUTO_INCREMENT tiếp theo là MAX(id) + 1
-            $resetQuery = "ALTER TABLE feeback AUTO_INCREMENT = " . ($maxId + 1);
+            $resetQuery = "ALTER TABLE feedback AUTO_INCREMENT = " . ($maxId + 1);
         }
 
         // Thực thi câu lệnh ALTER TABLE để thiết lập AUTO_INCREMENT
         $this->conn->prepare($resetQuery)->execute();
 
-        $stmt = $this->conn->prepare("INSERT INTO feedback (user_id, product_id, message) VALUES (?, ?, ?)");
-        return $stmt->execute([$userId, $productId, $message]);
+        try {
+            $stmt = $this->conn->prepare("INSERT INTO feedback (user_id, name, email, order_id, message, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
+            return $stmt->execute([$user_id, $name, $email, $order_id, $user_message]);
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getUserFeedback($user_id)
+    {
+        try {
+            $stmt = $this->conn->prepare("SELECT * FROM feedback WHERE user_id = ? ORDER BY created_at DESC");
+            $stmt->execute([$user_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    // Chỉnh sửa feedback
+    public function updateFeedback($feedback_id, $user_id, $message)
+    {
+        $sql = "UPDATE feedback SET message = :message WHERE id = :feedback_id AND user_id = :user_id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':message', $message, PDO::PARAM_STR);
+        $stmt->bindParam(':feedback_id', $feedback_id, PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+
+        return $stmt->execute();
     }
 
     // Xóa feedback
-    public function deleteFeedback($id)
+    public function deleteFeedback($feedback_id, $user_id)
     {
-        $stmt = $this->conn->prepare("DELETE FROM feedback WHERE id = ?");
-        return $stmt->execute([$id]);
+        $stmt = $this->conn->prepare("DELETE FROM feedback WHERE id = ? AND user_id = ?");
+        return $stmt->execute([$feedback_id, $user_id]);
     }
 }

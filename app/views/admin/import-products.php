@@ -6,8 +6,6 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     exit("Forbidden: You do not have permission to access this resource.");
 }
 
-$productController = new ProductController($conn);
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['product_file'])) {
     $file = $_FILES['product_file'];
 

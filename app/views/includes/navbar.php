@@ -47,7 +47,7 @@ function getCartItemCount($conn, $user_id)
         'home' => ['label' => 'Home', 'icon' => 'fas fa-home'],
         'products' => ['label' => 'Products', 'icon' => 'fas fa-pizza-slice'],
         'cart' => ['label' => 'Cart', 'icon' => 'fas fa-shopping-cart'],
-        'contact' => ['label' => 'Contact', 'icon' => 'fas fa-envelope']
+        'feedback' => ['label' => 'Feedback', 'icon' => 'fas fa-envelope']
       ];
       foreach ($nav_links as $page => $data): ?>
         <a href="/<?= $page ?>" class="hover:text-yellow-300 transition duration-300 flex items-center space-x-1 relative">

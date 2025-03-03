@@ -54,10 +54,10 @@ class UserController
   }
 
   // Thêm contact
-  public function handleAddContact($userId, $name, $email, $message)
+  public function handleAddFeedback($user_id, $name, $email, $order_id, $user_message)
   {
     try {
-      return $this->userModel->addContact($userId, $name, $email, $message);
+      return $this->userModel->handleAddFeedback($user_id, $name, $email, $order_id, $user_message);
     } catch (Exception $e) {
       return $e->getMessage();
     }
@@ -73,31 +73,20 @@ class UserController
     }
   }
 
-  // Gửi phản hồi
-  public function submitFeedback()
+  // 
+  public function updateFeedback($feedback_id, $user_id, $message)
   {
-    $userId = $_SESSION['user_id'] ?? null;
-    $productId = filter_input(INPUT_POST, 'product_id', FILTER_VALIDATE_INT);
-    $message = trim(strip_tags(filter_input(INPUT_POST, 'message', FILTER_DEFAULT)));
-
-    if (!$userId || !$productId || empty($message)) {
-      header("Location: /error.php?msg=Invalid feedback");
-      exit;
-    }
-
-    $this->userModel->addFeedback($userId, $productId, $message);
-    header("Location: /product.php?id=" . $productId);
-    exit;
+    return $this->userModel->updateFeedback($feedback_id, $user_id, $message);
+  }
+  // Gửi phản hồi
+  public function getUserFeedback($user_id)
+  {
+    return $this->userModel->getUserFeedback($user_id);
   }
 
   // Xóa phản hồi
-  public function deleteFeedback()
+  public function deleteFeedback($feedback_id, $user_id)
   {
-    $feedbackId = filter_input(INPUT_POST, 'feedback_id', FILTER_VALIDATE_INT);
-    if ($feedbackId) {
-      $this->userModel->deleteFeedback($feedbackId);
-    }
-    header("Location: /admin/feedbacks.php");
-    exit;
+    return $this->userModel->deleteFeedback($feedback_id, $user_id);
   }
 }

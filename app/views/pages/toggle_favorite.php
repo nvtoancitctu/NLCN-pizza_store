@@ -14,11 +14,8 @@ if ($csrf_token !== $_SESSION['csrf_token']) {
     die("CSRF validation failed.");
 }
 
-// Khởi tạo UserController
-$usercontroller = new UserController($conn);
-
 // Thay đổi trạng thái yêu thích (thêm hoặc xóa)
-$usercontroller->manageFavorite($user_id, $product_id);
+$userController->manageFavorite($user_id, $product_id);
 
 // Quay lại trang trước
 header("Location: " . $_SERVER['HTTP_REFERER']);

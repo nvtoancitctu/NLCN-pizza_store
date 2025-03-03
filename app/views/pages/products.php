@@ -5,9 +5,6 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Khởi tạo Product Controller
-$productController = new ProductController($conn);
-
 // Lấy ID người dùng (nếu có)
 $user_id = $_SESSION['user_id'] ?? null;
 
@@ -26,12 +23,12 @@ if (isset($_GET['favorite']) && $user_id) {
     $products = $productController->listProducts($category_id);
 }
 
-
 // Lấy danh sách sản phẩm yêu thích của người dùng
 $favoriteProductIds = [];
 if ($user_id) {
     $favoriteProductIds = $productController->getFavoriteProductIds($user_id);
 }
+
 ?>
 
 <!-- Tiêu đề -->

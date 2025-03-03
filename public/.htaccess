@@ -20,7 +20,7 @@ RewriteRule ^order-success$                     /index.php?page=order-success [L
 RewriteRule ^order-success/order_id=([0-9]+)$   /index.php?page=order-success&order_id=$1 [L]
 
 # Trang liên hệ
-RewriteRule ^contact$                           /index.php?page=contact [L]
+RewriteRule ^feedback$                          /index.php?page=feedback [L]
 
 # Quản trị admin
 RewriteRule ^admin/list$                        /index.php?page=list [L]

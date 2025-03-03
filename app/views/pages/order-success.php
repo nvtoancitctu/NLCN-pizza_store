@@ -6,15 +6,13 @@ if (!isset($_SESSION['user_id'])) {
   exit();
 }
 
-// Khởi tạo OrderController
-$orderController = new OrderController($conn);
-
 // Lấy user_id từ session
 $user_id = $_SESSION['user_id'];
 $order_id = isset($_GET['order_id']) && is_numeric($_GET['order_id']) ? (int)$_GET['order_id'] : null;
 
 // Truy vấn lấy chi tiết đơn hàng
 $orderDetails = $orderController->getOrderDetails($order_id, $user_id);
+
 ?>
 
 <h1 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Order Confirmation</h1>

@@ -25,6 +25,12 @@ require_once '../app/controllers/OrderController.php';
 require_once '../app/controllers/ProductController.php';
 require_once '../app/controllers/UserController.php';
 
+// Khởi tạo các controllers
+$cartController = new CartController($conn);
+$orderController = new OrderController($conn);
+$productController = new ProductController($conn);
+$userController = new UserController($conn);
+
 // Routing đơn giản thông qua tham số "page"
 $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
@@ -51,20 +57,14 @@ switch ($page) {
     case 'account':
         include '../app/views/pages/account.php';
         break;
-    case 'contact':
-        include '../app/views/pages/contact.php';
+    case 'feedback':
+        include '../app/views/pages/feedback.php';
         break;
     case 'register':
         include '../app/views/pages/register.php';
         break;
-    case 'forgot-password':
-        include '../app/views/pages/forgot_password.php';
-        break;
     case 'order-success':
         include '../app/views/pages/order-success.php';
-        break;
-    case 'reset-password':
-        include '../app/views/admin/reset_password.php';
         break;
     case 'list':
         include '../app/views/admin/list.php';
@@ -80,9 +80,6 @@ switch ($page) {
         break;
     case 'delete-order':
         include '../app/views/admin/delete-order.php';
-        break;
-    case 'export':
-        include '../app/views/admin/export.php';
         break;
     case 'statistics':
         include '../app/views/admin/statistics.php';

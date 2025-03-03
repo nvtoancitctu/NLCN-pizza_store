@@ -12,14 +12,9 @@ if (isset($_SESSION['success'])) {
   unset($_SESSION['success']); // Xóa thông báo khỏi session
 }
 
-// Khởi tạo đối tượng Product
-$productModel = new Product($conn);
-
-$randomProducts = $productModel->getRandomProducts(3);  // Lấy 3 sản phẩm ngẫu nhiên
-$discountProduct = $productModel->getDiscountProduct(); // Lấy sản phẩm khuyến mãi
-
-// Khởi tạo ProductController
-$productController = new ProductController($conn);
+// Lấy các sản phẩm khuyến mãi và Lấy 3 sản phẩm ngẫu nhiên
+$discountProduct = $productController->getDiscountProduct();
+$randomProducts = $productController->getRandomProducts(3);
 
 // Lấy ID sản phẩm từ URL
 $product_id = isset($_GET['id']) ? $_GET['id'] : null;

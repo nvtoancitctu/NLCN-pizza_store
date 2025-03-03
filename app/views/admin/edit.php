@@ -11,7 +11,6 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$productController = new ProductController($conn);
 $categories = $productController->getDistinctCategories();
 $product_id = $_GET['id'];
 $product = $productController->getProductDetails($product_id);

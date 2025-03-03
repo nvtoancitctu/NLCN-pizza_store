@@ -13,11 +13,7 @@ if (!isset($_SESSION['user_id'])) {
 
 // Lấy user_id từ session để sử dụng trong việc lấy dữ liệu đơn hàng
 $user_id = $_SESSION['user_id'];
-
-$orderController = new OrderController($conn);
 $orders = $orderController->getOrdersByUserId($user_id);
-
-$userController = new UserController($conn);
 $user = $userController->getUserById($user_id);
 
 // Xử lý điều kiện khi người dùng nhấn vào nút Admin Panel, Logout, hoặc cập nhật thông tin

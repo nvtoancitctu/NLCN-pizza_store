@@ -5,9 +5,6 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Khởi tạo đối tượng UserController
-$user = new UserController($conn);
-
 $error = '';    // Khởi tạo biến để lưu thông báo lỗi
 
 // Kiểm tra nếu form đã được gửi
@@ -30,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = "Passwords do not match.";
     } else {
         // Thực hiện đăng ký người dùng
-        $result = $user->register($name, $email, $password);
+        $result = $userController->register($name, $email, $password);
 
         // Kiểm tra kết quả đăng ký
         if (strpos($result, 'successful') !== false) {

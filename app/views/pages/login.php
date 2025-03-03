@@ -5,9 +5,6 @@ if (empty($_SESSION['csrf_token'])) {
   $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Khởi tạo UserController
-$userController = new UserController($conn);
-
 $error = '';
 
 // Kiểm tra và lấy thông báo thành công từ session

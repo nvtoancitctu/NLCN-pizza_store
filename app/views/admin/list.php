@@ -18,9 +18,6 @@ if (isset($_SESSION['success'])) {
     unset($_SESSION['success']);
 }
 
-$productController = new ProductController($conn);
-$orderController = new OrderController($conn);
-
 $searchTerm = '';
 $limit = isset($_POST['limit']) ? max(1, (int)$_POST['limit']) : $productController->countProducts();   // Số lượng sản phẩm hiển thị mặc định là ALL
 $page = isset($_POST['page']) ? max(1, (int)$_POST['page']) : 1;      // Trang hiện tại, mặc định là trang 1
@@ -71,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 
 // Cập nhật số ngày khóa tài khoản
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
-    $userController = new UserController($conn);
+
     $user_id = $_POST['user_id'];
 
     // Cập nhật số ngày block user 
@@ -563,27 +560,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     });
 </script>
 
-<!-- Xử lý thông tin khi click logout -->
+<!-- Quản lý phản hồi -->
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Check CSRF token
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        die('Invalid CSRF token');
-    }
 
-    if (isset($_POST['logout'])) {
-        // Xóa tất cả biến session
-        session_unset();
-        session_destroy();
+// Lấy danh sách phản hồi
+$stmt = $conn->query("SELECT * FROM feedback ORDER BY created_at ASC");
+$feedbacks = $stmt->fetchAll();
 
-        // Chặn trình duyệt lưu cache để tránh vấn đề redirect sai
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+// Xử lý phản hồi của admin
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id'])) {
 
-        exit();
-    }
+    $id = $_POST['id'];
+    $response = $_POST['response'];
+
+    $stmt = $conn->prepare("UPDATE feedback SET response = ?, updated_at = NOW() WHERE id = ?");
+    $stmt->execute([$response, $id]);
+
+    $_SESSION['success'] = "Feedback $id is responsed successfully.";
+    header("Location: " . $_SERVER['HTTP_REFERER']);
+    exit;
 }
-
 ?>
+<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Feedback Management</h1>
+<div class="container-fluid mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+    <div class="table-responsive">
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-gray-100 text-gray-800 text-center">
+                    <th class="px-3 py-2 border-b">ID</th>
+                    <th class="px-3 py-2 border-b">Sender</th>
+                    <th class="px-3 py-2 border-b">Email</th>
+                    <th class="px-3 py-2 border-b">Order</th>
+                    <th class="px-3 py-2 border-b">Message</th>
+                    <th class="px-3 py-2 border-b">Created</th>
+                    <th class="px-3 py-2 border-b">Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($feedbacks)): ?>
+                    <?php foreach ($feedbacks as $fb): ?>
+                        <tr class="hover:bg-gray-50 text-center">
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($fb['id']) ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($fb['name']) ?></td>
+                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($fb['email']) ?></td>
+                            <td class="px-3 py-2 border-b">#<?= htmlspecialchars($fb['order_id']) ?></td>
+                            <td class="px-3 py-2 border-b text-left text-sm">
+                                <?= nl2br(htmlspecialchars($fb['message'])) ?>
+                            </td>
+                            <td class="px-3 py-2 border-b"> <?= htmlspecialchars($fb['created_at']) ?> </td>
+                            <td class="px-3 py-2 border-b">
+                                <form method="post" class="flex items-center space-x-2">
+                                    <input type="hidden" name="id" value="<?= htmlspecialchars($fb['id']) ?>">
+                                    <textarea name="response" required class="w-full p-2 border rounded-lg"><?= htmlspecialchars($fb['response'] ?? '') ?></textarea>
+                                    <button type="submit" class="bg-blue-500 text-white px-3 py-2 rounded-md">Reply</button>
+                                </form>
+                            </td>
+
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="8" class="text-center text-gray-500 py-4">No feedback found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <!-- Logout Button -->
 <form method="POST" class="flex justify-center mb-8">

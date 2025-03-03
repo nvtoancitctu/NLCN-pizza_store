@@ -6,8 +6,6 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-$productController = new ProductController($conn);
-
 // Xóa sản phẩm nếu có yêu cầu từ GET
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['product_id'])) {
     $product_id = intval($_POST['product_id']);

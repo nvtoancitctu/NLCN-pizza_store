@@ -11,11 +11,6 @@ if (!isset($_SESSION['user_id'])) {
   exit();
 }
 
-// Khởi tạo các controller
-$cartController = new CartController($conn);
-$orderController = new OrderController($conn);
-$userController = new UserController($conn);
-
 // Lấy user_id từ phiên
 $user_id = $_SESSION['user_id'];
 
