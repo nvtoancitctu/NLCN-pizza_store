@@ -76,7 +76,7 @@ if ($user_id) {
                         <div class="p-2">
                             <h5 class="text-2xl font-bold text-gray-800 text-center mb-2"><?= htmlspecialchars($product['name']) ?></h5>
                             <p class="text-l text-gray-600 text-center"><?= htmlspecialchars($product['description']) ?></p>
-
+                            <p class="text-sm text-gray-600 text-center mt-2 ">Stock Quantity: <?= htmlspecialchars($product['stock_quantity']) ?></p>
                             <!-- Hiển thị giá -->
                             <div class="text-center">
                                 <?php

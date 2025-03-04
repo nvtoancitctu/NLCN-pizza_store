@@ -29,6 +29,7 @@ class Cart
         c.product_id, 
         c.quantity, 
         c.size,
+        p.stock_quantity,
         p.price,
         p.name, 
         p.image,
@@ -84,6 +85,16 @@ class Cart
      */
     public function addToCart($user_id, $product_id, $quantity, $size)
     {
+        // Kiểm tra sản phẩm có còn hàng không
+        $query = "SELECT stock_quantity FROM products WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$product_id]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$product || $product['stock_quantity'] == 0) {
+            return false;
+        }
+
         // Kiểm tra xem sản phẩm với cùng size đã có trong giỏ hàng chưa
         $query = "SELECT id, quantity FROM " . $this->table . " WHERE user_id = ? AND product_id = ? AND size = ?";
         $stmt = $this->conn->prepare($query);
@@ -94,13 +105,22 @@ class Cart
             // Nếu sản phẩm đã tồn tại với cùng size, cập nhật số lượng
             $query = "UPDATE " . $this->table . " SET quantity = quantity + ? WHERE id = ?";
             $stmt = $this->conn->prepare($query);
-            return $stmt->execute([$quantity, $cartItem['id']]);
+            $success = $stmt->execute([$quantity, $cartItem['id']]);
         } else {
             // Nếu chưa có, thêm mới vào giỏ hàng
             $query = "INSERT INTO " . $this->table . " (user_id, product_id, quantity, size) VALUES (?, ?, ?, ?)";
             $stmt = $this->conn->prepare($query);
-            return $stmt->execute([$user_id, $product_id, $quantity, $size]);
+            $success = $stmt->execute([$user_id, $product_id, $quantity, $size]);
         }
+
+        // Nếu thêm thành công, cập nhật stock_quantity
+        if ($success) {
+            $query = "UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?";
+            $stmt = $this->conn->prepare($query);
+            return $stmt->execute([$quantity, $product_id]);
+        }
+
+        return false;
     }
 
     /**
@@ -113,26 +133,36 @@ class Cart
     public function updateCartItem($cart_id, $quantity, $size)
     {
         // Lấy thông tin sản phẩm hiện tại trong giỏ hàng
-        $query = "SELECT user_id, product_id FROM " . $this->table . " WHERE id = ?";
+        $query = "SELECT user_id, product_id, quantity FROM " . $this->table . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$cart_id]);
         $cartItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$cartItem) {
-            return false; // Nếu không tìm thấy sản phẩm, return false
+            return false; // Không tìm thấy sản phẩm trong giỏ hàng
         }
 
         $user_id = $cartItem['user_id'];
         $product_id = $cartItem['product_id'];
+        $old_quantity = $cartItem['quantity'];
 
-        // Kiểm tra xem có sản phẩm nào cùng product_id và size đã tồn tại không
+        // Lấy số lượng tồn kho
+        $query = "SELECT stock_quantity FROM products WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$product_id]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$product || $product['stock_quantity'] + $old_quantity < $quantity) {
+            return false; // Không đủ hàng để cập nhật số lượng
+        }
+
+        // Nếu sản phẩm có cùng size tồn tại, cộng dồn số lượng
         $query = "SELECT id, quantity FROM " . $this->table . " WHERE user_id = ? AND product_id = ? AND size = ? AND id != ?";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$user_id, $product_id, $size, $cart_id]);
         $existingItem = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($existingItem) {
-            // Nếu đã có sản phẩm cùng size, cộng dồn quantity rồi xóa dòng cũ
             $newQuantity = $existingItem['quantity'] + $quantity;
 
             $query = "UPDATE " . $this->table . " SET quantity = ? WHERE id = ?";
@@ -142,13 +172,19 @@ class Cart
             // Xóa sản phẩm cũ
             $query = "DELETE FROM " . $this->table . " WHERE id = ?";
             $stmt = $this->conn->prepare($query);
-            return $stmt->execute([$cart_id]);
+            $stmt->execute([$cart_id]);
         } else {
-            // Nếu chưa có sản phẩm trùng, cập nhật size như bình thường
+            // Cập nhật size và số lượng nếu không có sản phẩm cùng size
             $query = "UPDATE " . $this->table . " SET quantity = ?, size = ? WHERE id = ?";
             $stmt = $this->conn->prepare($query);
-            return $stmt->execute([$quantity, $size, $cart_id]);
+            $stmt->execute([$quantity, $size, $cart_id]);
         }
+
+        // Cập nhật lại stock_quantity trong bảng products
+        $new_stock = $product['stock_quantity'] + $old_quantity - $quantity;
+        $query = "UPDATE products SET stock_quantity = ? WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([$new_stock, $product_id]);
     }
 
     /**
@@ -158,9 +194,28 @@ class Cart
      */
     public function deleteCartItem($cart_id)
     {
+        // Lấy thông tin sản phẩm trước khi xóa
+        $query = "SELECT product_id, quantity FROM " . $this->table . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$cart_id]);
+        $cartItem = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$cartItem) {
+            return false; // Không tìm thấy sản phẩm trong giỏ hàng
+        }
+
+        $product_id = $cartItem['product_id'];
+        $quantity = $cartItem['quantity'];
+
+        // Xóa sản phẩm khỏi giỏ hàng
         $query = "DELETE FROM " . $this->table . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$cart_id]);
+        $stmt->execute([$cart_id]);
+
+        // Cập nhật stock_quantity trong bảng products
+        $query = "UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([$quantity, $product_id]);
     }
 
     // /**

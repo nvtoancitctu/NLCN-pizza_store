@@ -88,6 +88,9 @@ class Product
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    //----------------------------------
+    // QUẢN TRỊ VIÊN
+    //----------------------------------
     /**
      * Cập nhật sản phẩm
      * @param int $id
@@ -148,6 +151,57 @@ class Product
         return $stmt->execute([$id]);
     }
 
+    /**
+     * Tìm kiếm sản phẩm theo từ khóa
+     * @param string $searchTerm
+     * @return array
+     */
+    public function searchProducts($searchTerm)
+    {
+        $query = "SELECT * FROM products 
+                WHERE name LIKE :searchTerm
+                OR id LIKE :searchTerm
+                OR description LIKE :searchTerm 
+                OR price LIKE :searchTerm 
+                OR discount LIKE :searchTerm";
+        $stmt = $this->conn->prepare($query);
+        // Thêm ký tự "%" vào từ khóa để tìm kiếm bất kỳ từ nào có chứa $searchTerm
+        $stmt->bindValue(':searchTerm', '%' . $searchTerm . '%');
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Lấy sản phẩm theo danh mục với phân trang
+     * @param int $category_id
+     * @param int $limit
+     * @param int $offset
+     * @return array
+     */
+    public function getProductsByCategoryWithPagination($category_id = null, $limit, $offset)
+    {
+        if ($limit <= 0 || $offset < 0) {
+            throw new InvalidArgumentException("Invalid limit or offset values");
+        }
+
+        $query = "SELECT * FROM " . $this->table;
+        if ($category_id !== null) {
+            $query .= " WHERE category_id = :category_id";
+        }
+        $query .= " LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($query);
+
+        if ($category_id !== null) {
+            $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
+        }
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // ------------------------------------------
     // Phương thức bổ sung
     // ------------------------------------------
@@ -190,40 +244,6 @@ class Product
     }
 
     /**
-     * Lấy sản phẩm theo danh mục
-     * @param int $category_id
-     * @return array
-     */
-    public function getProductsByCategory($category_id)
-    {
-        $query = "SELECT * FROM " . $this->table . " WHERE category_id = :category_id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Tìm kiếm sản phẩm theo từ khóa
-     * @param string $searchTerm
-     * @return array
-     */
-    public function searchProducts($searchTerm)
-    {
-        $query = "SELECT * FROM products 
-                WHERE name LIKE :searchTerm
-                OR id LIKE :searchTerm
-                OR description LIKE :searchTerm 
-                OR price LIKE :searchTerm 
-                OR discount LIKE :searchTerm";
-        $stmt = $this->conn->prepare($query);
-        // Thêm ký tự "%" vào từ khóa để tìm kiếm bất kỳ từ nào có chứa $searchTerm
-        $stmt->bindValue(':searchTerm', '%' . $searchTerm . '%');
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
      * Lấy danh sách các danh mục khác nhau
      * @return array
      */
@@ -240,8 +260,23 @@ class Product
         return $categories;
     }
 
-    // Các phương thức bổ sung khác...
+    /**
+     * Lấy sản phẩm theo danh mục
+     * @param int $category_id
+     * @return array
+     */
+    public function getProductsByCategory($category_id)
+    {
+        $query = "SELECT * FROM " . $this->table . " WHERE category_id = :category_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
+    //----------------------------
+    // CÁC PHƯƠNG THỨC KHÁC
+    //----------------------------
     /**
      * Đếm tổng số sản phẩm trong một danh mục
      * @param int $category_id
@@ -298,39 +333,8 @@ class Product
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Các phương thức bổ sung khác...
-    /**
-     * Lấy sản phẩm theo danh mục với phân trang
-     * @param int $category_id
-     * @param int $limit
-     * @param int $offset
-     * @return array
-     */
-    public function getProductsByCategoryWithPagination($category_id = null, $limit, $offset)
-    {
-        if ($limit <= 0 || $offset < 0) {
-            throw new InvalidArgumentException("Invalid limit or offset values");
-        }
+    // XUẤT FILE CSV GỒM TẤT CẢ BẢNG DỮ LIỆU
 
-        $query = "SELECT * FROM " . $this->table;
-        if ($category_id !== null) {
-            $query .= " WHERE category_id = :category_id";
-        }
-        $query .= " LIMIT :limit OFFSET :offset";
-
-        $stmt = $this->conn->prepare($query);
-
-        if ($category_id !== null) {
-            $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
-        }
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    // Xuất file csv
     public function exportProducts()
     {
         header('Content-Type: text/csv; charset=utf-8');
@@ -346,7 +350,8 @@ class Product
         exit();
     }
 
-    // Tạo sản phẩm mới bằng cách upload file csv
+    // THÊM SẢN PHẨM MỚI BẰNG CÁCH IMPORT FILE CSV
+
     public function importOrUpdateProduct($data)
     {
         // Kiểm tra và xử lý giá trị đầu vào từ file CSV

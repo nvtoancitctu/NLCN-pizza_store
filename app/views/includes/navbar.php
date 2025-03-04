@@ -47,7 +47,7 @@ function getCartItemCount($conn, $user_id)
         'home' => ['label' => 'Home', 'icon' => 'fas fa-home'],
         'products' => ['label' => 'Products', 'icon' => 'fas fa-pizza-slice'],
         'cart' => ['label' => 'Cart', 'icon' => 'fas fa-shopping-cart'],
-        'feedback' => ['label' => 'Feedback', 'icon' => 'fas fa-envelope']
+        'feedback' => ['label' => 'Feedback', 'icon' => 'fas fa-comment']
       ];
       foreach ($nav_links as $page => $data): ?>
         <a href="/<?= $page ?>" class="hover:text-yellow-300 transition duration-300 flex items-center space-x-1 relative">
@@ -69,7 +69,7 @@ function getCartItemCount($conn, $user_id)
             <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
           </button>
 
-          <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-36 bg-white text-black rounded-lg shadow-lg">
+          <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-auto bg-white text-black rounded-lg shadow-lg">
             <?php if ($_SESSION['user_role'] === 'admin'): ?>
               <a href="/admin/list" class="text-center block px-4 py-2 hover:bg-gray-200 rounded-lg">Admin Panel</a>
             <?php endif; ?>

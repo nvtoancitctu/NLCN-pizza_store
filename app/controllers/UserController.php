@@ -53,16 +53,6 @@ class UserController
     return $this->userModel->updateUserProfile($userId, $name, $phone, $address);
   }
 
-  // Thêm contact
-  public function handleAddFeedback($user_id, $name, $email, $order_id, $user_message)
-  {
-    try {
-      return $this->userModel->handleAddFeedback($user_id, $name, $email, $order_id, $user_message);
-    } catch (Exception $e) {
-      return $e->getMessage();
-    }
-  }
-
   // Quản lý sản phẩm yêu thích
   public function manageFavorite($userId, $productId)
   {
@@ -73,15 +63,26 @@ class UserController
     }
   }
 
-  // 
-  public function updateFeedback($feedback_id, $user_id, $message)
-  {
-    return $this->userModel->updateFeedback($feedback_id, $user_id, $message);
-  }
-  // Gửi phản hồi
+  // Lấy ds feedback của user
   public function getUserFeedback($user_id)
   {
     return $this->userModel->getUserFeedback($user_id);
+  }
+
+  // Thêm feedback
+  public function handleAddFeedback($user_id, $name, $email, $order_id, $user_message)
+  {
+    try {
+      return $this->userModel->handleAddFeedback($user_id, $name, $email, $order_id, $user_message);
+    } catch (Exception $e) {
+      return $e->getMessage();
+    }
+  }
+
+  // Cập nhật feedback
+  public function updateFeedback($feedback_id, $user_id, $message)
+  {
+    return $this->userModel->updateFeedback($feedback_id, $user_id, $message);
   }
 
   // Xóa phản hồi

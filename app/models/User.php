@@ -225,38 +225,6 @@ class User
         }
     }
 
-    /**
-     * Thêm thông tin liên hệ của người dùng vào cơ sở dữ liệu.
-     *
-     * @param int $user_id - ID người dùng
-     * @param string $name - Tên người gửi
-     * @param string $email - Email người gửi
-     * @param string $message - Tin nhắn người gửi
-     * 
-     * @return bool - Trả về true nếu thành công, ném ngoại lệ nếu thất bại
-     *
-     * @throws Exception - Nếu có lỗi trong quá trình thực thi câu truy vấn
-     */
-    public function addContact($user_id, $name, $email, $message)
-    {
-        $stmt = $this->conn->prepare("INSERT INTO contact (user_id, name, email, message) VALUES (:user_id, :name, :email, :message)");
-
-        if ($stmt === false) {
-            throw new Exception("Error preparing statement: " . $this->conn->errorInfo()[2]);
-        }
-
-        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
-        $stmt->bindValue(':name', $name, PDO::PARAM_STR);
-        $stmt->bindValue(':email', $email, PDO::PARAM_STR);
-        $stmt->bindValue(':message', $message, PDO::PARAM_STR);
-
-        if (!$stmt->execute()) {
-            throw new Exception("Failed to save message: " . implode(" ", $stmt->errorInfo()));
-        }
-
-        return true;
-    }
-
     // ------------------------------------------
     // Kiểm tra sản phẩm yêu thích
     // ------------------------------------------
@@ -344,6 +312,7 @@ class User
         }
     }
 
+    // Lấy danh sách Feedback của User
     public function getUserFeedback($user_id)
     {
         try {

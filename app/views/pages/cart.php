@@ -67,73 +67,77 @@ if (isset($_GET['action'])) {
 <div class="container mx-auto w-10/12">
     <?php if (!empty($cartItems)): ?>
         <!-- Bảng hiển thị sản phẩm trong giỏ hàng -->
-        <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8 alert alert-info">
+        <div class="bg-white shadow-xl rounded-lg overflow-hidden mb-8 border border-gray-200">
             <div class="overflow-x-auto">
-                <table class="table-auto w-full border border-gray-300">
+                <table class="w-full border-collapse">
                     <!-- Tiêu đề bảng -->
                     <thead>
-                        <tr class="bg-gradient-to-r from-gray-100 to-gray-200 text-blue-600">
-                            <th class="px-6 py-3 text-left text-sm font-semibold">Product</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold">Price</th>
-                            <th class="px-6 py-3 text-center text-sm font-semibold">Size, Quantity</th>
-                            <th class="px-6 py-3 text-center text-sm font-semibold">Total</th>
-                            <th class="px-6 py-3 text-center text-sm font-semibold">Actions</th>
+                        <tr class="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm uppercase">
+                            <th class="px-6 py-4 text-left">Product</th>
+                            <th class="px-6 py-4 text-center">Price</th>
+                            <th class="px-6 py-4 text-center">Stock</th>
+                            <th class="px-6 py-4 text-center">Size & Quantity</th>
+                            <th class="px-6 py-4 text-center">Total</th>
+                            <th class="px-6 py-4 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($cartItems as $item): ?>
-                            <tr class="border-t border-gray-300 hover:bg-gray-50 transition duration-150">
-                                <!-- Cột hình ảnh và tên sản phẩm -->
-                                <td class="px-6 py-4 flex items-center">
-                                    <img src="/images/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-16 h-16 mr-4 rounded-md shadow-md">
-                                    <span class="text-gray-800 font-medium">
-                                        <?= htmlspecialchars($item['name']) ?>
-                                    </span>
+                            <tr class="border-t border-gray-300 hover:bg-gray-100 transition">
+                                <!-- Hình ảnh và tên sản phẩm -->
+                                <td class="px-6 py-4 flex items-center space-x-4">
+                                    <img src="/images/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-16 h-16 rounded-md shadow">
+                                    <span class="text-gray-900 font-medium"><?= htmlspecialchars($item['name']) ?></span>
                                 </td>
 
-                                <!-- Cột giá sản phẩm -->
-                                <td class="px-6 py-4 text-gray-800">
+                                <!-- Giá sản phẩm -->
+                                <td class="px-6 py-4 text-center text-gray-800">
                                     <?php if ($item['base_price'] < $item['price']): ?>
-                                        <span class="text-sm text-gray-500 line-through">
+                                        <span class="text-gray-500 line-through text-sm">
                                             $<?= number_format($item['price'], 2) ?>
                                         </span>
-                                        <p class="text-red-600 mt-1 font-semibold">
+                                        <p class="text-red-600 font-semibold mt-1">
                                             $<?= number_format($item['base_price'], 2) ?>
                                         </p>
                                     <?php else: ?>
-                                        <span class="text-gray-800 font-semibold">
+                                        <span class="font-semibold">
                                             $<?= number_format($item['price'], 2) ?>
                                         </span>
                                     <?php endif; ?>
                                 </td>
 
-                                <!-- Cột lựa chọn size và số lượng -->
-                                <td class="px-6 py-4 text-center align-middle">
-                                    <form method="POST" action="/cart" class="flex justify-center items-center space-x-4">
+                                <!-- Số lượng tồn kho -->
+                                <td class="px-6 py-4 text-center font-semibold text-green-600"><?= htmlspecialchars($item['stock_quantity']) ?></td>
+
+                                <!-- Lựa chọn size & số lượng -->
+                                <td class="px-6 py-4">
+                                    <form method="POST" action="/cart" class="flex justify-center items-center space-x-3">
                                         <input type="hidden" name="cart_id" value="<?= $item['id'] ?>">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
-                                        <select name="size" class="border border-gray-300 rounded px-2 py-1 text-center">
+                                        <select name="size" class="border rounded-lg px-2 py-1 bg-white text-center">
                                             <option value="S" <?= $item['size'] === 'S' ? 'selected' : '' ?>>S</option>
                                             <option value="M" <?= $item['size'] === 'M' ? 'selected' : '' ?>>M</option>
                                             <option value="L" <?= $item['size'] === 'L' ? 'selected' : '' ?>>L</option>
                                         </select>
 
-                                        <input type="number" name="quantity" value="<?= htmlspecialchars($item['quantity']) ?>" min="1" class="border border-gray-300 rounded px-2 py-1 w-16 text-center focus:outline-none focus:ring-2 focus:ring-blue-400">
-                                        <button type="submit" name="update" class="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition duration-200 text-xs font-semibold">
+                                        <input type="number" name="quantity" value="<?= htmlspecialchars($item['quantity']) ?>" min="1" class="w-16 text-center border rounded-lg px-2 py-1 focus:ring focus:ring-blue-300">
+
+                                        <button type="submit" name="update" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold transition">
                                             Update
                                         </button>
                                     </form>
                                 </td>
 
-                                <!-- Cột tổng giá của sản phẩm -->
-                                <td class="px-4 py-3 text-red-600 font-semibold text-center">
+                                <!-- Tổng giá -->
+                                <td class="px-6 py-4 text-center font-semibold text-red-600">
                                     $<?= number_format($item['total_price'], 2) ?>
                                 </td>
 
-                                <!-- Cột thao tác xóa sản phẩm khỏi giỏ hàng -->
-                                <td class="px-4 py-3 text-center">
-                                    <a href="/index.php?page=cart&action=delete&cart_id=<?= $item['id'] ?>&csrf_token=<?= htmlspecialchars($_SESSION['csrf_token']) ?>" class="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 transition duration-200 text-xs font-semibold">
+                                <!-- Xóa sản phẩm -->
+                                <td class="px-6 py-4 text-center">
+                                    <a href="/index.php?page=cart&action=delete&cart_id=<?= $item['id'] ?>&csrf_token=<?= htmlspecialchars($_SESSION['csrf_token']) ?>"
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md text-xs font-semibold transition">
                                         Delete
                                     </a>
                                 </td>
@@ -143,10 +147,10 @@ if (isset($_GET['action'])) {
                 </table>
             </div>
 
-            <!-- Hiển thị tổng giá đơn hàng -->
-            <div class="text-right px-6 py-3 bg-gray-100">
-                <span class="font-bold text-lg">Total Price: </span>
-                <span class="text-red-600 text-xl font-semibold">
+            <!-- Tổng giá đơn hàng -->
+            <div class="flex justify-between items-center bg-gray-100 px-6 py-4">
+                <span class="text-lg font-bold">Total Price:</span>
+                <span class="text-2xl font-semibold text-red-600">
                     $<?= number_format(array_sum(array_column($cartItems, 'total_price')), 2) ?>
                 </span>
             </div>

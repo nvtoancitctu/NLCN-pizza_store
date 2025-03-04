@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Product added to cart successfully!");
             setTimeout(() => location.reload(), 100);
         } else {
-            alert("An error occurred while adding the product to the cart.");
+            alert("Cannot add to cart! The product is out of stock.");
         }
     };
 
