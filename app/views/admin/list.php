@@ -573,7 +573,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
     $id = $_POST['id'];
     $response = $_POST['response'];
 
-    $stmt = $conn->prepare("UPDATE feedback SET response = ?, updated_at = NOW() WHERE id = ?");
+    $stmt = $conn->prepare("UPDATE feedback SET response = ?, responsed_at = NOW() WHERE id = ?");
     $stmt->execute([$response, $id]);
 
     $_SESSION['success'] = "Feedback $id is responsed successfully.";

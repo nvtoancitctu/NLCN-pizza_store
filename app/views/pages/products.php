@@ -63,8 +63,15 @@ if ($user_id) {
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <?php if (!empty($products)): ?>
             <?php foreach ($products as $product): ?>
-                <div class="p-2">
-                    <div class="rounded-lg shadow-lg bg-white transition-transform transform hover:scale-105 alert alert-info">
+                <div class="p-2 relative">
+                    <div class="rounded-lg shadow-lg bg-white transition-transform transform hover:scale-105 alert alert-info relative">
+                        <!-- Nếu sản phẩm đã bán hết thì hiển thị "Sold Out" -->
+                        <?php if ($product['stock_quantity'] == 0): ?>
+                            <div class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center border-4 border-red-600 rounded-lg z-10 pointer-events-none">
+                                <span class="text-red-600 text-4xl font-extrabold">SOLD OUT</span>
+                            </div>
+                        <?php endif; ?>
+
                         <!-- Hình ảnh sản phẩm -->
                         <div class="flex justify-center">
                             <img src="/images/<?= htmlspecialchars($product['image']) ?>"
@@ -72,11 +79,31 @@ if ($user_id) {
                                 alt="<?= htmlspecialchars($product['name']) ?>">
                         </div>
 
+                        <!-- Nút yêu thích (yêu cầu đăng nhập) -->
+                        <div class="absolute top-2 right-2 z-20">
+                            <?php if ($user_id): ?>
+                                <?php $isFavorite = in_array($product['id'], $favoriteProductIds); ?>
+                                <form method="POST" action="/toggle-favorite">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                    <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
+                                    <button type="submit" class="px-3 py-2 rounded-full text-xl transition duration-300 
+                                    <?= $isFavorite ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-300 text-gray-800 hover:bg-gray-400' ?>">♥</button>
+                                </form>
+                            <?php else: ?>
+                                <button onclick="alert('Please log in to add favorites!'); window.location.href='/login';"
+                                    class="px-3 py-2 rounded-full text-xl bg-gray-300 text-gray-800 hover:bg-gray-400 transition duration-300">
+                                    ♥
+                                </button>
+                            <?php endif; ?>
+                        </div>
+
+
                         <!-- Thông tin sản phẩm -->
                         <div class="p-2">
                             <h5 class="text-2xl font-bold text-gray-800 text-center mb-2"><?= htmlspecialchars($product['name']) ?></h5>
                             <p class="text-l text-gray-600 text-center"><?= htmlspecialchars($product['description']) ?></p>
-                            <p class="text-sm text-gray-600 text-center mt-2 ">Stock Quantity: <?= htmlspecialchars($product['stock_quantity']) ?></p>
+                            <p class="text-sm text-gray-600 text-center mt-2">Stock Quantity: <?= htmlspecialchars($product['stock_quantity']) ?></p>
+
                             <!-- Hiển thị giá -->
                             <div class="text-center">
                                 <?php
@@ -102,26 +129,15 @@ if ($user_id) {
                             <!-- Nút Thêm vào giỏ hàng -->
                             <div class="mt-4 mb-4 flex justify-center space-x-4">
                                 <form method="POST" action="add" class="add-to-cart-form" style="display:inline;">
-                                    <!-- CSRF Token -->
                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
                                     <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
                                     <input type="hidden" name="quantity" value="1">
                                     <input type="hidden" name="size" value="S">
-                                    <button type="button" class="add-to-cart-button px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-300">Add to Cart</button>
+                                    <button type="button" class="add-to-cart-button px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-300" <?= ($product['stock_quantity'] == 0) ? 'disabled' : '' ?>>
+                                        Add to Cart
+                                    </button>
                                 </form>
                             </div>
-
-                            <!-- Nút Yêu thích -->
-                            <div class="absolute top-2 right-2">
-                                <?php $isFavorite = in_array($product['id'], $favoriteProductIds); ?>
-                                <form method="POST" action="/toggle-favorite">
-                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
-                                    <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
-                                    <button type="submit" class="px-3 py-2 rounded-full text-xl transition duration-300 
-                                        <?= $isFavorite ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-300 text-gray-800 hover:bg-gray-400' ?>">♥</button>
-                                </form>
-                            </div>
-
                         </div>
                     </div>
                 </div>

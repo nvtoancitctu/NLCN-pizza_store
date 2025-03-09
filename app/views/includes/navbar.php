@@ -28,7 +28,7 @@ function getCartItemCount($conn, $user_id)
     <!-- Logo -->
     <div class="flex items-center space-x-3">
       <img src="/images/logo.png" alt="Pizza Store" class="h-14 w-14">
-      <a href="/home" class="text-3xl font-bold">Lover's Hub</a>
+      <a href="/home" class="text-3xl font-bold">Lover's Hut</a>
     </div>
 
     <!-- Mobile Menu Button -->

@@ -203,7 +203,7 @@ class Product
     }
 
     // ------------------------------------------
-    // Phương thức bổ sung
+    // Phương thức format home page
     // ------------------------------------------
 
     /**
@@ -230,6 +230,67 @@ class Product
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // Lấy danh sách vouchers
+    public function getActiveVouchers()
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM vouchers");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy danh sách pizza được đánh giá cao nhất
+    public function getTopRatedPizzas($limit = 4)
+    {
+        $stmt = $this->conn->prepare("SELECT p.name, fb.rating 
+                                      FROM feedback fb 
+                                      JOIN order_items oi ON fb.order_id = oi.order_id
+                                      JOIN products p ON p.id = oi.product_id
+                                      ORDER BY rating DESC LIMIT ?");
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // // Lấy danh sách combo khuyến mãi
+    // public function getComboDeals($limit = 3)
+    // {
+
+    //     $stmt = $this->conn->prepare("SELECT name, description, price FROM combo_deals ORDER BY price DESC LIMIT ?");
+    //     $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+    //     $stmt->execute();
+    //     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // }
+
+    // // Lấy danh sách sản phẩm đã xem gần đây từ session
+    // public function getRecentlyViewed()
+    // {
+    //     return $_SESSION['recently_viewed'] ?? [];
+    // }
+
+    // // Lưu sản phẩm vào danh sách đã xem gần đây
+    // public function addRecentlyViewed($product)
+    // {
+    //     if (!isset($_SESSION['recently_viewed'])) {
+    //         $_SESSION['recently_viewed'] = [];
+    //     }
+    //     array_unshift($_SESSION['recently_viewed'], $product);
+    //     $_SESSION['recently_viewed'] = array_slice($_SESSION['recently_viewed'], 0, 5);
+    // }
+
+    // Lấy danh sách phản hồi từ khách hàng
+    public function getCustomerTestimonials($limit = 4)
+    {
+
+        $sql = "SELECT name, message FROM feedback ORDER BY RAND() LIMIT " . intval($limit);
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // ------------------------------------------
+    // Phương thức Danh mục sản phẩm
+    // ------------------------------------------
 
     /**
      * Lấy danh sách tất cả các danh mục

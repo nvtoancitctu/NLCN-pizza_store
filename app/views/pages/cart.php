@@ -148,7 +148,7 @@ if (isset($_GET['action'])) {
             </div>
 
             <!-- Tổng giá đơn hàng -->
-            <div class="flex justify-between items-center bg-gray-100 px-6 py-4">
+            <div class="flex justify-between items-center bg-gray-200 px-6 py-4">
                 <span class="text-lg font-bold">Total Price:</span>
                 <span class="text-2xl font-semibold text-red-600">
                     $<?= number_format(array_sum(array_column($cartItems, 'total_price')), 2) ?>

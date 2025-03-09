@@ -70,10 +70,10 @@ class UserController
   }
 
   // Thêm feedback
-  public function handleAddFeedback($user_id, $name, $email, $order_id, $user_message)
+  public function handleAddFeedback($user_id, $name, $email, $order_id, $user_message, $rating)
   {
     try {
-      return $this->userModel->handleAddFeedback($user_id, $name, $email, $order_id, $user_message);
+      return $this->userModel->handleAddFeedback($user_id, $name, $email, $order_id, $user_message, $rating);
     } catch (Exception $e) {
       return $e->getMessage();
     }

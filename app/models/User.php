@@ -278,7 +278,7 @@ class User
     // ------------------------------------------
     // Xử lý feedback
     // ------------------------------------------
-    public function handleAddFeedback($user_id, $name, $email, $order_id, $user_message)
+    public function handleAddFeedback($user_id, $name, $email, $order_id, $user_message, $rating)
     {
         // Kiểm tra nếu bảng products trống, thì reset AUTO_INCREMENT về 1
         $query = "SELECT COUNT(*) FROM feedback";
@@ -304,8 +304,8 @@ class User
         $this->conn->prepare($resetQuery)->execute();
 
         try {
-            $stmt = $this->conn->prepare("INSERT INTO feedback (user_id, name, email, order_id, message, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-            return $stmt->execute([$user_id, $name, $email, $order_id, $user_message]);
+            $stmt = $this->conn->prepare("INSERT INTO feedback (user_id, name, email, order_id, message, rating, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            return $stmt->execute([$user_id, $name, $email, $order_id, $user_message, $rating]);
         } catch (PDOException $e) {
             error_log("Database Error: " . $e->getMessage());
             return false;
@@ -328,7 +328,7 @@ class User
     // Chỉnh sửa feedback
     public function updateFeedback($feedback_id, $user_id, $message)
     {
-        $sql = "UPDATE feedback SET message = :message WHERE id = :feedback_id AND user_id = :user_id";
+        $sql = "UPDATE feedback SET message = :message, updated_at = NOW() WHERE id = :feedback_id AND user_id = :user_id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindParam(':message', $message, PDO::PARAM_STR);
         $stmt->bindParam(':feedback_id', $feedback_id, PDO::PARAM_INT);

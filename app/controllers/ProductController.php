@@ -65,6 +65,42 @@ class ProductController
     return $this->productModel->getRandomProducts($limit);
   }
 
+  // Lấy danh sách vouchers
+  public function getActiveVouchers()
+  {
+    return $this->productModel->getActiveVouchers();
+  }
+
+  // Lấy danh sách pizza được đánh giá cao nhất
+  public function getTopRatedPizzas($limit = 4)
+  {
+    return $this->productModel->getTopRatedPizzas($limit);
+  }
+
+  // // Lấy danh sách combo khuyến mãi
+  // public function getComboDeals($limit = 3)
+  // {
+  //   return $this->productModel->getComboDeals($limit);
+  // }
+
+  // // Lấy danh sách sản phẩm đã xem gần đây từ session
+  // public function getRecentlyViewed()
+  // {
+  //   return $this->productModel->getRecentlyViewed();
+  // }
+
+  // // Lưu sản phẩm vào danh sách đã xem gần đây
+  // public function addRecentlyViewed($product)
+  // {
+  //   return $this->productModel->addRecentlyViewed($product);
+  // }
+
+  // Lấy danh sách phản hồi từ khách hàng
+  public function getCustomerTestimonials($limit = 4)
+  {
+    return $this->productModel->getCustomerTestimonials($limit);
+  }
+
   /**
    * Lấy chi tiết sản phẩm
    */
