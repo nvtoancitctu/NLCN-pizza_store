@@ -72,9 +72,9 @@ class ProductController
   }
 
   // Lấy danh sách pizza được đánh giá cao nhất
-  public function getTopRatedPizzas($limit = 4)
+  public function getTopRatedPizzas()
   {
-    return $this->productModel->getTopRatedPizzas($limit);
+    return $this->productModel->getTopRatedPizzas();
   }
 
   // // Lấy danh sách combo khuyến mãi

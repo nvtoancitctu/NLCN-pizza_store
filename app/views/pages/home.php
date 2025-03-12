@@ -117,11 +117,11 @@ $product = $productController->getProductDetails($product_id);
   </div>
 
   <!-- Discount Products -->
-  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">Special Discount Offer</h2>
+  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">🍕 Special Discount Offer 🍕</h2>
   <?php if (!empty($discountProduct)): ?>
     <?php foreach ($discountProduct as $product): ?>
       <?php if ($product['stock_quantity'] > 0): ?>
-        <div class="bg-white shadow-md border-l-4 border-red-500 rounded-2xl mb-6 p-6 transition-transform transform hover:scale-105 duration-300 text-red-900 font-semibold">
+        <div class="bg-white shadow-md border-l-4 border-red-500 rounded-2xl mb-6 p-6 transition-transform transform hover:scale-105 duration-300 text-red-900 font-semibold border-2 border-red-500">
 
           <!-- Ưu đãi giới hạn -->
           <div class="absolute top-4 left-8 text-white text-xl font-bold py-1 px-2 rounded-full animate-pulse-custom"
@@ -171,7 +171,7 @@ $product = $productController->getProductDetails($product_id);
                 <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
                 <input type="hidden" name="quantity" value="1">
                 <input type="hidden" name="size" value="S">
-                <button type="button" class="font-semibold add-to-cart-button bg-blue-500 text-white px-5 py-2 rounded-lg transition duration-300 ease-in-out transform hover:bg-purple-600 hover:shadow-lg hover:-translate-y-1 hover:scale-105">Add to Cart</button>
+                <button type="button" class="font-semibold add-to-cart-button bg-yellow-500 text-white px-5 py-2 rounded-lg transition duration-300 ease-in-out transform hover:bg-purple-600 hover:shadow-lg hover:-translate-y-1 hover:scale-105">Add to Cart</button>
               </form>
             </div>
           </div>
@@ -258,29 +258,30 @@ $product = $productController->getProductDetails($product_id);
   <?php endif; ?>
 
   <!-- Featured Pizzas -->
-  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">Featured Pizzas</h2>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">
+    🍕 Featured Pizzas 🍕
+  </h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
     <?php foreach ($randomProducts as $product): ?>
-      <div class="rounded-2xl shadow-md transition-transform transform hover:scale-105 bg-white">
-        <img src="/images/<?php echo htmlspecialchars($product['image']); ?>"
-          class="w-3/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:rotate-12 hover:scale-110"
+      <div class="rounded-2xl shadow-md bg-white overflow-hidden transition-transform transform hover:scale-105 hover:shadow-xl border-2 border-blue-500">
+        <img src="/images/<?php echo htmlspecialchars($product['image']); ?>" class="w-3/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:rotate-12 hover:scale-110"
           alt="<?php echo htmlspecialchars($product['name']); ?>">
 
-        <div class="p-6">
-          <h5 class="text-xl font-bold mb-2 text-center"><?php echo htmlspecialchars($product['name']); ?></h5>
-          <p class="card-text text-sm text-gray-600 text-center mb-4"><?php echo htmlspecialchars($product['description']); ?></p>
+        <div class="p-6 text-center">
+          <h5 class="text-2xl font-bold mb-2 text-gray-800"><?php echo htmlspecialchars($product['name']); ?></h5>
+          <p class="text-xl font-semibold text-blue-500 mt-2">$<?= htmlspecialchars($product['final_price']); ?></p>
 
-          <div class="mt-4 flex justify-center space-x-4">
+          <div class="mt-4 flex justify-center">
             <form method="POST" action="add" class="add-to-cart-form" style="display:inline;">
-              <!-- CSRF Token -->
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
               <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
               <input type="hidden" name="quantity" value="1">
               <input type="hidden" name="size" value="S">
-              <button type="button" class="add-to-cart-button px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-300">Add to Cart</button>
+              <button type="button" class="add-to-cart-button px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-green-500 transition duration-300 shadow-md">
+                🛒 Add to Cart
+              </button>
             </form>
           </div>
-
         </div>
       </div>
     <?php endforeach; ?>
@@ -288,35 +289,67 @@ $product = $productController->getProductDetails($product_id);
 
   <?php
   $vouchers = $productController->getActiveVouchers();
-  $topRatedPizzas = $productController->getTopRatedPizzas();
-  // $comboDeals = $productController->getComboDeals();
-  // $recentlyViewed = $productController->getRecentlyViewed();
+
+  $topPizzas = $productController->getTopRatedPizzas();
+  // Lấy pizza có điểm rating trung bình cao nhất
+  $highestRated = $topPizzas[0];
+
+  // Lấy pizza có số lượt bán cao nhất
+  $bestSeller = $topPizzas[0];
+  foreach ($topPizzas as $pizza) {
+    if ($pizza['total_sales'] > $bestSeller['total_sales']) {
+      $bestSeller = $pizza;
+    }
+  }
+
   $testimonials = $productController->getCustomerTestimonials();
   ?>
 
   <!-- Exclusive Vouchers -->
-  <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">Exclusive Vouchers</h2>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-    <?php foreach ($vouchers as $voucher): ?>
-      <div class="bg-red-100 p-4 rounded-lg shadow-md text-center cursor-pointer hover:bg-red-200 transition">
-        <h3 class="text-lg font-semibold text-red-600"> <?= htmlspecialchars($voucher['description']) ?> </h3>
-        <p class="text-gray-700">Code: <strong><?= htmlspecialchars($voucher['code']) ?></strong></p>
-        <p class="text-sm text-gray-500">Expires: <?= htmlspecialchars($voucher['expiration_date']) ?></p>
-        <button class="mt-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Claim Now</button>
-      </div>
-    <?php endforeach; ?>
-  </div>
+  <section class="bg-red-50 p-6 rounded-xl shadow-lg border border-red-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">🔥 Coupon Tickets 🔥</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <?php foreach ($vouchers as $voucher): ?>
+        <div class="relative bg-white p-5 rounded-lg shadow-md border border-red-300 text-center">
+          <p class="text-gray-700">Expires: <?= htmlspecialchars($voucher['expiration_date']) ?></p>
+          <div class="ticket flex flex-col justify-center items-center p-3 bg-red-500 text-white rounded-md mt-3 space-y-2" title="<?= htmlspecialchars($voucher['description']) ?>">
+            <span class="text-center font-bold">🎟 <?= htmlspecialchars($voucher['code']) ?></span>
+          </div>
+          <form method="post" action="index.php?page=claim_voucher" class="mt-3">
+            <input type="hidden" name="voucher_id" value="<?= htmlspecialchars($voucher['id']) ?>">
+            <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">Claim Now</button>
+          </form>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </section>
 
-  <!-- Top Rated Pizzas -->
-  <h2 class="text-2xl font-bold text-gray-800 my-8">Top Rated Pizzas</h2>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-    <?php foreach ($topRatedPizzas as $pizza): ?>
-      <div class="bg-gray-200 p-4 rounded-lg shadow-md text-center">
-        <h3 class="text-lg font-semibold"> <?= htmlspecialchars($pizza['name']) ?> </h3>
-        <p class="text-yellow-500">⭐ <?= $pizza['rating'] ?> / 5</p>
+
+  <!-- Top Rated & Best Seller Pizzas -->
+  <section class="mt-12 bg-white p-6 rounded-xl shadow-lg border text-center">
+    <h2 class="text-2xl font-bold mb-2">🔥 Best Pizzas This Week 🔥</h2>
+    <p class="text-gray-500 text-sm mb-6">Updated on <?= date('d/m/Y') ?></p> <!-- Hiển thị ngày tháng hiện tại -->
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Pizza có điểm rating cao nhất -->
+      <div class="p-6 bg-yellow-100 rounded-xl shadow-xl border-4 border-yellow-500">
+        <h3 class="text-xl font-bold">🏆 Highest Rated Pizza</h3>
+        <h2 class="text-3xl font-extrabold mt-2 text-yellow-700 animate-pulse">
+          <?= htmlspecialchars($highestRated['name']) ?>
+        </h2>
+        <p class="text-gray-700 text-xl mt-2">⭐ <?= number_format($highestRated['avg_rating'], 1) ?> / 5</p>
       </div>
-    <?php endforeach; ?>
-  </div>
+
+      <!-- Pizza bán chạy nhất -->
+      <div class="p-6 bg-green-100 rounded-xl shadow-xl border-4 border-green-500">
+        <h3 class="text-xl font-bold">📈 Best Seller</h3>
+        <h2 class="text-3xl font-extrabold mt-2 text-green-700 animate-pulse">
+          <?= htmlspecialchars($bestSeller['name']) ?>
+        </h2>
+        <p class="text-gray-700 text-xl mt-2">🔥 Sold: <strong><?= number_format($bestSeller['total_sales']) ?></strong> times</p>
+      </div>
+    </div>
+  </section>
 
   <!-- Combo Deals -->
   <!-- <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">Combo Deals</h2>
@@ -330,55 +363,47 @@ $product = $productController->getProductDetails($product_id);
     <?php endforeach; ?>
   </div> -->
 
-  <!-- Recently Viewed -->
-  <!-- <?php if (!empty($recentlyViewed)): ?>
-    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">Recently Viewed</h2>
-    <div class="flex space-x-4 overflow-x-auto">
-      <?php foreach ($recentlyViewed as $item): ?>
-        <div class="bg-gray-200 p-4 rounded-xl min-w-[150px] text-center">
-          <p class="text-gray-800 font-semibold"> <?= htmlspecialchars($item['name']) ?> </p>
+  <!-- Customer Testimonials -->
+  <section class="mt-12 bg-blue-50 p-6 rounded-xl shadow-lg border border-blue-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">💬 What Our Customers Say 💬</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <?php foreach ($testimonials as $review): ?>
+        <div class="bg-white p-4 rounded-lg shadow-md border border-blue-300">
+          <p class="text-gray-700 italic">"<?= htmlspecialchars($review['message']) ?>"</p>
+          <p class="text-right font-semibold text-blue-700">- <?= htmlspecialchars($review['name']) ?></p>
         </div>
       <?php endforeach; ?>
     </div>
-  <?php endif; ?> -->
-
-  <!-- Customer Testimonials -->
-  <h2 class="text-2xl font-bold text-gray-800 my-8">What Our Customers Say</h2>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    <?php foreach ($testimonials as $review): ?>
-      <div class="bg-blue-100 p-4 rounded-lg shadow-md">
-        <p class="text-gray-700 italic">"<?= htmlspecialchars($review['message']) ?>"</p>
-        <p class="text-right font-semibold text-blue-700">- <?= htmlspecialchars($review['name']) ?></p>
-      </div>
-    <?php endforeach; ?>
-  </div>
+  </section>
 
   <!-- Special Policies -->
-  <h2 class="text-2xl font-bold text-gray-800 my-8">Our Special Policies</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-lg border-t-4 border-yellow-500 transition-transform transform hover:scale-105">
-      <span class="text-4xl text-yellow-500">🚀</span>
-      <h3 class="text-lg font-bold mt-3">30-Minute Delivery</h3>
-      <p class="text-gray-600 text-center mt-2">We guarantee delivery within 30 minutes, or you'll receive a
-        <strong class="text-yellow-500">50% refund</strong>.
-      </p>
-    </div>
+  <section class="bg-gray-50 p-8 rounded-xl shadow-lg border border-gray-200 mt-12 mb-12">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">🌟 Our Special Policies 🌟</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-yellow-300 transition-transform hover:scale-105">
+        <span class="text-5xl text-yellow-500">🚀</span>
+        <h3 class="text-lg font-bold mt-4 text-gray-900">30-Minute Delivery</h3>
+        <p class="text-gray-700 text-center mt-2">We guarantee delivery within 30 minutes, or you'll receive a
+          <strong class="text-yellow-600">50% refund</strong>.
+        </p>
+      </div>
 
-    <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500 transition-transform transform hover:scale-105">
-      <span class="text-4xl text-green-500">🥬</span>
-      <h3 class="text-lg font-bold mt-3">Fresh Ingredients</h3>
-      <p class="text-gray-600 text-center mt-2">We only use
-        <strong class="text-green-500">fresh, high-quality</strong> ingredients—never frozen.
-      </p>
-    </div>
+      <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-green-300 transition-transform hover:scale-105">
+        <span class="text-5xl text-green-500">🥬</span>
+        <h3 class="text-lg font-bold mt-4 text-gray-900">Fresh Ingredients</h3>
+        <p class="text-gray-700 text-center mt-2">We only use
+          <strong class="text-green-600">fresh, high-quality</strong> ingredients—never frozen.
+        </p>
+      </div>
 
-    <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-lg border-t-4 border-red-500 transition-transform transform hover:scale-105">
-      <span class="text-4xl text-red-500">🍕</span>
-      <h3 class="text-lg font-bold mt-3">100% Handmade Pizza</h3>
-      <p class="text-gray-600 text-center mt-2">Our pizzas are
-        <strong class="text-red-500">hand-kneaded</strong>, never industrially processed.
-      </p>
+      <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-red-300 transition-transform hover:scale-105">
+        <span class="text-5xl text-red-500">🍕</span>
+        <h3 class="text-lg font-bold mt-4 text-gray-900">100% Handmade Pizza</h3>
+        <p class="text-gray-700 text-center mt-2">Our pizzas are
+          <strong class="text-red-600">hand-kneaded</strong>, never industrially processed.
+        </p>
+      </div>
     </div>
-  </div>
+  </section>
 
 </div>

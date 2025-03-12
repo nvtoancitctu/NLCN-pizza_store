@@ -213,9 +213,21 @@ class Product
      */
     public function getRandomProducts($limit = 3)
     {
-        $query = "SELECT * FROM " . $this->table . " ORDER BY RAND() LIMIT " . intval($limit);
+        $query = "SELECT id, image, name, 
+                     CASE 
+                         WHEN discount IS NOT NULL  
+                         AND (discount_end_time IS NULL OR discount_end_time >= NOW()) 
+                         THEN discount
+                         ELSE price
+                     END AS final_price
+                FROM " . $this->table . " 
+                ORDER BY RAND() 
+                LIMIT :limit";
+
         $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':limit', intval($limit), PDO::PARAM_INT);
         $stmt->execute();
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -231,23 +243,29 @@ class Product
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy danh sách vouchers
+    // Lấy danh sách vouchers còn hiệu lực
     public function getActiveVouchers()
     {
-        $stmt = $this->conn->prepare("SELECT * FROM vouchers");
+        $stmt = $this->conn->prepare("SELECT * FROM vouchers 
+                                      WHERE status = 'active' 
+                                      AND expiration_date IS NOT NULL 
+                                      AND expiration_date > NOW()");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy danh sách pizza được đánh giá cao nhất
-    public function getTopRatedPizzas($limit = 4)
+    // Lấy danh sách pizza được đánh giá cao nhất, kèm tổng số lượng bán ra và trung bình rating
+    public function getTopRatedPizzas()
     {
-        $stmt = $this->conn->prepare("SELECT p.name, fb.rating 
-                                      FROM feedback fb 
-                                      JOIN order_items oi ON fb.order_id = oi.order_id
-                                      JOIN products p ON p.id = oi.product_id
-                                      ORDER BY rating DESC LIMIT ?");
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt = $this->conn->prepare("SELECT 
+                                        p.name, 
+                                        ROUND(AVG(fb.rating), 1) AS avg_rating, 
+                                        SUM(oi.quantity) AS total_sales 
+                                    FROM feedback fb 
+                                    JOIN order_items oi ON fb.order_id = oi.order_id
+                                    JOIN products p ON p.id = oi.product_id
+                                    GROUP BY p.id, p.name
+                                    ORDER BY avg_rating DESC, total_sales DESC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

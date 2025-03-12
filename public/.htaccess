@@ -9,7 +9,6 @@ RewriteRule ^account$                           /index.php?page=account [L]
 
 # Trang sản phẩm
 RewriteRule ^products$                          /index.php?page=products [L]
-RewriteRule ^toggle-favorite$                   /index.php?page=toggle-favorite [L]
 RewriteRule ^products&category_id=([0-9]+)$     /index.php?page=products&category_id=$1 [L]
 RewriteRule ^products&favorite=([0-9]+)$        /index.php?page=products&favorite=$1 [L]
 

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy">
-    <title>Lover's Hub</title>
+    <title>Lover's Hut</title>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Lobster&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -25,10 +25,10 @@
     <!-- Inline CSS cho hình nền và font chữ -->
     <style>
         body {
-            background: linear-gradient(to bottom right, rgba(255, 248, 235, 0.9), rgba(255, 210, 160, 0.6));
             background-size: cover;
             font-family: 'Poppins', sans-serif;
         }
+
 
         #back-to-top {
             transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -41,38 +41,59 @@
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col bg-gradient-to-l from-red-50 to-yellow-50 font-medium">
+<body class="min-h-screen flex flex-col font-medium">
     <!-- Nút quay về đầu trang -->
-    <button id="back-to-top" class="fixed bottom-8 right-8 p-3 bg-pink-500 text-white rounded-full shadow-lg hover:bg-pink-600 transition-all duration-300 opacity-0 invisible">
+    <button id="back-to-top" class="fixed bottom-24 right-4 p-3 bg-pink-500 text-white rounded-full shadow-lg hover:bg-pink-600 transition-all duration-300 opacity-0 invisible">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
         </svg>
     </button>
 
+    <!-- Nút đi tới cuối trang -->
+    <button id="go-to-bottom" class="fixed bottom-8 right-4 p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 opacity-0 invisible">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+    </button>
+
     <!-- JavaScript -->
     <script>
-        // Lấy nút quay về đầu trang
         const backToTopButton = document.getElementById('back-to-top');
+        const goToBottomButton = document.getElementById('go-to-bottom');
 
-        // Xử lý sự kiện cuộn trang
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) { // Hiển thị nút khi cuộn xuống 300px
+            if (window.scrollY > 300) {
                 backToTopButton.classList.add('visible', 'opacity-100');
                 backToTopButton.classList.remove('invisible', 'opacity-0');
-            } else { // Ẩn nút khi ở đầu trang
+            } else {
                 backToTopButton.classList.remove('visible', 'opacity-100');
                 backToTopButton.classList.add('invisible', 'opacity-0');
             }
+
+            if (window.innerHeight + window.scrollY < document.body.offsetHeight - 300) {
+                goToBottomButton.classList.add('visible', 'opacity-100');
+                goToBottomButton.classList.remove('invisible', 'opacity-0');
+            } else {
+                goToBottomButton.classList.remove('visible', 'opacity-100');
+                goToBottomButton.classList.add('invisible', 'opacity-0');
+            }
         });
 
-        // Xử lý sự kiện click để cuộn về đầu trang
         backToTopButton.addEventListener('click', () => {
             window.scrollTo({
                 top: 0,
-                behavior: 'smooth' // Cuộn mượt
+                behavior: 'smooth'
+            });
+        });
+
+        goToBottomButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
             });
         });
     </script>
+
 </body>
 
 </html>

@@ -16,6 +16,9 @@ $user_id = $_SESSION['user_id'];
 $orders = $orderController->getOrdersByUserId($user_id);
 $user = $userController->getUserById($user_id);
 
+// Lấy danh sách voucher user đã nhận
+$userVouchers = $userController->getUserVouchers($user['id']);
+
 // Xử lý điều kiện khi người dùng nhấn vào nút Admin Panel, Logout, hoặc cập nhật thông tin
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Check CSRF token
@@ -119,6 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         Update Profile
       </button>
     </div>
+
+
   </div>
 
   <!-- Form Cập Nhật Thông Tin Người Dùng, mặc định bị ẩn -->
@@ -157,6 +162,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       form.classList.toggle('hidden');
     }
   </script>
+
+  <!-- Danh sách voucher đã nhận -->
+  <section class="bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">🎟 Your Vouchers 🎟</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <?php if (empty($userVouchers)): ?>
+        <p class="text-gray-500 text-center col-span-3">You have not claimed any vouchers yet.</p>
+      <?php else: ?>
+        <?php foreach ($userVouchers as $voucher): ?>
+          <div class="relative bg-white p-5 rounded-lg shadow-md border border-gray-300 text-center">
+            <h3 class="text-lg font-semibold text-red-600"><?= htmlspecialchars($voucher['description']) ?></h3>
+            <p class="text-gray-700">Code: <strong class="text-gray-900"><?= htmlspecialchars($voucher['code']) ?></strong></p>
+            <p class="text-sm text-gray-500">Expires: <?= htmlspecialchars($voucher['expiration_date']) ?></p>
+            <p class="text-sm text-gray-600">Status:
+              <span class="<?= $voucher['status'] === 'used' ? 'text-red-500' : 'text-green-500' ?>">
+                <?= ucfirst($voucher['status']) ?>
+              </span>
+            </p>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+  </section>
 
   <!-- Order History Section -->
   <h3 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Order History</h3>

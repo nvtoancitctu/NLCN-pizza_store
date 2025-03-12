@@ -90,4 +90,10 @@ class UserController
   {
     return $this->userModel->deleteFeedback($feedback_id, $user_id);
   }
+
+  // Lấy danh sách các voucher của người dùng
+  public function getUserVouchers($user_id)
+  {
+    return $this->userModel->getUserVouchers($user_id);
+  }
 }

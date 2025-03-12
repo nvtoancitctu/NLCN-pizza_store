@@ -39,6 +39,9 @@ switch ($page) {
     case 'home':
         include '../app/views/pages/home.php';
         break;
+    case 'claim_voucher':
+        include '../app/views/pages/claim_voucher.php';
+        break;
     case 'products':
         include '../app/views/pages/products.php';
         break;

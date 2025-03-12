@@ -343,4 +343,15 @@ class User
         $stmt = $this->conn->prepare("DELETE FROM feedback WHERE id = ? AND user_id = ?");
         return $stmt->execute([$feedback_id, $user_id]);
     }
+
+    // Lấy danh sách vouchers của người dùng
+    public function getUserVouchers($user_id)
+    {
+        $stmt = $this->conn->prepare("SELECT v.id, v.code, v.description, v.expiration_date, v.status 
+                                    FROM user_voucher uv
+                                    JOIN vouchers v ON uv.voucher_id = v.id
+                                    WHERE uv.user_id = ?");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
