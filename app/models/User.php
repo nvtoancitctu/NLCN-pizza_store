@@ -120,7 +120,7 @@ class User
     // ------------------------------------------
     public function getAllUsers()
     {
-        $query = "SELECT * FROM " . $this->table;
+        $query = "SELECT * FROM " . $this->table . " WHERE role != 'admin'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Trả về danh sách người dùng
@@ -371,5 +371,37 @@ class User
                                       WHERE uv.status = 'unused' AND uv.user_id = ?");
         $stmt->execute([$user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Thêm thông báo liên quan đến người dùng
+    public function addNotification($user_id, $message)
+    {
+        // Kiểm tra nếu bảng products trống, thì reset AUTO_INCREMENT về 1
+        $query = "SELECT COUNT(*) FROM notifications";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $rowCount = $stmt->fetchColumn();
+
+        // Nếu bảng trống, reset AUTO_INCREMENT về 1
+        if ($rowCount == 0) {
+            $resetQuery = "ALTER TABLE notifications AUTO_INCREMENT = 1";
+        } else {
+            // Nếu bảng có dữ liệu, lấy giá trị MAX(id) và set AUTO_INCREMENT tiếp theo
+            $maxIdQuery = "SELECT MAX(id) FROM notifications";
+            $stmt = $this->conn->prepare($maxIdQuery);
+            $stmt->execute();
+            $maxId = $stmt->fetchColumn();
+
+            // Đặt AUTO_INCREMENT tiếp theo là MAX(id) + 1
+            $resetQuery = "ALTER TABLE notifications AUTO_INCREMENT = " . ($maxId + 1);
+        }
+
+        // Thực thi câu lệnh ALTER TABLE để thiết lập AUTO_INCREMENT
+        $this->conn->prepare($resetQuery)->execute();
+
+        $stmt = $this->conn->prepare("INSERT INTO notifications (user_id, message, is_read, created_at) VALUES (:user_id, :message, 0, NOW())");
+        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->bindParam(':message', $message, PDO::PARAM_STR);
+        $stmt->execute();
     }
 }

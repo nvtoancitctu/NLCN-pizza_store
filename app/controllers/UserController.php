@@ -102,4 +102,10 @@ class UserController
   {
     return $this->userModel->getUserVouchers($user_id);
   }
+
+  // Thêm thông báo cho người dùng
+  public function addNotification($user_id, $message)
+  {
+    return $this->userModel->addNotification($user_id, $message);
+  }
 }

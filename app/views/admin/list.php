@@ -60,8 +60,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
     if ($order_id && !empty($customer_name) && $total_price >= 0 && !empty($order_status)) {
         // Gọi phương thức updateOrder trong controller
         $updated = $orderController->updateOrder($order_id, $customer_name, $total_price, $order_status);
-        $_SESSION['success'] = "Order $order_id is updated successfully.";
-        header("Location: /admin/list");
+
+        if ($updated) {
+            $_SESSION['success'] = "Order (ID: $order_id) is updated successfully.";
+
+            // Lấy user_id từ bảng orders để gửi thông báo
+            $stmt = $conn->prepare("SELECT user_id FROM orders WHERE id = ?");
+            $stmt->execute([$order_id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                $user_id = $user['user_id'];
+                $message = "Your order (ID: $order_id) has been updated to status: $order_status.";
+
+                // Gọi hàm thêm notification
+                $userController->addNotification($user_id, $message);
+            }
+        } else {
+            $_SESSION['error'] = "Failed to update order (ID: $order_id).";
+        }
+
+        header("Location: " . $_SERVER['HTTP_REFERER']);
         exit;
     }
 }
@@ -78,7 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
         if ($days > 0) {
             $userController->blockUser($user_id, $days);
-            $_SESSION['success'] = "User $user_id is blocked for $days days successfully.";
+            $_SESSION['success'] = "User (ID: $user_id) is blocked for $days days successfully.";
+
+            // Gửi thông báo đến người dùng bị khóa
+            $message = "Your account has been blocked for $days days due to policy violations.";
+            $userController->addNotification($user_id, $message);
         } else {
             $_SESSION['success'] = "Please enter a valid block duration (minimum 1 day).";
         }
@@ -92,13 +115,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     elseif (isset($_POST['unblock'])) {
         $result = $userController->unblockUser($user_id);
         if ($result) {
-            $_SESSION['success'] = "User $user_id has been unblocked successfully.";
+            $_SESSION['success'] = "User (ID: $user_id) has been unblocked successfully.";
+
+            // Gửi thông báo đến người dùng về việc mở khóa
+            $message = "Your account has been unblocked. You can now access your account again.";
+            $userController->addNotification($user_id, $message);
         } else {
-            $_SESSION['success'] = "Failed to unblock user $user_id.";
+            $_SESSION['success'] = "Failed to unblock user has ID: $user_id.";
         }
     }
 
-    header('Location: /admin/list');
+    header("Location: " . $_SERVER['HTTP_REFERER']);
     exit();
 }
 
@@ -431,7 +458,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 </script>
 
 <!--------------------------------------- Quản lý tài khoản --------------------------------------->
-<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Account Management</h1>
+<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Accounts Management</h1>
 
 <!-- Form Block User (mặc định ẩn) -->
 <div id="block-user-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
@@ -490,7 +517,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     </form>
 </div>
 
-<div class="container-fluid mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <!-- Bảng danh sách người dùng -->
     <div class="table-responsive">
         <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -604,28 +631,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
 <!--------------------------------------- Quản lý phản hồi --------------------------------------->
 <?php
-
 // Lấy danh sách phản hồi
-$stmt = $conn->query("SELECT * FROM feedback ORDER BY created_at ASC");
+$stmt = $conn->query("SELECT * FROM feedback WHERE user_id != 1 ORDER BY created_at ASC");
 $feedbacks = $stmt->fetchAll();
 
 // Xử lý phản hồi của admin
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id'])) {
+    $id = intval($_POST['id']);
+    $response = trim($_POST['response']);
 
-    $id = $_POST['id'];
-    $response = $_POST['response'];
+    if ($id > 0 && !empty($response)) {
+        $stmt = $conn->prepare("UPDATE feedback SET response = ?, responsed_at = NOW() WHERE id = ?");
+        $stmt->execute([$response, $id]);
 
-    $stmt = $conn->prepare("UPDATE feedback SET response = ?, responsed_at = NOW() WHERE id = ?");
-    $stmt->execute([$response, $id]);
+        // Lấy user_id từ bảng feedback để gửi thông báo
+        $stmt = $conn->prepare("SELECT user_id FROM feedback WHERE id = ?");
+        $stmt->execute([$id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $_SESSION['success'] = "Feedback $id is responsed successfully.";
+        if ($user) {
+            $user_id = $user['user_id'];
+            $message = "Your feedback #$id has been responded to by the admin.";
+
+            // Gọi hàm thêm notification
+            $userController->addNotification($user_id, $message);
+        }
+
+        $_SESSION['success'] = "Feedback #$id has been responded to successfully.";
+    } else {
+        $_SESSION['success'] = "Invalid feedback ID or response cannot be empty.";
+    }
     header("Location: " . $_SERVER['HTTP_REFERER']);
     exit;
 }
 ?>
 
-<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Feedback Management</h1>
-<div class="container mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Feedbacks Management</h1>
+<div class="container mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="overflow-x-auto">
         <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
             <thead>
@@ -702,17 +744,79 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
     }
 </script>
 
+<!--------------------------------------- Quản lý Voucherss --------------------------------------->
 <?php
 
-// Lấy danh sách voucher
+// Lấy danh sách các voucher
 $stmt = $conn->query("SELECT * FROM vouchers ORDER BY id ASC");
 $vouchers = $stmt->fetchAll();
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
+
+    // Lấy danh sách voucher còn hạn
+    $stmt = $conn->query("SELECT id, code, expiration_date FROM vouchers WHERE expiration_date IS NOT NULL");
+    $vouchers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($vouchers as $voucher) {
+
+        $voucherDate = new DateTime($voucher['expiration_date'], new DateTimeZone('Asia/Ho_Chi_Minh'));
+        $now = new DateTime("now", new DateTimeZone('Asia/Ho_Chi_Minh'));
+
+        if ($voucherDate < $now) {
+
+            // Cập nhật trạng thái voucher (hết hạn)
+            $updateStmt = $conn->prepare("UPDATE vouchers SET expiration_date = NULL WHERE id = ?");
+            $updateStmt->execute([$voucher['id']]);
+
+            // Nếu voucher đã hết hạn, tìm user_id đã nhận voucher này
+            $userStmt = $conn->prepare("SELECT user_id FROM user_voucher WHERE voucher_id = ? AND status = 'unused'");
+            $userStmt->execute([$voucher['id']]);
+            $users = $userStmt->fetchAll(PDO::FETCH_COLUMN);
+
+            if (!empty($users)) {
+                // Gửi thông báo đến từng user có voucher hết hạn
+                foreach ($users as $user_id) {
+                    $message = "Your voucher " . htmlspecialchars($voucher['code']) . " has expired.";
+                    $userController->addNotification($user_id, $message);
+                }
+            }
+        } else {
+            // Tính số ngày còn lại
+            $interval = $now->diff($voucherDate);
+            $daysLeft = $interval->days;
+            $hoursLeft = $interval->h;
+            $minutesLeft = $interval->i;
+
+            // Lấy danh sách user đã nhận voucher
+            $userStmt = $conn->prepare("SELECT user_id FROM user_voucher WHERE voucher_id = ? AND status = 'unused'");
+            $userStmt->execute([$voucher['id']]);
+            $users = $userStmt->fetchAll(PDO::FETCH_COLUMN);
+
+            if (!empty($users)) {
+                foreach ($users as $user_id) {
+                    $message = "Your voucher " . htmlspecialchars($voucher['code']) . " is valid for $daysLeft days, $hoursLeft hours, and $minutesLeft minutes.";
+                    $userController->addNotification($user_id, $message);
+                }
+            }
+        }
+    }
+
+    $_SESSION['success'] = "Voucher expiration dates have been checked and updated.";
+    header("Location: " . $_SERVER['HTTP_REFERER']);
+    exit;
+}
 ?>
 
-<h1 class="text-4xl font-extrabold text-center my-8 text-green-700 drop-shadow-lg">Voucher Management</h1>
+<h1 class="text-4xl font-extrabold text-center my-8 text-green-700 drop-shadow-lg">Vouchers Management</h1>
 <div class="container mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-green-600">
+    <!-- Thêm Voucher -->
     <a href="/admin/add-voucher" class="mb-4 bg-green-500 text-white px-4 py-2 rounded-lg inline-block">+ Add Voucher</a>
+
+    <!-- Reset hạn dùng -->
+    <form action="/admin" method="POST" class="inline-block ml-2">
+        <button type="submit" name="reset-voucher" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">🔄 Reset Expiration</button>
+    </form>
+
     <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead>
             <tr class="bg-green-100 text-gray-800 text-center uppercase text-sm">
@@ -735,7 +839,7 @@ $vouchers = $stmt->fetchAll();
                     <td class="px-4 py-3 text-green-600 font-semibold">$<?= htmlspecialchars($v['discount_amount']) ?></td>
                     <td class="px-4 py-3 text-blue-600 font-semibold">$<?= htmlspecialchars($v['min_order_value']) ?></td>
                     <td class="px-4 py-3 text-purple-600 font-semibold"><?= htmlspecialchars($v['quantity']) ?></td>
-                    <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['expiration_date']) ?></td>
+                    <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['expiration_date'] ?? '---') ?></td>
                     <td class="px-4 py-3">
                         <div class="flex items-center space-x-2">
                             <!-- Nút edit -->

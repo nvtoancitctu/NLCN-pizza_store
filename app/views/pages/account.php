@@ -128,7 +128,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Form Cập Nhật Thông Tin Người Dùng, mặc định bị ẩn -->
   <div id="update-profile-form" class="space-y-6 mt-4 mb-8 hidden mx-auto">
-    <h3 class="text-3xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Update Profile</h3>
     <form action="/account" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-blue-200">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
       <div class="flex flex-col md:flex-row justify-between">
@@ -166,8 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Danh sách voucher đã nhận -->
   <section class="bg-gray-50 p-6 rounded-xl drop-shadow-lg border-2 border-yellow-400">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Your Vouchers</h2>
-
     <div class="space-y-4">
       <?php if (empty($userVouchers)): ?>
         <p class="text-gray-500 text-center">🚫 You have not claimed any vouchers yet.</p>

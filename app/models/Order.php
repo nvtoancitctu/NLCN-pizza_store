@@ -167,6 +167,7 @@ class Order
         $query = "SELECT o.id, u.name AS customer_name, o.total, o.status, o.created_at, o.payment_method, o.images 
                 FROM orders o
                 JOIN users u ON o.user_id = u.id
+                WHERE u.role != 'admin'
                 ORDER BY o.created_at ASC";
 
         $stmt = $this->conn->prepare($query);
