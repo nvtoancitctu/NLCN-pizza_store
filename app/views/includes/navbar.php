@@ -26,9 +26,9 @@ function getCartItemCount($conn, $user_id)
   <div class="container mx-auto px-6 lg:px-20 py-3 flex justify-between items-center">
 
     <!-- Cột 1: Logo & Tên thương hiệu -->
-    <div class="flex items-center space-x-3">
+    <div class="flex items-center space-x-2">
       <img src="/images/logo.png" alt="Lover's Hut" class="w-14 h-14 rounded-full">
-      <a href="/" class="text-4xl font-bold italic font-serif text-yellow-400 shadow-2xl">
+      <a href="/" class="text-3xl font-bold font-serif text-yellow-400 shadow-2xl">
         Lover's Hut
       </a>
 
@@ -46,7 +46,7 @@ function getCartItemCount($conn, $user_id)
       <!-- PRODUCTS -->
       <a href="/products" class="hover:text-yellow-400 transition flex items-center space-x-2">
         <i class="fas fa-pizza-slice"></i>
-        <span>Products</span>
+        <span>Menus</span>
       </a>
 
       <!-- FEEDBACK -->
@@ -81,8 +81,8 @@ function getCartItemCount($conn, $user_id)
           </a>
 
           <!-- Nút Logout -->
-          <form method="POST" id="logout-form">
-            <button type="submit" name="logout" onclick="confirmLogout(event)"
+          <form method="POST" id="logout-form" onsubmit="return confirm('Are you sure you want to logout?');">
+            <button type="submit" name="logout"
               class="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-lg transition">
               Logout
             </button>
@@ -95,14 +95,6 @@ function getCartItemCount($conn, $user_id)
         </a>
       <?php endif; ?>
     </div>
-
-    <script>
-      function confirmLogout(event) {
-        if (!confirm("Are you sure you want to logout?")) {
-          event.preventDefault();
-        }
-      }
-    </script>
 
     <!-- Mobile Menu Button -->
     <div class="lg:hidden">

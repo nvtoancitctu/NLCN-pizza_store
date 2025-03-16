@@ -25,6 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = !empty($_POST['description']) ? $_POST['description'] : null;
     $price = $_POST['price'];
     $category_id = $_POST['category_id'];
+    $stock_quantity = isset($_POST['stock_quantity']) ? (int)$_POST['stock_quantity'] : 0;
+
     $discount = !empty($_POST['discount']) ? $_POST['discount'] : null;
     $discount_end_time = !empty($_POST['discount_end_time']) ? $_POST['discount_end_time'] : null;
     $image = !empty($_POST['image']) ? $_POST['image'] : null;
@@ -45,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    $productController->createProduct($name, $description, $price, $image, $category_id, $discount, $discount_end_time);
+    $productController->createProduct($name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time);
     $_SESSION['success'] = "Product has been added successfully!";
     $_SESSION['limit'] = $productController->countProducts();
     $_SESSION['page'] = 1;
@@ -59,35 +61,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php endif; ?>
 
 <h1 class="text-4xl font-extrabold text-center my-6 text-blue-700">Add New Product</h1>
-
-<div class="text-center mb-4">
-    <button type="button" class="inline-block bg-green-500 text-white px-5 py-2 rounded-full hover:bg-purple-600 transition-all duration-200"
-        onclick="window.location.href='/admin/list'">Back to Admin</button>
-</div>
-
 <div class="flex justify-center mb-8">
-
-    <div class="w-full max-w-4xl rounded-lg alert alert-info">
-        <form action="/admin/add" method="POST" enctype="multipart/form-data" class="bg-gray-50 border border-gray-200 rounded-lg px-8 pt-6 pb-8">
+    <div class="w-full max-w-4xl rounded-lg border-2 border-blue-400 p-6 bg-white">
+        <form action="/admin/add" method="POST" enctype="multipart/form-data" class="space-y-6">
             <!-- CSRF Token -->
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Cột 1 -->
                 <div>
-                    <div class="mb-4">
-                        <label for="name" class="block text-blue-600 text-sm font-medium mb-2">Product Name</label>
-                        <input type="text" name="name" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                    <div class="mb-4 relative">
+                        <label for="name" class="block text-blue-500 text-sm font-medium mb-2"><i class="fas fa-pizza-slice mr-2"></i>Product Name</label>
+                        <input type="text" name="name" class="border border-gray-200 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-blue-300" required>
                     </div>
                     <div class="mb-4">
-                        <label for="price" class="block text-blue-600 text-sm font-medium mb-2">Price</label>
-                        <input type="number" name="price" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" min="0" step="0.01" placeholder="e.g., 15.50" required>
+                        <label for="price" class="block text-blue-500 text-sm font-medium mb-2"><i class="fas fa-dollar-sign mr-2"></i>Price</label>
+                        <input type="number" name="price" class="border border-gray-200 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-blue-300" min="0.01" step="0.01" placeholder="e.g., 15.50" required>
                     </div>
                     <div class="mb-4">
-                        <label for="category_id" class="block text-blue-600 text-sm font-medium mb-2">Category</label>
-                        <select name="category_id" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                        <label for="category_id" class="block text-blue-500 text-sm font-medium mb-2"><i class="fas fa-list-alt mr-2"></i>Category</label>
+                        <select name="category_id" class="border border-gray-200 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-blue-300" required>
                             <?php foreach ($categories as $category): ?>
-                                <option value="<?= htmlspecialchars($category['id']) ?>"><?= htmlspecialchars($category['name']) ?></option>
+                                <option value="<?= htmlspecialchars($category['id']) ?>"> <?= htmlspecialchars($category['name']) ?> </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -95,40 +90,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Cột 2 -->
                 <div>
                     <div class="mb-4">
-                        <label for="discount" class="block text-blue-600 text-sm font-medium mb-2">Discount Price</label>
-                        <input type="number" name="discount" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" min="0" step="0.01" placeholder="e.g., 10.00">
+                        <label for="discount" class="block text-blue-500 text-sm font-medium mb-2"><i class="fas fa-tags mr-2"></i>Discount Price</label>
+                        <input type="number" name="discount" class="border border-gray-200 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-blue-300" min="0" step="0.01" placeholder="e.g., 10.00">
                     </div>
                     <div class="mb-4">
-                        <label for="discount_end_time" class="block text-blue-600 text-sm font-medium mb-2">Discount End Time (UTC)</label>
-                        <input type="datetime-local" id="discount_end_time" name="discount_end_time" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <label for="discount_end_time" class="block text-blue-500 text-sm font-medium mb-2"><i class="fas fa-clock mr-2"></i>Discount End Time</label>
+                        <input type="datetime-local" name="discount_end_time" class="border border-gray-200 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-blue-300">
                     </div>
                     <div class="mb-4">
-                        <label for="image" class="block text-blue-600 text-sm font-medium mb-2">Product Image</label>
-                        <div class="flex items-center">
+                        <label for="image" class="block text-blue-500 text-sm font-medium mb-2"><i class="fas fa-image mr-2"></i>Product Image</label>
+                        <div class="flex items-center gap-4">
                             <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)">
-                            <label for="image" class="border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-600 text-center cursor-pointer hover:bg-blue-50">
-                                <span id="file-name">Select an image...</span>
+                            <label for="image" class="border border-gray-200 rounded-lg px-4 py-2 text-gray-600 cursor-pointer hover:bg-blue-100">
+                                <i class="fas fa-upload"></i> Select an image
                             </label>
+                            <span id="file-name" class="text-gray-500">No file chosen</span>
+                        </div>
+                        <div class="mt-2">
+                            <img id="image-preview" class="hidden w-32 h-32 object-cover rounded-lg" />
                         </div>
                     </div>
-                    <script>
-                        function updateFileName(input) {
-                            const fileName = input.files.length > 0 ? input.files[0].name : "Select an image...";
-                            document.getElementById("file-name").innerText = fileName;
-                        }
-                    </script>
                 </div>
             </div>
-            <!-- Textarea Description (Chiếm toàn hàng) -->
             <div class="mb-4">
-                <label for="description" class="block text-blue-600 text-sm font-medium mb-2">Description</label>
-                <textarea name="description" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Optional"></textarea>
+                <label for="description" class="block text-blue-500 text-sm font-medium mb-2"><i class="fas fa-align-left mr-2"></i>Description</label>
+                <textarea name="description" class="border border-gray-200 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-blue-300" placeholder="Optional"></textarea>
             </div>
-            <div class="flex justify-center mt-6">
-                <button type="submit" class="bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-600 transition-all duration-200">
-                    Add
+            <!-- Button Actions -->
+            <div class="flex justify-center space-x-4">
+                <button type="button" class="bg-green-400 text-white px-4 py-2 rounded-lg hover:bg-green-500 flex items-center transition-all duration-200" onclick="window.location.href='/admin/list'">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Admin
+                </button>
+                <button type="submit" class="bg-blue-400 text-white px-4 py-2 rounded-lg hover:bg-blue-500 flex items-center transition-all duration-200">
+                    <i class="fas fa-plus mr-2"></i> Add new product
                 </button>
             </div>
         </form>
     </div>
 </div>
+<script>
+    function updateFileName(input) {
+        const file = input.files[0];
+        if (file) {
+            document.getElementById("file-name").innerText = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById("image-preview");
+                img.src = e.target.result;
+                img.classList.remove("hidden");
+            };
+            reader.readAsDataURL(file);
+        } else {
+            document.getElementById("file-name").innerText = "No file chosen";
+            document.getElementById("image-preview").classList.add("hidden");
+        }
+    }
+</script>

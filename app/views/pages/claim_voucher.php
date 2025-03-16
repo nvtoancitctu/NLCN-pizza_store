@@ -9,28 +9,33 @@ if (!isset($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $voucherId = $_POST['voucher_id'];
 
+// Kiểm tra user đã claim voucher này chưa
+$checkClaim = $conn->prepare("SELECT COUNT(*) FROM user_voucher WHERE user_id = ? AND voucher_id = ? AND status = 'unused'");
+$checkClaim->execute([$userId, $voucherId]);
+$alreadyClaimed = $checkClaim->fetchColumn();
+
+if ($alreadyClaimed > 0) {
+    // Nếu đã claim thì thông báo và quay lại trang trước
+    $_SESSION['success'] = "You have already claimed this voucher!";
+    header("Location: " . $_SERVER['HTTP_REFERER']);
+    exit;
+}
+
+// Tiếp tục xử lý claim
+$conn->beginTransaction();
 try {
-    // Kiểm tra xem user đã nhận voucher này chưa
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM user_voucher WHERE user_id = ? AND voucher_id = ?");
-    $stmt->execute([$userId, $voucherId]);
-    $exists = $stmt->fetchColumn();
+    // Giảm số lượng voucher
+    $updateVoucher = $conn->prepare("UPDATE vouchers SET quantity = quantity - 1 WHERE id = ?");
+    $updateVoucher->execute([$voucherId]);
 
-    if ($exists) {
-        $_SESSION['error'] = "You have already claimed this voucher.";
-    } else {
-        // Thêm vào bảng user_voucher
-        $stmt = $conn->prepare("INSERT INTO user_voucher (user_id, voucher_id) VALUES (?, ?)");
-        if ($stmt->execute([$userId, $voucherId])) {
-            // Cập nhật trạng thái voucher thành 'used'
-            $updateStmt = $conn->prepare("UPDATE vouchers SET status = 'used' WHERE id = ?");
-            $updateStmt->execute([$voucherId]);
+    // Thêm voucher vào tài khoản người dùng
+    $insertClaim = $conn->prepare("INSERT INTO user_voucher (user_id, voucher_id) VALUES (?, ?)");
+    $insertClaim->execute([$userId, $voucherId]);
 
-            $_SESSION['success'] = "You have successfully claimed the voucher!";
-        } else {
-            $_SESSION['error'] = "Error while claiming the voucher.";
-        }
-    }
+    $conn->commit();
+    $_SESSION['success'] = "You have successfully claimed the voucher!";
 } catch (Exception $e) {
+    $conn->rollBack();
     $_SESSION['error'] = "An unexpected error occurred.";
 }
 

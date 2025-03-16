@@ -28,16 +28,21 @@ if (empty($cartItems)) {
 // Lấy tổng giá trị giỏ hàng từ `total_cart_price`
 $totalAmount = array_sum(array_column($cartItems, 'total_price'));
 
+// Lấy danh sách voucher user đã nhận
+$userVouchers = $userController->getUserVouchers($user['id']);
+$voucherDiscount = 0;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   // Check CSRF token
   if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
     die('Invalid CSRF token');
   }
 
-  $address = trim(strip_tags($_POST['address'])); // Làm sạch địa chỉ
+  // Lấy thông tin từ form
+  $address = trim(strip_tags($_POST['address']));
   $payment_method = $_POST['payment_method'];
-
-  $image = !empty($_POST['image']) ? $_POST['image'] : null; // Lấy giá trị hình ảnh hoặc có hoặc trả về null
+  $image = !empty($_POST['image']) ? $_POST['image'] : null;
+  $voucher_code = !empty($_POST['voucher_code']) ? $_POST['voucher_code'] : null;
 
   if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
     $allowed = ['jpg', 'jpeg', 'png', 'gif'];
@@ -56,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   }
 
   // Gọi OrderController để tạo một đơn hàng mới
-  $order_id = $orderController->createOrder($user_id, $cartItems, $payment_method, $address, $image);
+  $order_id = $orderController->createOrder($user_id, $cartItems, $payment_method, $address, $image, $voucher_code);
 
   // Xóa giỏ hàng sau khi đặt hàng thành công
   $cartController->clearCart($user_id);
@@ -76,10 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
     class="bg-white shadow-lg alert alert-info rounded-lg p-8 max-w-4xl mx-auto mb-6">
     <!-- CSRF Token -->
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+
     <!-- Bố cục chia thành hai cột -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
       <!-- Cột bên trái: Thông tin giỏ hàng và địa chỉ giao hàng -->
       <div class="space-y-6">
+
         <!-- Thông tin giỏ hàng -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Your Cart</h2>
@@ -101,21 +109,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
             <?php endforeach; ?>
           </div>
         </div>
+
         <!-- Thông tin giao hàng -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Shipping Information</h2>
           <textarea name="address" id="address" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
         </div>
+
         <!-- Lưu ý đơn hàng -->
         <p class="text-gray-800 p-2 text-sm">
-          <strong>NOTE:</strong>
-          <br>• Size M costs +20% and Size L costs +50% of the base price, including discounted prices.
-          <br>• All orders with an invoice under $100 will have a shipping fee of $1.50.
+          <strong>NOTE: </strong>All orders with an invoice under $100 will have a shipping fee of $1.50.
         </p>
       </div>
 
       <!-- Cột bên phải: Tổng số tiền và thanh toán -->
       <div class="space-y-6">
+
         <!-- Phương thức thanh toán -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Payment Method</h2>
@@ -135,30 +144,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
           </div>
         </div>
 
+        <!-- Áp dụng Voucher Code -->
+        <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
+          <h2 class="text-xl font-bold mb-4 text-gray-800">Voucher Code</h2>
+          <select name="voucher_code" id="voucher_code" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" onchange="updateDiscount()">
+            <option value="" data-discount="0">-- Select a voucher --</option>
+            <?php foreach ($userVouchers as $voucher): ?>
+              <?php if ($totalAmount >= $voucher['min_order_value']): ?>
+                <option value="<?= htmlspecialchars($voucher['code']) ?>"
+                  data-discount="<?= $voucher['discount_amount'] ?>"
+                  data-min-order="<?= $voucher['min_order_value'] ?>"
+                  title="<?= htmlspecialchars($voucher['description']) ?>">
+                  <?= htmlspecialchars($voucher['code']) ?>
+                  (<?= $voucher['discount_amount'] < 1 ? '-' . ($voucher['discount_amount'] * 100) . '%' : '-$' . number_format($voucher['discount_amount'], 2) ?>)
+                </option>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
         <!-- Tổng số tiền -->
-        <!-- Xác định phí vận chuyển -->
         <?php
         $shippingFee = ($totalAmount >= 100) ? 0 : 1.5;
         $totalWithShipping = $totalAmount + $shippingFee;
         ?>
-
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
           <div class="space-y-3">
+
+            <!-- Giá trị của đơn hàng -->
             <div class="flex justify-between">
               <p class="text-gray-700">Subtotal</p>
               <p class="font-semibold text-gray-800">$<?= number_format($totalAmount, 2) ?></p>
             </div>
+
+            <!-- Chi phí vận chuyển -->
             <div class="flex justify-between">
               <p class="text-gray-700">Shipping</p>
               <p class="font-semibold text-gray-800">
                 <?= ($shippingFee == 0) ? "<span class='text-green-500 font-bold'>FREE</span>" : "$" . number_format($shippingFee, 2) ?>
               </p>
             </div>
+
+            <!-- Giảm giá voucher -->
+            <div class="flex justify-between">
+              <p class="text-gray-700">Voucher Discount</p>
+              <p id="discount_value" class="font-semibold text-green-500">
+                - <?= $voucherDiscount < 1 ? ($totalAmount * $voucherDiscount) . '$' : '$' . number_format($voucherDiscountAmount, 2) ?>
+              </p>
+            </div>
+
+            <!-- Tổng giá đơn hàng cuối cùng -->
             <div class="flex justify-between border-t pt-3">
               <p class="text-gray-700 font-bold">Total</p>
-              <p class="font-bold text-red-500">$<?= number_format($totalWithShipping, 2) ?></p>
+              <p id="total_price" class="font-bold text-red-500">
+                $<?= number_format(max($totalWithShipping, 0), 2) ?>
+              </p>
             </div>
+
           </div>
         </div>
 
@@ -212,5 +255,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
     } else {
       bankTransferSection.classList.add('hidden');
     }
+  }
+
+  function updateDiscount() {
+    const select = document.getElementById("voucher_code");
+    const selectedOption = select.options[select.selectedIndex];
+    const discountValue = parseFloat(selectedOption.getAttribute("data-discount")) || 0;
+    const minOrder = parseFloat(selectedOption.getAttribute("data-min-order")) || 0;
+    let subtotal = parseFloat(<?= json_encode($totalAmount) ?>);
+
+    // Kiểm tra subtotal có hợp lệ không
+    if (isNaN(subtotal)) {
+      console.error("Subtotal is invalid.");
+      subtotal = 0; // Đảm bảo không gây lỗi
+    }
+
+    if (subtotal < minOrder) {
+      alert(`Your order must be at least $${minOrder.toFixed(2)} to use this voucher.`);
+      select.value = ""; // Reset lựa chọn
+      return;
+    }
+
+    // Tính phí vận chuyển
+    let shippingFee = subtotal < 100 ? 1.5 : 0;
+    subtotal += shippingFee;
+
+    // Tính toán giảm giá
+    let discountAmount = discountValue < 1 ? subtotal * discountValue : discountValue;
+    let totalAfterDiscount = Math.max(subtotal - discountAmount, 0); // Đảm bảo không bị âm
+
+    // Cập nhật UI
+    document.getElementById("discount_value").textContent = discountValue < 1 ?
+      `-${(discountValue * 100).toFixed(0)}%` :
+      `-$${discountAmount.toFixed(2)}`;
+
+    document.getElementById("total_price").textContent = `$${totalAfterDiscount.toFixed(2)}`;
   }
 </script>

@@ -23,11 +23,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
+    // Lấy dữ liệu từ form
     $name = $_POST['name'];
     $description = $_POST['description'];
     $price = $_POST['price'];
     $category_id = $_POST['category_id'];
-
+    $stock_quantity = $_POST['stock_quantity'];
     $discount = !empty($_POST['discount']) ? $_POST['discount'] : null;
     $discount_end_time = !empty($_POST['discount_end_time']) ? $_POST['discount_end_time'] : null;
 
@@ -52,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Chạy cập nhật sản phẩm trong mọi trường hợp (dù có hoặc không có ảnh mới)
-    $productController->updateProduct($product_id, $name, $description, $price, $image, $category_id, $discount, $discount_end_time);
+    $productController->updateProduct($product_id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time);
     $_SESSION['success'] = "Product $product_id has been updated successfully!";
     $_SESSION['limit'] = $productController->countProducts();
     $_SESSION['page'] = 1;
@@ -63,16 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <h1 class="text-4xl font-extrabold text-center my-6 text-blue-700">Edit Product</h1>
-
-<div class="text-center mb-4">
-    <button type="button" class="inline-block bg-green-500 text-white px-5 py-2 rounded-full hover:bg-purple-600 transition-all duration-200"
-        onclick="window.location.href='/admin/list'">Back to Admin</button>
-</div>
-
 <div class="flex justify-center mb-8">
-    <div class="w-full max-w-4xl rounded-lg border-2 border-blue-600">
+    <div class="w-full max-w-4xl rounded-lg border-2 border-blue-700 bg-gray-50 shadow-lg p-6">
         <form action="/admin/edit-product/id=<?= htmlspecialchars($product['id']) ?>" method="POST" enctype="multipart/form-data"
-            class="bg-white border border-gray-200 rounded-lg px-8 pt-6 pb-8">
+            class="bg-gray-50 border border-gray-400 rounded-lg px-8 pt-6 pb-8">
             <!-- CSRF Token -->
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
@@ -80,75 +75,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Cột 1 -->
                 <div>
                     <div class="mb-4">
-                        <label for="name" class="block text-blue-600 text-sm font-medium mb-2">Product Name</label>
+                        <label for="name" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-tag mr-2"></i>Product Name</label>
                         <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>"
-                            class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
                     <div class="mb-4">
-                        <label for="price" class="block text-blue-600 text-sm font-medium mb-2">Price</label>
+                        <label for="price" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-dollar-sign mr-2"></i>Price</label>
                         <input type="number" name="price" value="<?= htmlspecialchars($product['price']) ?>"
-                            class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" min="0" step="0.01" placeholder="Enter price (e.g., 15.50)" required>
+                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" step="0.01" placeholder="Enter price (e.g., 15.50)" required>
                     </div>
                     <div class="mb-4">
-                        <label for="category_id" class="block text-blue-600 text-sm font-medium mb-2">Category</label>
-                        <select name="category_id" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                        <label for="category_id" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-list mr-2"></i>Category</label>
+                        <select name="category_id" class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                             <?php foreach ($categories as $category): ?>
                                 <option value="<?= htmlspecialchars($category['id']) ?>" <?= $category['id'] == $product['category_id'] ? 'selected' : '' ?>><?= htmlspecialchars($category['name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="mb-4">
+                        <label for="stock_quantity" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-boxes mr-2"></i>Stock Quantity</label>
+                        <input type="number" name="stock_quantity" value="<?= htmlspecialchars($product['stock_quantity']) ?>"
+                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" required>
+                    </div>
                 </div>
                 <!-- Cột 2 -->
                 <div>
                     <div class="mb-4">
-                        <label for="discount" class="block text-blue-600 text-sm font-medium mb-2">Discount Price</label>
+                        <label for="discount" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-percentage mr-2"></i>Discount Price</label>
                         <input type="number" name="discount" value="<?= htmlspecialchars($product['discount']) ?>"
-                            class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" min="0" step="0.01" placeholder="Enter discount (e.g., 15.50)">
+                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" step="0.01" placeholder="Enter discount (e.g., 15.50)">
                     </div>
                     <div class="mb-4">
-                        <label for="discount_end_time" class="block text-blue-600 text-sm font-medium mb-2">Discount End Time (UTC)</label>
+                        <label for="discount_end_time" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-clock mr-2"></i>Discount End Time (UTC)</label>
                         <input type="datetime-local" id="discount_end_time" name="discount_end_time" value="<?= htmlspecialchars($product['discount_end_time']) ?>"
-                            class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="mb-4">
-                        <label for="image" class="block text-blue-600 text-sm font-medium mb-2">Product Image</label>
-
-                        <!-- Hiển thị ảnh cũ -->
-                        <?php if (!empty($product['image'])): ?>
-                            <div class="mb-3">
+                        <label class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-image mr-2"></i>Product Image</label>
+                        <div class="flex items-center gap-6">
+                            <!-- Ảnh cũ -->
+                            <?php if (!empty($product['image'])): ?>
                                 <img src="/images/<?= htmlspecialchars($product['image']) ?>" alt="Product Image" class="w-32 h-32 object-cover border rounded-lg shadow">
+                            <?php else: ?>
+                                <p class="text-sm text-gray-600">No image uploaded.</p>
+                            <?php endif; ?>
+                            <!-- Upload ảnh mới -->
+                            <div>
+                                <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)">
+                                <label for="image" class="border border-gray-200 rounded-lg px-4 py-2 text-gray-600 cursor-pointer hover:bg-blue-100">
+                                    <i class="fas fa-upload"></i>
+                                </label>
+                                <span id="file-name" class="text-gray-500 block mt-2">No file chosen</span>
                             </div>
-                        <?php else: ?>
-                            <p class="text-sm text-gray-500 mb-3">No image uploaded for this product.</p>
-                        <?php endif; ?>
-
-                        <div class="flex items-center">
-                            <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)">
-                            <label for="image" class="border border-gray-300 rounded-lg w-full py-2 px-3 text-gray-600 text-center cursor-pointer hover:bg-blue-50">
-                                <span id="file-name">Choose an image...</span>
-                            </label>
+                            <!-- Preview ảnh mới -->
+                            <img id="image-preview" class="hidden w-32 h-32 object-cover rounded-lg border">
                         </div>
                     </div>
                 </div>
             </div>
             <!-- Textarea Description -->
             <div class="mb-4">
-                <label for="description" class="block text-blue-600 text-sm font-medium mb-2">Description</label>
-                <textarea name="description" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400"><?= htmlspecialchars($product['description']) ?></textarea>
+                <label for="description" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-align-left mr-2"></i>Description</label>
+                <textarea name="description" class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"><?= htmlspecialchars($product['description']) ?></textarea>
             </div>
-            <!-- Button Submit -->
-            <div class="flex justify-center">
-                <button type="submit" class="bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-600 transition-all duration-200">
-                    Update
+            <!-- Button Actions -->
+            <div class="flex justify-center space-x-4">
+                <button type="button" class="flex items-center bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all duration-200"
+                    onclick="window.location.href='/admin/list'">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Admin
+                </button>
+                <button type="submit" class="flex items-center bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200">
+                    <i class="fas fa-save mr-2"></i> Update
                 </button>
             </div>
         </form>
     </div>
 </div>
 
+
 <script>
     function updateFileName(input) {
-        const fileName = input.files.length > 0 ? input.files[0].name : "Choose an image...";
-        document.getElementById("file-name").innerText = fileName;
+        const file = input.files[0];
+        if (file) {
+            document.getElementById("file-name").innerText = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById("image-preview");
+                img.src = e.target.result;
+                img.classList.remove("hidden");
+            };
+            reader.readAsDataURL(file);
+        } else {
+            document.getElementById("file-name").innerText = "No file chosen";
+            document.getElementById("image-preview").classList.add("hidden");
+        }
     }
 </script>

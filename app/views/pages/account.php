@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <h2 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">PROFILE</h2>
 
   <!-- Thông tin người dùng hiển thị dưới dạng lưới -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white shadow-md rounded-xl mx-auto mb-8 alert alert-info">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white shadow-md rounded-xl mx-auto mb-8 border-2 border-yellow-400">
     <!-- Name -->
     <div class="flex items-center space-x-4">
       <i class="fas fa-user text-3xl text-yellow-500"></i>
@@ -127,9 +127,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
   <!-- Form Cập Nhật Thông Tin Người Dùng, mặc định bị ẩn -->
-  <div id="update-profile-form" class="space-y-6 mt-4 hidden mx-auto">
-    <h3 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Update Profile</h3>
-    <form action="/account" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md alert alert-info">
+  <div id="update-profile-form" class="space-y-6 mt-4 mb-8 hidden mx-auto">
+    <h3 class="text-3xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Update Profile</h3>
+    <form action="/account" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-blue-200">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
       <div class="flex flex-col md:flex-row justify-between">
         <div class="w-full md:w-1/2 pr-0 md:pr-3 mb-4 md:mb-0">
@@ -152,34 +152,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" name="update_profile" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md">Update</button>
       </div>
     </form>
+
+    <script>
+      function toggleForm() {
+        // Lấy phần tử form
+        const form = document.getElementById('update-profile-form');
+        // Ẩn/Hiện form
+        form.classList.toggle('hidden');
+      }
+    </script>
+
   </div>
 
-  <script>
-    function toggleForm() {
-      // Lấy phần tử form
-      const form = document.getElementById('update-profile-form');
-      // Ẩn/Hiện form
-      form.classList.toggle('hidden');
-    }
-  </script>
-
   <!-- Danh sách voucher đã nhận -->
-  <section class="bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-200">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">🎟 Your Vouchers 🎟</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  <section class="bg-gray-50 p-6 rounded-xl drop-shadow-lg border-2 border-yellow-400">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Your Vouchers</h2>
+
+    <div class="space-y-4">
       <?php if (empty($userVouchers)): ?>
-        <p class="text-gray-500 text-center col-span-3">You have not claimed any vouchers yet.</p>
+        <p class="text-gray-500 text-center">🚫 You have not claimed any vouchers yet.</p>
       <?php else: ?>
         <?php foreach ($userVouchers as $voucher): ?>
-          <div class="relative bg-white p-5 rounded-lg shadow-md border border-gray-300 text-center">
-            <h3 class="text-lg font-semibold text-red-600"><?= htmlspecialchars($voucher['description']) ?></h3>
-            <p class="text-gray-700">Code: <strong class="text-gray-900"><?= htmlspecialchars($voucher['code']) ?></strong></p>
-            <p class="text-sm text-gray-500">Expires: <?= htmlspecialchars($voucher['expiration_date']) ?></p>
-            <p class="text-sm text-gray-600">Status:
-              <span class="<?= $voucher['status'] === 'used' ? 'text-red-500' : 'text-green-500' ?>">
-                <?= ucfirst($voucher['status']) ?>
-              </span>
-            </p>
+          <div class="flex items-center bg-white p-4 rounded-lg shadow-md border border-gray-300 transition-all duration-300 ease-in-out hover:shadow-lg">
+            <!-- Icon voucher -->
+            <div class="text-5xl text-red-500 px-4">🎟</div>
+
+            <!-- Thông tin voucher -->
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-900"><?= htmlspecialchars($voucher['description']) ?></h3>
+              <p class="text-gray-700">🔑 Code: <strong class="text-gray-900"><?= htmlspecialchars($voucher['code']) ?></strong></p>
+              <p class="text-sm text-gray-500">⏳ Expires: <?= htmlspecialchars($voucher['expiration_date']) ?></p>
+            </div>
+
+            <!-- Trạng thái voucher -->
+            <div class="text-sm font-medium <?= $voucher['status'] === 'used' ? 'text-red-500' : 'text-green-500' ?>">
+              <?= $voucher['status'] === 'used' ? '❌ Used' : '✅ Active' ?>
+            </div>
+
           </div>
         <?php endforeach; ?>
       <?php endif; ?>
@@ -197,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $orderStatus = strtolower($order['status'] ?? 'unknown');
       $isCanceled = $orderStatus === 'cancelled';
       ?>
-      <div class="relative bg-white p-8 rounded-2xl shadow-lg alert alert-info mb-8">
+      <div class="relative bg-white p-8 rounded-2xl drop-shadow-lg mb-8 border-2 border-yellow-400">
 
         <!-- Thông báo nếu đơn hàng bị hủy -->
         <?php if ($isCanceled): ?>
@@ -212,7 +221,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Nội dung đơn hàng -->
         <div class="space-y-8 <?= $isCanceled ? 'opacity-50' : '' ?>">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
+
+            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <i class="fas fa-receipt text-blue-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Order ID</p>
@@ -220,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <i class="fas fa-map-marker-alt text-pink-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Shipping Address</p>
@@ -228,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <i class="fas fa-calendar-alt text-indigo-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Order Date</p>
@@ -236,15 +246,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <i class="fas fa-dollar-sign text-green-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Total Amount</p>
-                <p class="font-semibold text-gray-800">$<?= number_format($order['total'], 2) ?></p>
+                <p class="font-semibold text-gray-800">
+                  $<?= number_format($order['total'], 2) ?>
+                  <?php if (!empty($order['voucher_code'])): ?>
+                    <span class="text-red-500" title="<?= htmlspecialchars($order['description']) ?>">
+                      (<?= htmlspecialchars($order['voucher_code']) ?>)
+                    </span>
+                  <?php endif; ?>
+                </p>
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg alert alert-info flex items-center space-x-3">
+            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <i class="fas fa-credit-card text-purple-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Payment Method</p>
@@ -262,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statusColor = $statusColors[$orderStatus] ?? 'text-gray-500';
             ?>
 
-            <div class="relative bg-white p-4 rounded-lg alert alert-info">
+            <div class="relative bg-white p-4 rounded-lg border-2 border-blue-100">
               <div class="flex items-center space-x-3">
                 <i class="fas fa-truck <?= $statusColor ?> text-xl"></i>
                 <div>
@@ -273,47 +290,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
               </div>
             </div>
-          </div>
 
+          </div>
           <!-- Bảng chi tiết đơn hàng -->
-          <div class="overflow-x-auto">
-            <table class="w-full border border-gray-200 rounded-lg overflow-hidden alert alert-info">
-              <thead class="bg-gradient-to-r from-yellow-200 to-yellow-300 text-gray-700">
-                <tr>
-                  <th class="px-6 py-3 text-left font-semibold uppercase">Product</th>
-                  <th class="px-6 py-3 text-center font-semibold uppercase">Size</th>
-                  <th class="px-6 py-3 text-center font-semibold uppercase">Quantity</th>
-                  <th class="px-6 py-3 text-center font-semibold uppercase">Price</th>
-                  <th class="px-6 py-3 text-center font-semibold uppercase">Total</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <?php foreach ($orderdetails as $item): ?>
-                  <tr class="hover:bg-yellow-50 transition-all duration-200 ease-in-out">
-                    <td class="px-6 py-4 text-gray-800 font-medium">
-                      <?= htmlspecialchars($item['name']) ?>
-                    </td>
-                    <td class="px-6 py-4 text-center text-gray-600">
-                      <?= htmlspecialchars($item['size']) ?>
-                    </td>
-                    <td class="px-6 py-4 text-center text-gray-600">
-                      <?= htmlspecialchars($item['quantity']) ?>
-                    </td>
-                    <td class="px-6 py-4 text-center text-gray-600">
+          <div class="overflow-x-auto bg-white border-2 border-blue-100 rounded-lg shadow-sm p-4">
+            <ul class="divide-y divide-gray-300 text-sm">
+              <?php foreach ($orderdetails as $item): ?>
+                <li class="py-3 px-4 flex flex-col space-y-1 border-l-4 border-yellow-400 bg-yellow-50 rounded-md shadow-sm">
+                  <div class="flex justify-between items-center">
+                    <span class="font-semibold text-gray-800"><?= htmlspecialchars($item['name']) ?></span>
+                    <span class="text-gray-600 text-sm">(Size: <?= htmlspecialchars($item['size']) ?>)</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Quantity: <strong><?= htmlspecialchars($item['quantity']) ?></strong></span>
+                    <span class="text-gray-600">
+                      Price:
                       <?php if ($item['price_to_display'] < $item['price']): ?>
-                        <span class="line-through text-gray-500 text-sm">$<?= number_format($item['price'], 2) ?></span>
-                        <span class="text-red-600 text-base font-semibold">$<?= number_format($item['price_to_display'], 2) ?></span>
+                        <span class="line-through text-gray-500">$<?= number_format($item['price'], 2) ?></span>
+                        <span class="text-red-600 font-semibold">$<?= number_format($item['price_to_display'], 2) ?></span>
                       <?php else: ?>
-                        <span>$<?= number_format($item['price'], 2) ?></span>
+                        <span class="font-semibold">$<?= number_format($item['price'], 2) ?></span>
                       <?php endif; ?>
-                    </td>
-                    <td class="px-6 py-4 text-center font-semibold text-gray-800">
-                      $<?= number_format($item['total_price'], 2) ?>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
+                    </span>
+                  </div>
+                  <div class="text-right font-semibold text-gray-800">
+                    Total: <span class="text-lg text-green-600">$<?= number_format($item['total_price'], 2) ?></span>
+                  </div>
+                </li>
+              <?php endforeach; ?>
+            </ul>
           </div>
         </div>
       </div>
@@ -321,24 +326,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
 
   <!-- Logout Button -->
-  <form method="POST" class="flex justify-center mb-8">
+  <form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure you want to logout?');">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-    <button type="submit" name="logout" onclick="confirmLogout(event)"
+    <button type="submit" name="logout" title="Logout"
       class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
       Logout</button>
   </form>
 </div>
-
-<script>
-  function confirmLogout(event) {
-    // Hiển thị hộp thoại xác nhận
-    const userConfirmed = confirm("Are you sure you want to logout?");
-    if (userConfirmed) {
-      // Người dùng xác nhận thì submit form
-      document.getElementById('logout-form').submit();
-    } else {
-      // Ngăn chặn submit nếu người dùng nhấn "Hủy"
-      event.preventDefault();
-    }
-  }
-</script>

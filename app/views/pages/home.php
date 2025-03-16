@@ -263,7 +263,8 @@ $product = $productController->getProductDetails($product_id);
   </h2>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
     <?php foreach ($randomProducts as $product): ?>
-      <div class="rounded-2xl shadow-md bg-white overflow-hidden transition-transform transform hover:scale-105 hover:shadow-xl border-2 border-blue-500">
+      <div class="rounded-2xl shadow-md bg-white overflow-hidden transition-transform transform hover:scale-105 hover:shadow-xl border-2 border-blue-500"
+        title="<?= htmlspecialchars($product['description']) ?>">
         <img src="/images/<?php echo htmlspecialchars($product['image']); ?>" class="w-3/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:rotate-12 hover:scale-110"
           alt="<?php echo htmlspecialchars($product['name']); ?>">
 
@@ -308,22 +309,26 @@ $product = $productController->getProductDetails($product_id);
   <!-- Exclusive Vouchers -->
   <section class="bg-red-50 p-6 rounded-xl shadow-lg border border-red-200">
     <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">🔥 Coupon Tickets 🔥</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      <?php foreach ($vouchers as $voucher): ?>
-        <div class="relative bg-white p-5 rounded-lg shadow-md border border-red-300 text-center">
-          <p class="text-gray-700">Expires: <?= htmlspecialchars($voucher['expiration_date']) ?></p>
-          <div class="ticket flex flex-col justify-center items-center p-3 bg-red-500 text-white rounded-md mt-3 space-y-2" title="<?= htmlspecialchars($voucher['description']) ?>">
-            <span class="text-center font-bold">🎟 <?= htmlspecialchars($voucher['code']) ?></span>
-          </div>
-          <form method="post" action="index.php?page=claim_voucher" class="mt-3">
-            <input type="hidden" name="voucher_id" value="<?= htmlspecialchars($voucher['id']) ?>">
-            <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">Claim Now</button>
-          </form>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  </section>
 
+    <?php if (!empty($vouchers)): ?>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <?php foreach ($vouchers as $voucher): ?>
+          <div class="relative bg-white p-5 rounded-lg shadow-md border border-red-300 text-center" title="<?= htmlspecialchars($voucher['description']) ?>">
+            <p class="text-gray-700">Expires: <?= htmlspecialchars($voucher['expiration_date']) ?></p>
+            <div class="ticket flex flex-col justify-center items-center p-3 bg-red-500 text-white rounded-md mt-3 space-y-2">
+              <span class="text-center font-bold">🎟 <?= htmlspecialchars($voucher['code']) ?></span>
+            </div>
+            <form method="post" action="index.php?page=claim_voucher" class="mt-3">
+              <input type="hidden" name="voucher_id" value="<?= htmlspecialchars($voucher['id']) ?>">
+              <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">Claim Now</button>
+            </form>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <p class="text-center text-gray-600 text-lg mt-4">No available vouchers right now. Stay tuned for more deals!</p>
+    <?php endif; ?>
+  </section>
 
   <!-- Top Rated & Best Seller Pizzas -->
   <section class="mt-12 bg-white p-6 rounded-xl shadow-lg border text-center">

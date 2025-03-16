@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
     $user_id = $_POST['user_id'];
 
-    // Cập nhật số ngày block user 
+    // Trường hợp khóa tài khoản
     if (isset($_POST['block_user'])) {
         $_POST['days'] = intval($_POST['days']);
         $days = $_POST['days'];
@@ -82,10 +82,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
         } else {
             $_SESSION['success'] = "Please enter a valid block duration (minimum 1 day).";
         }
-    } elseif (isset($_POST['check_block'])) {
-        // Kiểm tra block days
-        $message = $userController->unblockUser($user_id);
+    }
+    // Trường hợp kiểm tra block
+    elseif (isset($_POST['check_block'])) {
+        $message = $userController->checkblockUser($user_id);
         $_SESSION['success'] = $message;
+    }
+    // Trường hợp mở khóa tài khoản
+    elseif (isset($_POST['unblock'])) {
+        $result = $userController->unblockUser($user_id);
+        if ($result) {
+            $_SESSION['success'] = "User $user_id has been unblocked successfully.";
+        } else {
+            $_SESSION['success'] = "Failed to unblock user $user_id.";
+        }
     }
 
     header('Location: /admin/list');
@@ -101,9 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     </script>
 <?php endif; ?>
 
-<!-- Quản lý sản phẩm, thống kê, xuất file csv -->
-<h1 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">Product Management</h1>
-
+<!--------------------------------------- Quản lý sản phẩm, thống kê, xuất file csv --------------------------------------->
+<h1 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">Products Management</h1>
 <div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="row mb-4">
         <!-- Nút chức năng -->
@@ -117,12 +126,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
             <!-- Nút xuất/nhập dữ liệu -->
             <div class="d-flex align-items-center mb-3 flex-wrap">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-
                 <button class="btn btn-outline-success me-4 mb-2" onclick="window.location.href='/admin/export-products'">Export to CSV</button>
-
                 <form method="POST" action="/admin/import-products" enctype="multipart/form-data" class="d-flex align-items-center flex-wrap">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-                    <label for="product_file" class="form-label mb-0 me-3 align-self-center">Upload CSV:</label>
                     <input type="file" name="product_file" id="product_file" class="form-control w-auto me-3 mb-2" accept=".csv" required>
                     <button type="submit" class="btn btn-primary mb-2">Import</button>
                 </form>
@@ -164,8 +170,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                     <th class="px-3 py-2 border-b">ID</th>
                     <th class="px-3 py-2 border-b">Image</th>
                     <th class="px-3 py-2 border-b">Name</th>
-                    <th class="px-3 py-2 border-b">Price</th>
                     <th class="px-3 py-2 border-b">Description</th>
+                    <th class="px-3 py-2 border-b">Stock</th>
+                    <th class="px-3 py-2 border-b">Price</th>
                     <th class="px-3 py-2 border-b">Discount</th>
                     <th class="px-3 py-2 border-b">Actions</th>
                 </tr>
@@ -178,25 +185,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                             <td class="px-3 py-2 border-b text-center">
                                 <img src="/images/<?= htmlspecialchars($product['image']); ?>" class="w-16 h-16 object-cover mx-auto rounded-lg" alt="<?= htmlspecialchars($product['name']); ?>">
                             </td>
-                            <td class="px-3 py-2 border-b font-semibold text-gray-800 text-center"><?= htmlspecialchars($product['name']) ?></td>
+                            <td class="px-3 py-2 border-b font-semibold text-gray-800"><?= htmlspecialchars($product['name']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-600"><?= htmlspecialchars(substr($product['description'], 0, 20)) ?>...</td>
+                            <td class="px-3 py-2 border-b text-green-600 font-bold text-center"><?= htmlspecialchars($product['stock_quantity']) ?></td>
                             <td class="px-3 py-2 border-b text-green-600 font-bold text-center">$<?= number_format($product['price'], 2) ?></td>
-                            <td class="px-3 py-2 border-b text-gray-600"><?= htmlspecialchars(substr($product['description'], 0, 50)) ?>...</td>
                             <td class="px-3 py-2 border-b text-red-500 font-bold text-center">
                                 <?php if (!empty($product['discount']) && $product['discount'] > 0): ?>
                                     $<?= number_format($product['discount'], 2) ?>
                                 <?php else: ?>
-                                    <span class="text-gray-500">No Discount</span>
+                                    <span class="text-gray-500">---</span>
                                 <?php endif; ?>
                             </td>
                             <td class="px-3 py-2 border-b text-center">
-                                <div class="d-flex justify-content-center flex-wrap">
-                                    <a href="/admin/edit-product/id=<?= $product['id'] ?>" class="btn btn-warning me-2">Edit</a>
+                                <div class="d-flex justify-content-center flex-nowrap gap-2">
+                                    <!-- Nút Edit -->
+                                    <a href="/admin/edit-product/id=<?= $product['id'] ?>" class="btn btn-warning me-2" title="Edit Product">
+                                        <i class="fas fa-edit"></i> <!-- Icon Edit -->
+                                    </a>
+
+                                    <!-- Nút Delete -->
                                     <form action="/admin/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');">
                                         <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                        <button type="submit" class="btn btn-danger" title="Delete Product">
+                                            <i class="fas fa-trash-alt"></i> <!-- Icon Delete -->
+                                        </button>
                                     </form>
                                 </div>
                             </td>
+
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -237,12 +253,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     </div>
 </div>
 
-<!-- Shipment Management -->
-<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Order Management</h1>
+<!--------------------------------------- Quản lý đơn hàng, cập nhật trạng thái --------------------------------------->
+<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Orders Management</h1>
 
-<!-- Form Chỉnh Sửa Đơn Hàng (Mặc Định Ẩn) -->
+<!-- Form chỉnh sửa đơn hàng (mặc định ẩn) -->
 <div id="edit-order-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
-    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md alert alert-info">
+    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-green-400">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
         <!-- Bố cục 2 cột -->
@@ -291,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
         <!-- Nút Thao Tác -->
         <div class="flex justify-center space-x-4 mt-6">
-            <button type="submit" name="edit_order" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md">Save Changes</button>
+            <button type="submit" name="edit_order" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md">Save</button>
             <button type="button" id="cancelEdit" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
         </div>
     </form>
@@ -345,11 +361,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                                         data-status="<?= $order['status'] ?>"
                                         data-payment="<?= htmlspecialchars($order['payment_method']) ?>"
                                         data-image="<?= isset($order['images']) ? htmlspecialchars($order['images']) : '' ?>">
-                                        Edit
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                     <form action="/admin/delete-order" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');">
                                         <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                        <button type="submit" class="btn btn-danger" title="Delete Product">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                     </form>
                                 </div>
                             </td>
@@ -412,18 +430,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     });
 </script>
 
-<!-- Quản lý tài khoản -->
+<!--------------------------------------- Quản lý tài khoản --------------------------------------->
 <h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Account Management</h1>
 
-<!-- Form Block User (Ẩn Mặc Định) -->
+<!-- Form Block User (mặc định ẩn) -->
 <div id="block-user-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
-    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md alert alert-info">
+    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-green-400">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="user_id" id="blockUserId">
 
         <!-- Grid 2 cột -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Cột 1: User ID, Name, Role -->
+            <!-- Cột 1: Name, Email, Phone, Address -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-blue-700 font-semibold">Name</label>
+                    <input type="text" id="blockUserName" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block text-blue-700 font-semibold">Email</label>
+                    <input type="text" id="blockUserEmail" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block text-blue-700 font-semibold">Phone</label>
+                    <input type="text" id="blockUserPhone" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+                <div>
+                    <label class="block text-blue-700 font-semibold">Address</label>
+                    <input type="text" id="blockUserAddress" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                </div>
+            </div>
+
+            <!-- Cột 2: Email, Phone, Address, Block Days -->
             <div class="space-y-4">
                 <div>
                     <label class="block text-blue-700 font-semibold">User ID</label>
@@ -437,18 +475,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                     <label class="block text-blue-700 font-semibold">Blocked Until</label>
                     <input type="text" id="blockUserBlockedUntil" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
                 </div>
-            </div>
-
-            <!-- Cột 2: Email, Blocked Until, Block Days -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-blue-700 font-semibold">Name</label>
-                    <input type="text" id="blockUserName" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-blue-700 font-semibold">Email</label>
-                    <input type="text" id="blockUserEmail" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
                 <div>
                     <label class="block text-red-500 font-semibold">Block Days</label>
                     <input type="number" name="days" id="blockDays" min="1" class="w-full p-3 border border-gray-300 rounded-md">
@@ -457,7 +483,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
         </div>
         <!-- Nút Confirm và Cancel -->
         <div class="flex justify-center space-x-4 mt-6">
-            <button type="submit" name="block_user" class="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-lg shadow-md">Confirm Block</button>
+            <button type="submit" name="block_user" class="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-lg shadow-md">Confirm</button>
             <button type="button" id="cancelBlock" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
             <button type="submit" name="check_block" class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-6 rounded-lg shadow-md">Check</button>
         </div>
@@ -473,8 +499,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                     <th class="px-3 py-2 border-b">ID</th>
                     <th class="px-3 py-2 border-b">Name</th>
                     <th class="px-3 py-2 border-b">Email</th>
-                    <th class="px-3 py-2 border-b">Phone</th>
-                    <th class="px-3 py-2 border-b">Address</th>
                     <th class="px-3 py-2 border-b">Created At</th>
                     <th class="px-3 py-2 border-b">Blocked Until</th>
                     <th class="px-3 py-2 border-b">Action</th>
@@ -491,25 +515,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['id']) ?></td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['name']) ?></td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['email']) ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['phone'] ?? 'NULL') ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['address'] ?? 'NULL') ?></td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['created_at']) ?></td>
                             <td class="px-3 py-2 border-b text-red-500 font-bold"><?= htmlspecialchars($user['blocked_until'] ?? 'NULL') ?></td>
                             <td class="px-3 py-2 border-b">
-                                <button class="block-btn bg-red-500 text-white px-4 py-2 rounded-md"
-                                    data-id="<?= htmlspecialchars($user['id']) ?>"
-                                    data-name="<?= htmlspecialchars($user['name']) ?>"
-                                    data-email="<?= htmlspecialchars($user['email']) ?>"
-                                    data-role="<?= htmlspecialchars($user['role']) ?>"
-                                    data-block="<?= htmlspecialchars($user['blocked_until'] ?? 'NULL') ?>">
-                                    Block
-                                </button>
+                                <div class="flex justify-center items-center space-x-2">
+                                    <!-- Nút khóa (Block) -->
+                                    <button class="block-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+                                        data-id="<?= htmlspecialchars($user['id']) ?>"
+                                        data-name="<?= htmlspecialchars($user['name']) ?>"
+                                        data-email="<?= htmlspecialchars($user['email']) ?>"
+                                        data-role="<?= htmlspecialchars($user['role']) ?>"
+                                        data-phone="<?= htmlspecialchars($user['phone'] ?? 'NULL') ?>"
+                                        data-address="<?= htmlspecialchars($user['address'] ?? 'NULL') ?>"
+                                        data-block="<?= htmlspecialchars($user['blocked_until'] ?? 'NULL') ?>">
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+
+                                    <!-- Nút mở khóa (Unblock) -->
+                                    <form action="/admin/list" method="POST" onsubmit="return confirm('Are you sure you want to unblock this user?');">
+                                        <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+                                        <button type="submit" name="unblock" title="Unblock"
+                                            class="unblock-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md">
+                                            <i class="fas fa-unlock"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
-                    <?php endforeach;
-                else: ?>
+                    <?php endforeach; ?>
+                <?php else: ?>
                     <tr>
-                        <td colspan="8" class="text-center text-gray-500 py-4">No users found.</td>
+                        <td colspan="6" class="text-center text-gray-500 py-4">No users found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -529,6 +565,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
         const blockUserName = document.getElementById("blockUserName");
         const blockUserEmail = document.getElementById("blockUserEmail");
         const blockUserRole = document.getElementById("blockUserRole");
+        const blockUserPhone = document.getElementById("blockUserPhone");
+        const blockUserAddress = document.getElementById("blockUserAddress");
         const blockUserBlockedUntil = document.getElementById("blockUserBlockedUntil");
         const blockDays = document.getElementById("blockDays");
 
@@ -538,6 +576,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 const userName = this.getAttribute("data-name");
                 const userEmail = this.getAttribute("data-email");
                 const userRole = this.getAttribute("data-role");
+                const userPhone = this.getAttribute("data-phone");
+                const userAddress = this.getAttribute("data-address");
                 const blockedUntil = this.getAttribute("data-block");
 
                 // Gán giá trị vào form
@@ -546,6 +586,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 blockUserName.value = userName;
                 blockUserEmail.value = userEmail;
                 blockUserRole.value = userRole;
+                blockUserPhone.value = userPhone;
+                blockUserAddress.value = userAddress;
                 blockUserBlockedUntil.value = (blockedUntil !== "NULL" && blockedUntil) ? blockedUntil : "Not Blocked";
                 blockDays.value = ""; // Reset ngày block
 
@@ -560,7 +602,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     });
 </script>
 
-<!-- Quản lý phản hồi -->
+<!--------------------------------------- Quản lý phản hồi --------------------------------------->
 <?php
 
 // Lấy danh sách phản hồi
@@ -581,46 +623,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
     exit;
 }
 ?>
+
 <h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Feedback Management</h1>
-<div class="container-fluid mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
-    <div class="table-responsive">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+<div class="container mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+    <div class="overflow-x-auto">
+        <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
             <thead>
-                <tr class="bg-gray-100 text-gray-800 text-center">
-                    <th class="px-3 py-2 border-b">ID</th>
-                    <th class="px-3 py-2 border-b">Sender</th>
-                    <th class="px-3 py-2 border-b">Email</th>
-                    <th class="px-3 py-2 border-b">Order</th>
-                    <th class="px-3 py-2 border-b">Message</th>
-                    <th class="px-3 py-2 border-b">Created</th>
-                    <th class="px-3 py-2 border-b">Response</th>
+                <tr class="bg-blue-100 text-gray-800 text-center uppercase text-sm">
+                    <th class="px-4 py-3 border-b">ID</th>
+                    <th class="px-4 py-3 border-b">Sender</th>
+                    <th class="px-4 py-3 border-b">Order</th>
+                    <th class="px-4 py-3 border-b">Message</th>
+                    <th class="px-4 py-3 border-b">Rating</th>
+                    <th class="px-4 py-3 border-b">Created</th>
+                    <th class="px-4 py-3 border-b">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($feedbacks)): ?>
                     <?php foreach ($feedbacks as $fb): ?>
-                        <tr class="hover:bg-gray-50 text-center">
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($fb['id']) ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($fb['name']) ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($fb['email']) ?></td>
-                            <td class="px-3 py-2 border-b">#<?= htmlspecialchars($fb['order_id']) ?></td>
-                            <td class="px-3 py-2 border-b text-left text-sm">
+                        <tr class="hover:bg-gray-50 border-b text-center">
+                            <td class="px-4 py-3"><?= htmlspecialchars($fb['id']) ?></td>
+                            <td class="px-4 py-3"><?= htmlspecialchars($fb['name']) ?></td>
+                            <td class="px-4 py-3 font-semibold">#<?= htmlspecialchars($fb['order_id']) ?></td>
+                            <td class="px-4 py-3 text-left text-sm text-gray-700 max-w-xs break-words">
                                 <?= nl2br(htmlspecialchars($fb['message'])) ?>
                             </td>
-                            <td class="px-3 py-2 border-b"> <?= htmlspecialchars($fb['created_at']) ?> </td>
-                            <td class="px-3 py-2 border-b">
-                                <form method="post" class="flex items-center space-x-2">
-                                    <input type="hidden" name="id" value="<?= htmlspecialchars($fb['id']) ?>">
-                                    <textarea name="response" required class="w-full p-2 border rounded-lg"><?= htmlspecialchars($fb['response'] ?? '') ?></textarea>
-                                    <button type="submit" class="bg-blue-500 text-white px-3 py-2 rounded-md">Reply</button>
-                                </form>
+                            <td class="px-4 py-3 text-yellow-500 font-semibold"><?= htmlspecialchars($fb['rating']) ?><i class="fas fa-star"></i></td>
+                            <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars($fb['created_at']) ?></td>
+                            <td class="px-4 py-3">
+                                <button onclick="openReplyModal(<?= $fb['id'] ?>, '<?= htmlspecialchars($fb['message'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($fb['response'] ?? '', ENT_QUOTES, 'UTF-8') ?>')"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-md transition-all">
+                                    ✏️
+                                </button>
                             </td>
-
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" class="text-center text-gray-500 py-4">No feedback found.</td>
+                        <td colspan="6" class="text-center text-gray-500 py-4">No feedback found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -628,24 +669,97 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
     </div>
 </div>
 
+<!-- Modal Reponse-->
+<div id="replyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 p-6">
+        <h2 class="text-xl font-semibold mb-4">Reply to Feedback</h2>
+        <form method="post">
+            <input type="hidden" id="replyFeedbackId" name="id">
+            <label class="block mb-2 font-semibold">Customer Feedback:</label>
+            <textarea id="replyMessage" class="w-full p-2 border rounded-lg bg-gray-100" readonly></textarea>
+
+            <label class="block mt-4 mb-2 font-semibold">Your Response:</label>
+            <textarea name="response" id="replyResponse" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400"></textarea>
+
+            <div class="flex justify-end space-x-3 mt-4">
+                <button type="button" onclick="closeReplyModal()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Close</button>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">Reply</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openReplyModal(feedbackId, message, response) {
+        document.getElementById('replyFeedbackId').value = feedbackId;
+        document.getElementById('replyMessage').value = message;
+        document.getElementById('replyResponse').value = response;
+        document.getElementById('replyModal').classList.remove('hidden');
+    }
+
+    function closeReplyModal() {
+        document.getElementById('replyModal').classList.add('hidden');
+    }
+</script>
+
+<?php
+
+// Lấy danh sách voucher
+$stmt = $conn->query("SELECT * FROM vouchers ORDER BY id ASC");
+$vouchers = $stmt->fetchAll();
+
+?>
+
+<h1 class="text-4xl font-extrabold text-center my-8 text-green-700 drop-shadow-lg">Voucher Management</h1>
+<div class="container mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-green-600">
+    <a href="/admin/add-voucher" class="mb-4 bg-green-500 text-white px-4 py-2 rounded-lg inline-block">+ Add Voucher</a>
+    <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
+        <thead>
+            <tr class="bg-green-100 text-gray-800 text-center uppercase text-sm">
+                <th class="px-4 py-3 border-b">ID</th>
+                <th class="px-4 py-3 border-b">Code</th>
+                <th class="px-4 py-3 border-b">Description</th>
+                <th class="px-4 py-3 border-b">Discount</th>
+                <th class="px-4 py-3 border-b">Min Order</th>
+                <th class="px-4 py-3 border-b">Quantity</th>
+                <th class="px-4 py-3 border-b">Expiration</th>
+                <th class="px-4 py-3 border-b">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($vouchers as $v): ?>
+                <tr class="hover:bg-gray-50 border-b text-center" title="<?= htmlspecialchars($v['description']) ?>">
+                    <td class="px-4 py-3"><?= htmlspecialchars($v['id']) ?></td>
+                    <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['code']) ?></td>
+                    <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars(substr($v['description'], 0, 15)) ?>...</td>
+                    <td class="px-4 py-3 text-green-600 font-semibold">$<?= htmlspecialchars($v['discount_amount']) ?></td>
+                    <td class="px-4 py-3 text-blue-600 font-semibold">$<?= htmlspecialchars($v['min_order_value']) ?></td>
+                    <td class="px-4 py-3 text-purple-600 font-semibold"><?= htmlspecialchars($v['quantity']) ?></td>
+                    <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['expiration_date']) ?></td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center space-x-2">
+                            <!-- Nút edit -->
+                            <a href="/admin/edit-voucher/id=<?= $v['id'] ?>"
+                                class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">✏️</a>
+                            <!-- Nút delete -->
+                            <form action="/admin/delete-voucher" method="POST"
+                                onsubmit="return confirm('Are you sure you want to delete this voucher?');">
+                                <input type="hidden" name="voucher_id" value="<?= $v['id'] ?>">
+                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
+                                    title="Delete Voucher">❌</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+
 <!-- Logout Button -->
-<form method="POST" class="flex justify-center mb-8">
+<form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure you want to logout?');">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-    <button type="submit" name="logout" onclick="confirmLogout(event)"
+    <button type="submit" name="logout" title="Logout"
         class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
         Logout</button>
 </form>
-
-<script>
-    function confirmLogout(event) {
-        // Hiển thị hộp thoại xác nhận
-        const userConfirmed = confirm("Are you sure you want to logout?");
-        if (userConfirmed) {
-            // Người dùng xác nhận thì submit form
-            document.getElementById('logout-form').submit();
-        } else {
-            // Ngăn chặn submit nếu người dùng nhấn "Hủy"
-            event.preventDefault();
-        }
-    }
-</script>

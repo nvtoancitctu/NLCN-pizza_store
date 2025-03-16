@@ -33,7 +33,7 @@ class Product
      * @param string|null $discount_end_time
      * @return bool
      */
-    public function createProduct($name, $description, $price, $image, $category_id, $discount = null, $discount_end_time = null)
+    public function createProduct($name, $description, $price, $image, $category_id, $stock_quantity, $discount = null, $discount_end_time = null)
     {
         // Kiểm tra nếu bảng products trống, thì reset AUTO_INCREMENT về 1
         $query = "SELECT COUNT(*) FROM products";
@@ -58,9 +58,9 @@ class Product
         // Thực thi câu lệnh ALTER TABLE để thiết lập AUTO_INCREMENT
         $this->conn->prepare($resetQuery)->execute();
 
-        $query = "INSERT INTO " . $this->table . " (name, description, price, image, category_id, discount, discount_end_time) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO " . $this->table . " (name, description, price, image, category_id, stock_quantity, discount, discount_end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$name, $description, $price, $image, $category_id, $discount, $discount_end_time]);
+        return $stmt->execute([$name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time]);
     }
 
     /**
@@ -103,23 +103,20 @@ class Product
      * @param string|null $discount_end_time
      * @return bool
      */
-    public function updateProduct($id, $name, $description, $price, $image, $category_id, $discount, $discount_end_time)
+    public function updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time)
     {
         $query = "UPDATE " . $this->table . " SET name = ?, description = ?, price = ?, image = ?,
-                                            category_id = ?, discount = ?, discount_end_time = ? WHERE id = ?";
+                                            category_id = ?, stock_quantity = ?, discount = ?, discount_end_time = ? WHERE id = ?";
         $stmt = $this->conn->prepare($query);
 
         if (!$stmt) {
-            // In lỗi khi chuẩn bị câu lệnh không thành công
-            echo "Failed to prepare statement: " . $this->conn->error;
             return false;
         }
 
-        $result = $stmt->execute([$name, $description, $price, $image, $category_id, $discount, $discount_end_time, $id]);
+        $result = $stmt->execute([$name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time, $id]);
 
         if (!$result) {
-            // In lỗi khi thực thi câu lệnh không thành công
-            echo "Failed to execute statement: " . $stmt->error;
+            return false;
         }
 
         return $result;
@@ -213,7 +210,7 @@ class Product
      */
     public function getRandomProducts($limit = 3)
     {
-        $query = "SELECT id, image, name, 
+        $query = "SELECT id, image, name, description,
                      CASE 
                          WHEN discount IS NOT NULL  
                          AND (discount_end_time IS NULL OR discount_end_time >= NOW()) 
@@ -247,7 +244,8 @@ class Product
     public function getActiveVouchers()
     {
         $stmt = $this->conn->prepare("SELECT * FROM vouchers 
-                                      WHERE status = 'active' 
+                                      WHERE status = 'active'
+                                      AND quantity > 0 
                                       AND expiration_date IS NOT NULL 
                                       AND expiration_date > NOW()");
         $stmt->execute();
@@ -434,52 +432,71 @@ class Product
     public function importOrUpdateProduct($data)
     {
         // Kiểm tra và xử lý giá trị đầu vào từ file CSV
-        $productId = $data['ID'] ?? null;
         $name = $data['Name'] ?? 'Unnamed Product';
         $description = $data['Description'] ?? null;
         $price = isset($data['Price']) ? floatval($data['Price']) : 0.0;
         $categoryId = isset($data['Category']) ? intval($data['Category']) : null;
+        $stock_quantity = isset($data['Stock']) ? intval($data['Stock']) : 0;
         $discount = isset($data['Discount']) && $data['Discount'] !== '' ? floatval($data['Discount']) : null;
         $discountEndTime = isset($data['Discount End Time']) && $data['Discount End Time'] !== '' ? $data['Discount End Time'] : null;
 
-        // Kiểm tra sản phẩm đã tồn tại trong cơ sở dữ liệu chưa
-        $stmt = $this->conn->prepare("SELECT id FROM products WHERE id = :id");
-        $stmt->execute([':id' => $productId]);
+        // Kiểm tra giá trị Discount End Time và chuyển đổi định dạng nếu có
+        $discountEndTime = null;
+        if (!empty($data['Discount End Time'])) {
+            $dateTime = DateTime::createFromFormat('d/m/Y H:i', $data['Discount End Time']);
+            if ($dateTime) {
+                $discountEndTime = $dateTime->format('Y-m-d H:i:s'); // Chuyển sang format chuẩn của MySQL
+            } else {
+                error_log("⚠ Lỗi chuyển đổi ngày: " . $data['Discount End Time']);
+            }
+        }
+
+        // Kiểm tra sản phẩm có tồn tại dựa trên name & description không
+        $stmt = $this->conn->prepare("SELECT id FROM products WHERE name = :name AND description = :description");
+        $stmt->execute([
+            ':name' => $name,
+            ':description' => $description
+        ]);
         $existingProduct = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($existingProduct) {
-            // Nếu sản phẩm đã tồn tại, cập nhật sản phẩm
+            // Nếu sản phẩm đã tồn tại, cập nhật thông tin
             $stmt = $this->conn->prepare("
             UPDATE products SET 
-                name = :name,
-                description = :description,
                 price = :price,
                 category_id = :category_id,
+                stock_quantity = :stock_quantity,
                 discount = :discount,
                 discount_end_time = :discount_end_time
             WHERE id = :id
         ");
             $stmt->execute([
-                ':name' => $name,
-                ':description' => $description,
                 ':price' => $price,
                 ':category_id' => $categoryId,
+                ':stock_quantity' => $stock_quantity,
                 ':discount' => $discount,
                 ':discount_end_time' => $discountEndTime,
-                ':id' => $productId
+                ':id' => $existingProduct['id']
             ]);
         } else {
-            // Nếu sản phẩm không tồn tại, thêm sản phẩm mới
+            // Nếu sản phẩm không tồn tại, lấy ID lớn nhất hiện tại rồi +1
+            $stmt = $this->conn->prepare("SELECT MAX(id) as max_id FROM products");
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $newProductId = $result['max_id'] ? $result['max_id'] + 1 : 1; // Nếu bảng rỗng, ID bắt đầu từ 1
+
+            // Thêm sản phẩm mới với ID mới
             $stmt = $this->conn->prepare("
-            INSERT INTO products (id, name, description, price, category_id, discount, discount_end_time) 
-            VALUES (:id, :name, :description, :price, :category_id, :discount, :discount_end_time)
+            INSERT INTO products (id, name, description, price, category_id, stock_quantity, discount, discount_end_time) 
+            VALUES (:id, :name, :description, :price, :category_id, :stock_quantity, :discount, :discount_end_time)
         ");
             $stmt->execute([
-                ':id' => $productId,
+                ':id' => $newProductId,
                 ':name' => $name,
                 ':description' => $description,
                 ':price' => $price,
                 ':category_id' => $categoryId,
+                ':stock_quantity' => $stock_quantity,
                 ':discount' => $discount,
                 ':discount_end_time' => $discountEndTime
             ]);

@@ -14,8 +14,9 @@
           <?php
           $footerLinks = [
             'home' => ['label' => 'Home', 'icon' => 'fas fa-home'],
-            'products' => ['label' => 'Products', 'icon' => 'fas fa-pizza-slice'],
-            'feedback' => ['label' => 'Feedback', 'icon' => 'fas fa-comment']
+            'products' => ['label' => 'Menus', 'icon' => 'fas fa-pizza-slice'],
+            'feedback' => ['label' => 'Feedback', 'icon' => 'fas fa-comment'],
+            'profile' => ['label' => 'Profile', 'icon' => 'fas fa-user']
           ];
           foreach ($footerLinks as $page => $data): ?>
             <a href="/<?= $page ?>" class="flex items-center space-x-1 text-gray-300 hover:text-yellow-400 transition">
@@ -45,7 +46,7 @@
       <div class="flex items-center justify-center md:justify-start space-x-2">
         <span class="text-gray-300 text-sm">Contact Us:</span>
         <a href="tel:0932822075" class="text-yellow-400 font-semibold hover:underline">
-          0932 822 075
+          (+84) 932 822 075
         </a>
       </div>
 

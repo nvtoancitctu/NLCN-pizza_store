@@ -1,11 +1,5 @@
 <?php
 
-// Kiểm tra quyền truy cập
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    header("Location: /login");
-    exit();
-}
-
 // Kiểm tra yêu cầu POST
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['order_id'])) {
     $order_id = intval($_POST['order_id']); // Chuyển thành số nguyên để tránh lỗi

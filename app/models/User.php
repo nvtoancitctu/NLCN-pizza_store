@@ -77,59 +77,6 @@ class User
         }
     }
 
-    // ------------------------------------------
-    // Cài thời gian khóa tài khoản người dùng
-    // ------------------------------------------
-    public function blockUser($userId, $days)
-    {
-        if (!is_numeric($days) || $days < 1) {
-            return false; // Ngăn chặn giá trị không hợp lệ
-        }
-
-        date_default_timezone_set('Asia/Ho_Chi_Minh');
-
-        $blockedUntil = date('Y-m-d H:i:s', strtotime("+$days days"));
-
-        $query = "UPDATE users SET blocked_until = :blocked_until WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute(['blocked_until' => $blockedUntil, 'id' => $userId]);
-
-        return $stmt->rowCount();
-    }
-
-    // ------------------------------------------
-    // Kiểm tra ngày giờ hết hạn của tài khoản
-    // ------------------------------------------
-    public function unblockUser($userId)
-    {
-        $query = "SELECT blocked_until FROM users WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($user && $user['blocked_until']) {
-
-            $blockedUntil = new DateTime($user['blocked_until'], new DateTimeZone('Asia/Ho_Chi_Minh'));
-            $now = new DateTime("now", new DateTimeZone('Asia/Ho_Chi_Minh'));
-
-            if ($blockedUntil > $now) {
-                $interval = $now->diff($blockedUntil);
-                $daysLeft = $interval->days;
-                $hoursLeft = $interval->h;
-                $minutesLeft = $interval->i;
-
-                return "This account is still blocked. Remaining time: $daysLeft days, $hoursLeft hours, $minutesLeft minutes.";
-            } else {
-
-                $updateQuery = "UPDATE users SET blocked_until = NULL WHERE id = ?";
-                $updateStmt = $this->conn->prepare($updateQuery);
-                $updateStmt->execute([$userId]);
-                return "This account has been unlocked.";
-            }
-        }
-        return "This account is not blocked.";
-    }
-
     /**
      * Kiểm tra thông tin đăng nhập, kiểm tra tài khoản có bị khóa không?
      * @param string $email - Địa chỉ email
@@ -169,7 +116,7 @@ class User
     }
 
     // ------------------------------------------
-    // Lấy tất cả thông tin người dùng
+    // Quản lý thông tin người dùng
     // ------------------------------------------
     public function getAllUsers()
     {
@@ -223,6 +170,76 @@ class User
         } else {
             return false;
         }
+    }
+
+    // ------------------------------------------
+    // Quản lý tài khoản (block and unblock)
+    // ------------------------------------------
+    public function blockUser($userId, $days)
+    {
+        if (!is_numeric($days) || $days < 1) {
+            return false; // Ngăn chặn giá trị không hợp lệ
+        }
+
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+
+        $blockedUntil = date('Y-m-d H:i:s', strtotime("+$days days"));
+
+        $query = "UPDATE users SET blocked_until = :blocked_until WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute(['blocked_until' => $blockedUntil, 'id' => $userId]);
+
+        return $stmt->rowCount();
+    }
+
+    // Mở khóa tài khoản người dùng bằng cách đặt lại trường blocked_until thành NULL
+    public function unblockUser($user_id)
+    {
+        try {
+            $sql = "UPDATE users SET blocked_until = NULL WHERE id = :user_id";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            if ($stmt->rowCount() > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (PDOException $e) {
+            return "Error unblocking user: " . $e->getMessage();
+        }
+    }
+
+    // Kiểm tra ngày giờ hết hạn của tài khoản
+    public function checkblockUser($userId)
+    {
+        $query = "SELECT blocked_until FROM users WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && $user['blocked_until']) {
+
+            $blockedUntil = new DateTime($user['blocked_until'], new DateTimeZone('Asia/Ho_Chi_Minh'));
+            $now = new DateTime("now", new DateTimeZone('Asia/Ho_Chi_Minh'));
+
+            if ($blockedUntil > $now) {
+                $interval = $now->diff($blockedUntil);
+                $daysLeft = $interval->days;
+                $hoursLeft = $interval->h;
+                $minutesLeft = $interval->i;
+
+                return "This account is still blocked. Remaining time: $daysLeft days, $hoursLeft hours, $minutesLeft minutes.";
+            } else {
+
+                $updateQuery = "UPDATE users SET blocked_until = NULL WHERE id = ?";
+                $updateStmt = $this->conn->prepare($updateQuery);
+                $updateStmt->execute([$userId]);
+                return "This account has been unlocked.";
+            }
+        }
+        return "This account is not blocked.";
     }
 
     // ------------------------------------------
@@ -347,10 +364,11 @@ class User
     // Lấy danh sách vouchers của người dùng
     public function getUserVouchers($user_id)
     {
-        $stmt = $this->conn->prepare("SELECT v.id, v.code, v.description, v.expiration_date, v.status 
-                                    FROM user_voucher uv
-                                    JOIN vouchers v ON uv.voucher_id = v.id
-                                    WHERE uv.user_id = ?");
+        $stmt = $this->conn->prepare("SELECT v.id, v.code, v.description, v.expiration_date, uv.status, 
+                                             v.discount_amount, v.min_order_value, uv.used_at
+                                      FROM user_voucher uv
+                                      JOIN vouchers v ON uv.voucher_id = v.id
+                                      WHERE uv.status = 'unused' AND uv.user_id = ?");
         $stmt->execute([$user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

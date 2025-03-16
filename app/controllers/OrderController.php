@@ -13,15 +13,15 @@ class OrderController
   }
 
   // Tạo mới một đơn hàng
-  public function createOrder($user_id, $total, $payment_method, $address, $image)
+  public function createOrder($user_id, $total, $payment_method, $address, $image, $voucher_code)
   {
-    return $this->orderModel->createOrder($user_id, $total, $payment_method, $address, $image);
+    return $this->orderModel->createOrder($user_id, $total, $payment_method, $address, $image, $voucher_code);
   }
 
   // Thêm sản phẩm vào đơn hàng
-  public function addOrderItem($order_id, $product_id, $quantity, $price, $size)
+  public function addOrderItem($order_id, $product_id, $quantity, $price, $size, $voucher_id = NULL)
   {
-    return $this->orderModel->addOrderItem($order_id, $product_id, $quantity, $price, $size);
+    return $this->orderModel->addOrderItem($order_id, $product_id, $quantity, $price, $size, $voucher_id);
   }
 
   // Lấy tất cả đơn hàng

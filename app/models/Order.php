@@ -20,9 +20,8 @@ class Order
      * @return int - ID của đơn hàng vừa tạo
      * @throws InvalidArgumentException - Nếu $items không phải là mảng
      */
-    public function createOrder($user_id, $items, $payment_method, $address, $image)
+    public function createOrder($user_id, $items, $payment_method, $address, $image, $voucher_code)
     {
-        // Kiểm tra xem $items có phải là mảng không
         if (!is_array($items)) {
             throw new InvalidArgumentException('Items must be an array');
         }
@@ -44,12 +43,11 @@ class Order
         }
         $this->conn->prepare($resetQuery)->execute();
 
-        // Tạo đơn hàng với hình ảnh ban đầu (nếu có)
-        $query = "INSERT INTO orders (user_id, total, payment_method, address, images) VALUES (?, 0, ?, ?, ?)";
+        // Tạo đơn hàng
+        $query = "INSERT INTO orders (user_id, total, payment_method, address, images, voucher_id) VALUES (?, 0, ?, ?, ?, NULL)";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$user_id, $payment_method, $address, $image]);
 
-        // Lấy ID đơn hàng vừa được tạo
         $order_id = $this->conn->lastInsertId();
 
         // Nếu có hình ảnh, đổi tên ảnh theo định dạng: order_id + "_" + YYYY-MM-DD + extension
@@ -74,8 +72,6 @@ class Order
         }
 
         $total = 0.0;
-
-        // Thêm các sản phẩm vào bảng order_items
         foreach ($items as $item) {
             $total += $item['total_price'];
             $this->addOrderItem($order_id, $item['product_id'], $item['quantity'], $item['effective_price'], $item['size']);
@@ -85,12 +81,42 @@ class Order
         $shippingFee = ($total < 100) ? 1.50 : 0;
         $total += $shippingFee;
 
-        // Cập nhật tổng tiền vào bảng orders
-        $updateOrderQuery = "UPDATE orders SET total = :total WHERE id = :order_id";
-        $updateOrderStmt = $this->conn->prepare($updateOrderQuery);
-        $updateOrderStmt->bindParam(':total', $total, PDO::PARAM_STR);
-        $updateOrderStmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
-        $updateOrderStmt->execute();
+        // Cập nhật tổng tiền và voucher_id vào đơn hàng
+        $updateOrderTotal = "UPDATE orders SET total = :total WHERE id = :order_id";
+        $updateOrderStmt = $this->conn->prepare($updateOrderTotal);
+        $updateOrderStmt->execute(['total' => $total, 'order_id' => $order_id]);
+
+        if (!empty($voucher_code)) {
+            // Lấy thông tin voucher
+            $voucherQuery = "SELECT id, discount_amount FROM vouchers WHERE code = :voucher_code";
+            $voucherStmt = $this->conn->prepare($voucherQuery);
+            $voucherStmt->execute(['voucher_code' => $voucher_code]);
+            $voucher = $voucherStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($voucher) {
+                $voucher_id = $voucher['id'];
+                $discount_amount = $voucher['discount_amount'];
+
+                // Cập nhật voucher_id vào đơn hàng
+                $updateVoucherID = "UPDATE orders SET voucher_id = :voucher_id WHERE id = :order_id";
+                $updateVoucherIDStmt = $this->conn->prepare($updateVoucherID);
+                $updateVoucherIDStmt->execute(['voucher_id' => $voucher_id, 'order_id' => $order_id]);
+
+                // Cập nhật giá trị total khi áp dụng voucher
+                $updateVoucherTotal = "UPDATE orders SET total = GREATEST(0, total - :discount_amount) WHERE id = :order_id";
+                $updateVoucherTotalStmt = $this->conn->prepare($updateVoucherTotal);
+                $updateVoucherTotalStmt->execute(['discount_amount' => $discount_amount, 'order_id' => $order_id]);
+
+                // Cập nhật trạng thái voucher khi người dùng đã sử dụng
+                $updateVoucherStatus = "UPDATE user_voucher SET status = 'used', used_at = NOW() 
+                                        WHERE user_id = :user_id 
+                                        AND voucher_id = :voucher_id 
+                                        AND status = 'unused' 
+                                        LIMIT 1";
+                $updateVoucherStatusStmt = $this->conn->prepare($updateVoucherStatus);
+                $updateVoucherStatusStmt->execute(['user_id' => $user_id, 'voucher_id' => $voucher_id]);
+            }
+        }
 
         return $order_id;
     }
@@ -157,7 +183,11 @@ class Order
      */
     public function getOrderDetails($order_id, $user_id)
     {
-        $query = "SELECT * FROM orders WHERE id = ? AND user_id = ?";
+        // Lấy thông tin đơn hàng, bao gồm thông tin voucher (nếu có)
+        $query = "SELECT o.*, v.code, v.discount_amount, v.description
+                FROM orders o
+                LEFT JOIN vouchers v ON o.voucher_id = v.id
+                WHERE o.id = ? AND o.user_id = ?";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$order_id, $user_id]);
         $order = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -166,16 +196,9 @@ class Order
             return null;
         }
 
-        $query = "SELECT 
-                    oi.product_id, 
-                    oi.size,
-                    p.name, 
-                    p.image, 
-                    oi.quantity, 
-                    oi.price,
-                    oi.price AS price_to_display,
-                    (oi.price * oi.quantity) AS total_price
-
+        // Lấy danh sách sản phẩm trong đơn hàng
+        $query = "SELECT oi.size, oi.quantity, oi.price, p.name, p.image, 
+                        (oi.quantity * oi.price) AS total_price
                 FROM order_items oi
                 JOIN products p ON oi.product_id = p.id
                 WHERE oi.order_id = ?";
@@ -184,13 +207,18 @@ class Order
         $stmt->execute([$order_id]);
         $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // Cộng tổng tiền sản phẩm (trước khi áp dụng voucher)
         $orderTotal = array_sum(array_column($orderItems, 'total_price'));
+        $order['order_total'] = $orderTotal;
 
+        // Thêm danh sách sản phẩm vào đơn hàng
         $order['items'] = $orderItems;
 
-        $order['shipping_fee'] = ($orderTotal < 100.00) ? 1.50 : 0.00;
+        // Gán tổng tiền từ bảng orders (đã áp dụng voucher nếu có)
+        $order['final_total'] = $order['total'];
 
-        $order['total'] = $orderTotal;
+        // Cập nhật phí vận chuyển nếu chưa có
+        $order['shipping_fee'] = ($orderTotal < 100.00) ? 1.50 : 0.00;
 
         return $order;
     }
@@ -202,7 +230,19 @@ class Order
      */
     public function getOrdersByUserId($user_id)
     {
-        $query = "SELECT * FROM orders WHERE user_id = :user_id";
+        $query = "SELECT 
+                o.id, 
+                o.address, 
+                o.created_at, 
+                o.total, 
+                o.payment_method, 
+                o.status, 
+                v.code AS voucher_code,
+                v.description
+              FROM orders o
+              LEFT JOIN vouchers v ON o.voucher_id = v.id
+              WHERE o.user_id = :user_id";
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
         $stmt->execute();
@@ -216,19 +256,12 @@ class Order
      */
     public function getOrderDetailsByOrderId($order_id)
     {
-        $query_order_items = "SELECT 
-                                p.name,
-                                oi.size,
-                                oi.price,
-                                oi.quantity,
-                                oi.price AS price_to_display,
-                                (oi.price * oi.quantity) AS total_price 
-                            FROM 
-                                order_items oi
-                            JOIN 
-                                products p ON oi.product_id = p.id 
-                            WHERE 
-                                oi.order_id = :order_id";
+        $query_order_items = "SELECT p.name, oi.size, oi.price, oi.quantity,
+                                     oi.price AS price_to_display,
+                                    (oi.price * oi.quantity) AS total_price 
+                            FROM order_items oi
+                            JOIN products p ON oi.product_id = p.id 
+                            WHERE oi.order_id = :order_id";
 
         $stmt_items = $this->conn->prepare($query_order_items);
         $stmt_items->bindParam(':order_id', $order_id, PDO::PARAM_INT);
@@ -366,29 +399,31 @@ class Order
         switch ($timePeriod) {
             case 'daily':
                 // Thống kê theo ngày
-                $query = "SELECT DATE(created_at) AS date, SUM(total) AS revenue FROM orders GROUP BY DATE(created_at)";
+                $query = "SELECT DATE(created_at) AS date, SUM(total) AS revenue, SUM(total_quantity) AS total_quantity
+                      FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
+                      GROUP BY DATE(created_at)";
                 break;
             case 'monthly':
                 // Thống kê theo tháng
-                $query = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS date, SUM(total) AS revenue FROM orders GROUP BY DATE_FORMAT(created_at, '%Y-%m')";
-                break;
-            case 'weekly':
-                // Thống kê theo tuần, gồm năm và tuần
-                $query = "SELECT CONCAT(YEAR(created_at), '-W', WEEK(created_at)) AS date, SUM(total) AS revenue 
-                      FROM orders 
-                      GROUP BY YEAR(created_at), WEEK(created_at)";
+                $query = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS date, SUM(total) AS revenue, SUM(total_quantity) AS total_quantity
+                      FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
+                      GROUP BY DATE_FORMAT(created_at, '%Y-%m')";
                 break;
             case 'yearly':
                 // Thống kê theo năm
-                $query = "SELECT YEAR(created_at) AS date, SUM(total) AS revenue FROM orders GROUP BY YEAR(created_at)";
+                $query = "SELECT YEAR(created_at) AS date, SUM(total) AS revenue, SUM(total_quantity) AS total_quantity
+                      FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
+                      GROUP BY YEAR(created_at)";
                 break;
             case 'payment_method':
                 // Thống kê theo phương thức thanh toán
-                $query = "SELECT payment_method AS method, SUM(total) AS revenue FROM orders GROUP BY payment_method";
+                $query = "SELECT payment_method AS method, SUM(total) AS revenue, SUM(total_quantity) AS total_quantity
+                      FROM (SELECT payment_method, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
+                      GROUP BY payment_method";
                 break;
             case 'product':
                 // Thống kê theo sản phẩm
-                $query = "SELECT oi.product_id, p.name AS product_name, SUM(oi.quantity * oi.price) AS revenue 
+                $query = "SELECT oi.product_id, p.name AS product_name, SUM(oi.quantity * oi.price) AS revenue, SUM(oi.quantity) AS total_quantity
                       FROM order_items oi
                       JOIN products p ON oi.product_id = p.id
                       GROUP BY oi.product_id";

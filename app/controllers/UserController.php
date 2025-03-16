@@ -30,9 +30,15 @@ class UserController
   }
 
   // Mở khóa tài khoản
-  public function unblockUser($userId)
+  public function unblockUser($user_id)
   {
-    return $this->userModel->unblockUser($userId);
+    return $this->userModel->unblockUser($user_id);
+  }
+
+  // Kiểm tra tài khoản có bị khóa không
+  public function checkblockUser($userId)
+  {
+    return $this->userModel->checkblockUser($userId);
   }
 
   // Lấy tất cả thông tin người dùng

@@ -138,17 +138,17 @@ class ProductController
   /**
    * Thêm sản phẩm mới
    */
-  public function createProduct($name, $description, $price, $image, $category_id, $discount, $discount_end_time)
+  public function createProduct($name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time)
   {
-    return $this->productModel->createProduct($name, $description, $price, $image, $category_id, $discount, $discount_end_time);
+    return $this->productModel->createProduct($name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time);
   }
 
   /**
    * Cập nhật thông tin sản phẩm
    */
-  public function updateProduct($id, $name, $description, $price, $image, $category_id, $discount, $discount_end_time)
+  public function updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time)
   {
-    return $this->productModel->updateProduct($id, $name, $description, $price, $image, $category_id, $discount, $discount_end_time);
+    return $this->productModel->updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time);
   }
 
   /**

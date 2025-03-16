@@ -57,13 +57,12 @@ if ($user_id) {
     <?php endif; ?>
 </div>
 
-
 <!-- Danh sách sản phẩm -->
 <div class="container mx-auto px-4 mb-4">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <?php if (!empty($products)): ?>
             <?php foreach ($products as $product): ?>
-                <div class="p-2 relative">
+                <div class="p-2 relative" title="<?= htmlspecialchars($product['description']) ?>">
                     <div class="rounded-lg shadow-lg bg-white transition-transform transform hover:scale-105 alert alert-info relative">
                         <!-- Nếu sản phẩm đã bán hết thì hiển thị "Sold Out" -->
                         <?php if ($product['stock_quantity'] == 0): ?>
@@ -101,7 +100,6 @@ if ($user_id) {
                         <!-- Thông tin sản phẩm -->
                         <div class="p-2">
                             <h5 class="text-2xl font-bold text-gray-800 text-center mb-2"><?= htmlspecialchars($product['name']) ?></h5>
-                            <p class="text-l text-gray-600 text-center"><?= htmlspecialchars($product['description']) ?></p>
                             <p class="text-sm text-gray-600 text-center mt-2">Stock Quantity: <?= htmlspecialchars($product['stock_quantity']) ?></p>
 
                             <!-- Hiển thị giá -->

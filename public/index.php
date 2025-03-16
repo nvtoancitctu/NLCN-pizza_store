@@ -75,14 +75,23 @@ switch ($page) {
     case 'add':
         include '../app/views/admin/add.php';
         break;
+    case 'add-voucher':
+        include '../app/views/admin/add-voucher.php';
+        break;
     case 'edit':
         include '../app/views/admin/edit.php';
+        break;
+    case 'edit-voucher':
+        include '../app/views/admin/edit-voucher.php';
         break;
     case 'delete':
         include '../app/views/admin/delete.php';
         break;
     case 'delete-order':
         include '../app/views/admin/delete-order.php';
+        break;
+    case 'delete-voucher':
+        include '../app/views/admin/delete-voucher.php';
         break;
     case 'statistics':
         include '../app/views/admin/statistics.php';
