@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $image = $currentProduct['image'];
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         $file_ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
 
         if (in_array(strtolower($file_ext), $allowed)) {
@@ -48,13 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Failed to upload the image. Please try again.";
             }
         } else {
-            $error = "Invalid file format. Only JPG, JPEG, PNG, and GIF are allowed.";
+            $error = "Invalid file format. Only JPG, JPEG, PNG, GIF and WEBP files are allowed.";
         }
     }
 
     // Chạy cập nhật sản phẩm trong mọi trường hợp (dù có hoặc không có ảnh mới)
     $productController->updateProduct($product_id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time);
-    $_SESSION['success'] = "Product $product_id has been updated successfully!";
+    $_SESSION['success'] = "Product (ID: $product_id) has been updated successfully!";
     $_SESSION['limit'] = $productController->countProducts();
     $_SESSION['page'] = 1;
     header("Location: /admin/list");
@@ -111,24 +111,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="mb-4">
-                        <label class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-image mr-2"></i>Product Image</label>
+                        <label class="block text-blue-700 text-sm font-medium mb-2">
+                            <i class="fas fa-image mr-2"></i>Product Image
+                        </label>
                         <div class="flex items-center gap-6">
                             <!-- Ảnh cũ -->
                             <?php if (!empty($product['image'])): ?>
-                                <img src="/images/<?= htmlspecialchars($product['image']) ?>" alt="Product Image" class="w-32 h-32 object-cover border rounded-lg shadow">
+                                <img src="/images/<?= htmlspecialchars($product['image']) ?>" alt="Product Image"
+                                    class="w-32 h-32 object-cover border rounded-lg shadow">
                             <?php else: ?>
                                 <p class="text-sm text-gray-600">No image uploaded.</p>
                             <?php endif; ?>
-                            <!-- Upload ảnh mới -->
-                            <div>
-                                <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)">
-                                <label for="image" class="border border-gray-200 rounded-lg px-4 py-2 text-gray-600 cursor-pointer hover:bg-blue-100">
-                                    <i class="fas fa-upload"></i>
-                                </label>
-                                <span id="file-name" class="text-gray-500 block mt-2">No file chosen</span>
-                            </div>
+
+                            <!-- Mũi tên -->
+                            <i class="fas fa-arrow-right text-gray-500 text-2xl"></i>
+
                             <!-- Preview ảnh mới -->
                             <img id="image-preview" class="hidden w-32 h-32 object-cover rounded-lg border">
+                        </div>
+                        <!-- Upload ảnh mới -->
+                        <div class="flex items-center mt-2">
+                            <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)">
+                            <label for="image"
+                                class="mr-2 border border-gray-200 rounded-lg px-4 py-2 text-gray-600 cursor-pointer hover:bg-blue-100 flex items-center space-x-2">
+                                <i class="fas fa-upload"></i>
+                                <span>Upload</span>
+                            </label>
+                            <span id="file-name" class="text-gray-500">No file chosen</span>
                         </div>
                     </div>
                 </div>
@@ -151,7 +160,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </div>
 </div>
-
 
 <script>
     function updateFileName(input) {

@@ -29,6 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     $size = $_POST['size'];
 
     $cartController->updateCartItem($cart_id, $quantity, $size);
+
+    if (!$cartController) {
+        echo $_SESSION['message'];
+    }
+
     header("Location: /cart");
     exit();
 }
@@ -43,6 +48,7 @@ if (isset($_GET['action'])) {
         // Xóa sản phẩm
         $cart_id = (int) $_GET['cart_id'];
         $cartController->deleteCartItem($cart_id);
+
         header("Location: /cart");
         exit();
     } else {
@@ -165,7 +171,7 @@ if (isset($_GET['action'])) {
         </div>
     <?php else: ?>
         <!-- Hiển thị nếu giỏ hàng trống -->
-        <div class="alert alert-info text-center p-4 rounded-xl bg-white text-blue-800">
+        <div class="border-2 border-blue-300 text-center p-4 rounded-xl bg-white text-blue-800">
             <p>Your cart is empty. Why not check out our delicious pizzas?</p>
             <button type="button" onclick="window.location.href='/products'"
                 class="mt-4 bg-green-600 hover:bg-yellow-600 shadow-lg text-white px-5 py-2 rounded-lg transition duration-300">

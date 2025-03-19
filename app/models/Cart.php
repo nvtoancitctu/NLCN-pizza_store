@@ -152,8 +152,10 @@ class Cart
         $stmt->execute([$product_id]);
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // Kiểm tra số lượng tồn kho
         if (!$product || $product['stock_quantity'] + $old_quantity < $quantity) {
-            return false; // Không đủ hàng để cập nhật số lượng
+            $_SESSION['message'] = "The quantity you want to buy exceeds the remaining stock";
+            return false;
         }
 
         // Nếu sản phẩm có cùng size tồn tại, cộng dồn số lượng
@@ -184,6 +186,7 @@ class Cart
         $new_stock = $product['stock_quantity'] + $old_quantity - $quantity;
         $query = "UPDATE products SET stock_quantity = ? WHERE id = ?";
         $stmt = $this->conn->prepare($query);
+
         return $stmt->execute([$new_stock, $product_id]);
     }
 

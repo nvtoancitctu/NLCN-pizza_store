@@ -194,17 +194,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Order History Section -->
   <h3 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Order History</h3>
-  <?php if (empty($orders)): ?>
-    <p class="text-center text-gray-600 text-lg mt-8">No order history available.</p>
-  <?php else: ?>
-    <?php foreach ($orders as $order): ?>
-      <?php
-      $orderdetails = $orderController->getOrderDetailsByOrderId($order['id']);
-      $orderStatus = strtolower($order['status'] ?? 'unknown');
-      $isCanceled = $orderStatus === 'cancelled';
-      ?>
-      <div class="relative bg-white p-8 rounded-2xl drop-shadow-lg mb-8 border-2 border-yellow-400">
-
+  <div class="relative bg-white p-8 rounded-2xl drop-shadow-lg mb-8 border-2 border-yellow-400">
+    <?php if (empty($orders)): ?>
+      <p class="text-center text-gray-600 text-lg">No order history available.</p>
+    <?php else: ?>
+      <?php foreach ($orders as $order): ?>
+        <?php
+        $orderdetails = $orderController->getOrderDetailsByOrderId($order['id']);
+        $orderStatus = strtolower($order['status'] ?? 'unknown');
+        $isCanceled = $orderStatus === 'cancelled';
+        ?>
         <!-- Thông báo nếu đơn hàng bị hủy -->
         <?php if ($isCanceled): ?>
           <div class="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-md flex items-center justify-center z-20 rounded-2xl">
@@ -318,15 +317,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </ul>
           </div>
         </div>
-      </div>
-    <?php endforeach; ?>
-  <?php endif; ?>
-
-  <!-- Logout Button -->
-  <form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure you want to logout?');">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-    <button type="submit" name="logout" title="Logout"
-      class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
-      Logout</button>
-  </form>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </div>
 </div>
+<!-- Logout Button -->
+<form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure you want to logout?');">
+  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+  <button type="submit" name="logout" title="Logout"
+    class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
+    Logout</button>
+</form>

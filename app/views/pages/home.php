@@ -20,6 +20,8 @@ $randomProducts = $productController->getRandomProducts(3);
 $product_id = isset($_GET['id']) ? $_GET['id'] : null;
 $product = $productController->getProductDetails($product_id);
 
+// Lấy danh sách combo
+$Combos = $productController->listProducts(8);
 ?>
 
 <style>
@@ -84,26 +86,89 @@ $product = $productController->getProductDetails($product_id);
 <?php endif; ?>
 
 <div class="container mx-auto px-12">
-  <!-- Jumbotron -->
-  <div class="relative bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 shadow-md text-white text-center p-20 rounded-3xl mt-10 overflow-hidden">
-    <!-- Nội dung chính -->
-    <div class="relative z-10">
-      <h1 class="text-7xl font-extrabold tracking-wide drop-shadow-2xl animate-fade-in">
-        🍕 Delight in Every Bite! 🍕
-      </h1>
-      <h3 class="text-2xl mt-4 font-semibold">Welcome to Lover’s Hut – Your Pizza Paradise!</h3>
-      <p class="mt-4 text-xl font-light drop-shadow-md animate-slide-in bg-black bg-opacity-25 px-6 py-3 inline-block rounded-xl">
-        Fresh, cheesy, and delicious! Your perfect pizza moment starts here.
-      </p>
 
-      <a href="/products"
-        class="ml-2 mt-8 inline-flex items-center bg-white text-red-600 font-semibold px-6 py-4 rounded-full text-lg border-2 border-red-600 
-      transition-all duration-500 transform hover:scale-105 hover:bg-red-600">
-        <span class="mr-2">Order Now</span>
-        <svg class="w-6 h-6 transition-transform duration-300 group-hover:translate-x-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </a>
+  <!-- Jumbotron -->
+  <div class="relative bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 shadow-md text-white text-center p-16 rounded-3xl mt-10 overflow-hidden">
+    <!-- Nội dung chính -->
+    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0">
+      <!-- Nội dung văn bản -->
+      <div class="md:w-1/2 text-center md:text-left">
+        <h1 class="text-4xl md:text-6xl font-extrabold tracking-wide drop-shadow-xl animate-fade-in">
+          🍕Best Combo🍕
+        </h1>
+        <h3 class="text-2xl mt-4 font-semibold">More Taste, More Savings!</h3>
+        <p class="mt-4 text-xl font-light drop-shadow-md animate-slide-in bg-black bg-opacity-30 px-6 py-3 inline-block rounded-xl">
+          Indulge in our best-selling pizza combos at unbeatable prices.
+        </p>
+
+        <a href="/products&category_id=8"
+          class="inline-flex items-center bg-white text-red-600 font-semibold px-4 py-3 rounded-full text-lg border-2 border-red-600 
+                transition-all duration-500 transform hover:scale-105 mt-6">
+          <span class="mr-2">VIEW COMBOS</span>
+          <svg class="w-6 h-6 transition-transform duration-300 group-hover:translate-x-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- Hình ảnh combo -->
+      <div class="flex justify-center relative">
+        <?php if (!empty($Combos)): ?>
+          <div class="relative w-full max-w-lg">
+            <div class="relative overflow-hidden rounded-xl shadow-lg border-white">
+              <img id="comboImage" src="/images/<?= htmlspecialchars($Combos[0]['image']) ?>"
+                alt="<?= htmlspecialchars($Combos[0]['name']) ?>"
+                class="w-full h-auto object-cover rounded-xl transition-all duration-500 transform hover:scale-105">
+
+              <!-- Nút chuyển ảnh nếu có nhiều combo -->
+              <?php if (count($Combos) > 1): ?>
+                <button id="prevBtn" class="absolute top-1/2 left-3 transform -translate-y-1/2 bg-black bg-opacity-50 text-white px-3 py-2 rounded-full focus:outline-none hidden">
+                  ❮
+                </button>
+                <button id="nextBtn" class="absolute top-1/2 right-3 transform -translate-y-1/2 bg-black bg-opacity-50 text-white px-3 py-2 rounded-full focus:outline-none">
+                  ❯
+                </button>
+
+                <script>
+                  let comboImages = <?= json_encode(array_column($Combos, 'image')) ?>;
+                  let currentIndex = 0;
+                  let comboImageElement = document.getElementById('comboImage');
+                  let prevBtn = document.getElementById('prevBtn');
+                  let nextBtn = document.getElementById('nextBtn');
+
+                  function updateImage(index) {
+                    comboImageElement.classList.add('opacity-0');
+                    setTimeout(() => {
+                      comboImageElement.src = "/images/" + comboImages[index];
+                      comboImageElement.classList.remove('opacity-0');
+                    }, 300);
+                  }
+
+                  function nextImage() {
+                    currentIndex = (currentIndex + 1) % comboImages.length;
+                    updateImage(currentIndex);
+                    prevBtn.classList.remove('hidden');
+                  }
+
+                  function prevImage() {
+                    currentIndex = (currentIndex - 1 + comboImages.length) % comboImages.length;
+                    updateImage(currentIndex);
+                    if (currentIndex === 0) prevBtn.classList.add('hidden');
+                  }
+
+                  nextBtn.addEventListener('click', nextImage);
+                  prevBtn.addEventListener('click', prevImage);
+
+                  // Tự động chuyển ảnh sau mỗi 5 giây
+                  setInterval(nextImage, 5000);
+                </script>
+              <?php endif; ?>
+            </div>
+          </div>
+        <?php else: ?>
+          <p class="text-lg font-semibold">No combo available.</p>
+        <?php endif; ?>
+      </div>
     </div>
 
     <!-- Hiệu ứng lượn sóng -->
@@ -116,8 +181,63 @@ $product = $productController->getProductDetails($product_id);
     </div>
   </div>
 
+  <!-- New Pizza -->
+  <?php
+  $products = $productController->listProducts();
+
+  // Lọc sản phẩm có ghi chú "New"
+  $newProducts = array_filter($products, function ($product) {
+    return isset($product['note']) && strtolower($product['note']) === 'new';
+  });
+  ?>
+
+  <!-- New Pizza Section -->
+  <div class="container mx-auto p-10">
+    <?php if (!empty($newProducts)): ?>
+      <div class="space-y-6">
+        <?php foreach ($newProducts as $product): ?>
+          <div class="flex bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-transform transform hover:scale-[1.02]">
+            <!-- Hình ảnh -->
+            <div class="flex items-center justify-center">
+              <img src="/images/<?= htmlspecialchars($product['image']) ?>"
+                alt="<?= htmlspecialchars($product['name']) ?>"
+                class="w-3/5 h-auto object-cover">
+              <span class="absolute top-2 left-2 bg-red-500 text-white text-lg font-bold px-3 py-1 rounded-full">
+                NEW
+              </span>
+            </div>
+
+            <!-- Nội dung -->
+            <div class="w-2/3 p-5 flex flex-col justify-between">
+              <div class="mb-3">
+                <h3 class="text-3xl font-semibold text-gray-800"><?= htmlspecialchars($product['name']) ?></h3>
+                <p class="text-gray-600 mt-2"><?= htmlspecialchars($product['description']) ?></p>
+                <p class="text-red-500 text-xl font-bold mt-3">
+                  $<?= number_format($product['price'], 2) ?>
+                </p>
+              </div>
+
+              <!-- Nút Order -->
+              <form method="POST" action="add" class="add-to-cart-form" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
+                <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
+                <input type="hidden" name="quantity" value="1">
+                <input type="hidden" name="size" value="S">
+                <button type="button" class="add-to-cart-button px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-green-500 transition duration-300 shadow-md">
+                  🛒 Add to Cart
+                </button>
+              </form>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <p class="text-center text-gray-600 text-lg font-semibold">No new products available at the moment.</p>
+    <?php endif; ?>
+  </div>
+
   <!-- Discount Products -->
-  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">🍕 Special Discount Offer 🍕</h2>
+  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">🍕 Special Offer 🍕</h2>
   <?php if (!empty($discountProduct)): ?>
     <?php foreach ($discountProduct as $product): ?>
       <?php if ($product['stock_quantity'] > 0): ?>
@@ -139,7 +259,7 @@ $product = $productController->getProductDetails($product_id);
 
               <!-- Pizza xoay tròn khi hover -->
               <img src="/images/<?php echo htmlspecialchars($product['image']); ?>"
-                class="w-4/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:rotate-12 hover:scale-110"
+                class="w-4/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:scale-110"
                 alt="<?php echo htmlspecialchars($product['name']); ?>">
             </div>
 
@@ -166,12 +286,14 @@ $product = $productController->getProductDetails($product_id);
               </div>
 
               <!-- Nút Thêm vào giỏ hàng -->
-              <form method="POST" action="/add" class="add-to-cart-form" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+              <form method="POST" action="add" class="add-to-cart-form" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
                 <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
                 <input type="hidden" name="quantity" value="1">
                 <input type="hidden" name="size" value="S">
-                <button type="button" class="font-semibold add-to-cart-button bg-yellow-500 text-white px-5 py-2 rounded-lg transition duration-300 ease-in-out transform hover:bg-purple-600 hover:shadow-lg hover:-translate-y-1 hover:scale-105">Add to Cart</button>
+                <button type="button" class="add-to-cart-button px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-green-500 transition duration-300 shadow-md">
+                  🛒 Add to Cart
+                </button>
               </form>
             </div>
           </div>
@@ -258,21 +380,20 @@ $product = $productController->getProductDetails($product_id);
   <?php endif; ?>
 
   <!-- Featured Pizzas -->
-  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">
-    🍕 Featured Pizzas 🍕
-  </h2>
+  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">🍕 You may also like 🍕</h2>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
     <?php foreach ($randomProducts as $product): ?>
       <div class="rounded-2xl shadow-md bg-white overflow-hidden transition-transform transform hover:scale-105 hover:shadow-xl border-2 border-blue-500"
         title="<?= htmlspecialchars($product['description']) ?>">
-        <img src="/images/<?php echo htmlspecialchars($product['image']); ?>" class="w-3/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:rotate-12 hover:scale-110"
+        <img src="/images/<?php echo htmlspecialchars($product['image']); ?>"
+          class="w-3/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:scale-110"
           alt="<?php echo htmlspecialchars($product['name']); ?>">
 
         <div class="p-6 text-center">
-          <h5 class="text-2xl font-bold mb-2 text-gray-800"><?php echo htmlspecialchars($product['name']); ?></h5>
+          <h5 class="text-xl font-bold mb-2 text-gray-800"><?php echo htmlspecialchars($product['name']); ?></h5>
           <p class="text-xl font-semibold text-blue-500 mt-2">$<?= htmlspecialchars($product['final_price']); ?></p>
 
-          <div class="mt-4 flex justify-center">
+          <div class="mt-2 flex justify-center">
             <form method="POST" action="add" class="add-to-cart-form" style="display:inline;">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
               <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
@@ -290,20 +411,23 @@ $product = $productController->getProductDetails($product_id);
 
   <?php
   $vouchers = $productController->getActiveVouchers();
-
   $topPizzas = $productController->getTopRatedPizzas();
-  // Lấy pizza có điểm rating trung bình cao nhất
-  $highestRated = $topPizzas[0];
-
-  // Lấy pizza có số lượt bán cao nhất
-  $bestSeller = $topPizzas[0];
-  foreach ($topPizzas as $pizza) {
-    if ($pizza['total_sales'] > $bestSeller['total_sales']) {
-      $bestSeller = $pizza;
-    }
-  }
-
   $testimonials = $productController->getCustomerTestimonials();
+
+  // Kiểm tra danh sách pizza có rỗng không
+  if (!empty($topPizzas)) {
+    $highestRated = $topPizzas[0];
+    $bestSeller = $topPizzas[0];
+
+    foreach ($topPizzas as $pizza) {
+      if ($pizza['total_sales'] > $bestSeller['total_sales']) {
+        $bestSeller = $pizza;
+      }
+    }
+  } else {
+    $highestRated = null;
+    $bestSeller = null;
+  }
   ?>
 
   <!-- Exclusive Vouchers -->
@@ -333,52 +457,47 @@ $product = $productController->getProductDetails($product_id);
   <!-- Top Rated & Best Seller Pizzas -->
   <section class="mt-12 bg-white p-6 rounded-xl shadow-lg border text-center">
     <h2 class="text-2xl font-bold mb-2">🔥 Best Pizzas This Week 🔥</h2>
-    <p class="text-gray-500 text-sm mb-6">Updated on <?= date('d/m/Y') ?></p> <!-- Hiển thị ngày tháng hiện tại -->
+    <p class="text-gray-500 text-sm mb-6">Updated on <?= date('d/m/Y') ?></p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Pizza có điểm rating cao nhất -->
-      <div class="p-6 bg-yellow-100 rounded-xl shadow-xl border-4 border-yellow-500">
-        <h3 class="text-xl font-bold">🏆 Highest Rated Pizza</h3>
-        <h2 class="text-3xl font-extrabold mt-2 text-yellow-700 animate-pulse">
-          <?= htmlspecialchars($highestRated['name']) ?>
-        </h2>
-        <p class="text-gray-700 text-xl mt-2">⭐ <?= number_format($highestRated['avg_rating'], 1) ?> / 5</p>
-      </div>
+    <?php if ($highestRated && $bestSeller): ?>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="p-6 bg-yellow-100 rounded-xl shadow-xl border-4 border-yellow-500">
+          <h3 class="text-xl font-bold">🏆 Highest Rated Pizza</h3>
+          <h2 class="text-3xl font-extrabold mt-2 text-yellow-700 animate-pulse">
+            <?= htmlspecialchars($highestRated['name']) ?>
+          </h2>
+          <p class="text-gray-700 text-xl mt-2">⭐ <?= number_format($highestRated['avg_rating'], 1) ?> / 5</p>
+        </div>
 
-      <!-- Pizza bán chạy nhất -->
-      <div class="p-6 bg-green-100 rounded-xl shadow-xl border-4 border-green-500">
-        <h3 class="text-xl font-bold">📈 Best Seller</h3>
-        <h2 class="text-3xl font-extrabold mt-2 text-green-700 animate-pulse">
-          <?= htmlspecialchars($bestSeller['name']) ?>
-        </h2>
-        <p class="text-gray-700 text-xl mt-2">🔥 Sold: <strong><?= number_format($bestSeller['total_sales']) ?></strong> times</p>
+        <div class="p-6 bg-green-100 rounded-xl shadow-xl border-4 border-green-500">
+          <h3 class="text-xl font-bold">📈 Best Seller</h3>
+          <h2 class="text-3xl font-extrabold mt-2 text-green-700 animate-pulse">
+            <?= htmlspecialchars($bestSeller['name']) ?>
+          </h2>
+          <p class="text-gray-700 text-xl mt-2">🔥 Sold: <strong><?= number_format($bestSeller['total_sales']) ?></strong> times</p>
+        </div>
       </div>
-    </div>
+    <?php else: ?>
+      <p class="text-center text-gray-600 text-lg mt-4">No top-rated or best-selling pizzas available this week.</p>
+    <?php endif; ?>
   </section>
-
-  <!-- Combo Deals -->
-  <!-- <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4">Combo Deals</h2>
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-    <?php foreach ($comboDeals as $deal): ?>
-      <div class="bg-green-100 p-6 rounded-xl shadow-lg">
-        <h3 class="text-lg font-semibold text-green-700"> <?= htmlspecialchars($deal['name']) ?> </h3>
-        <p class="text-gray-600"> <?= htmlspecialchars($deal['description']) ?> </p>
-        <p class="text-xl font-bold text-green-500">$<?= number_format($deal['price'], 2) ?></p>
-      </div>
-    <?php endforeach; ?>
-  </div> -->
 
   <!-- Customer Testimonials -->
   <section class="mt-12 bg-blue-50 p-6 rounded-xl shadow-lg border border-blue-200">
     <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">💬 What Our Customers Say 💬</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <?php foreach ($testimonials as $review): ?>
-        <div class="bg-white p-4 rounded-lg shadow-md border border-blue-300">
-          <p class="text-gray-700 italic">"<?= htmlspecialchars($review['message']) ?>"</p>
-          <p class="text-right font-semibold text-blue-700">- <?= htmlspecialchars($review['name']) ?></p>
-        </div>
-      <?php endforeach; ?>
-    </div>
+
+    <?php if (!empty($testimonials)): ?>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <?php foreach ($testimonials as $review): ?>
+          <div class="bg-white p-4 rounded-lg shadow-md border border-blue-300">
+            <p class="text-gray-700 italic">"<?= htmlspecialchars($review['message']) ?>"</p>
+            <p class="text-right font-semibold text-blue-700">- <?= htmlspecialchars($review['name']) ?></p>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php else: ?>
+      <p class="text-center text-gray-600 text-lg mt-4">No customer feedback available at the moment. Be the first to leave a review!</p>
+    <?php endif; ?>
   </section>
 
   <!-- Special Policies -->

@@ -42,6 +42,18 @@ class OrderController
     return $this->orderModel->updateOrder($order_id, $name, $total, $status);
   }
 
+  // Lọc danh sách đơn hàng
+  public function getOrdersWithFilters($customerName, $limit, $offset)
+  {
+    return $this->orderModel->getOrdersWithFilters($customerName, $limit, $offset);
+  }
+
+  // Đếm số lượng danh sách đã lọc
+  public function countFilteredOrders($customerName)
+  {
+    return $this->orderModel->countFilteredOrders($customerName);
+  }
+
   // Lấy đơn hàng theo ID
   public function getOrderById($order_id)
   {

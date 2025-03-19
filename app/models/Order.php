@@ -379,6 +379,56 @@ class Order
         }
     }
 
+    public function getOrdersWithFilters($customerId, $limit, $offset)
+    {
+        if ($limit <= 0 || $offset < 0) {
+            throw new InvalidArgumentException("Invalid limit or offset values");
+        }
+
+        // Câu truy vấn chính
+        $query = "SELECT o.id, u.name AS customer_name, o.total, o.status, o.created_at, o.payment_method, o.images 
+              FROM orders o 
+              JOIN users u ON o.user_id = u.id";
+
+        // Nếu có chọn khách hàng, thêm điều kiện WHERE
+        if (!empty($customerId)) {
+            $query .= " WHERE o.user_id = :customer_id";
+        }
+
+        $query .= " ORDER BY o.created_at ASC LIMIT :limit OFFSET :offset";
+
+        $stmt = $this->conn->prepare($query);
+
+        // Chỉ bindParam nếu có lọc theo user_id
+        if (!empty($customerId)) {
+            $stmt->bindParam(':customer_id', $customerId, PDO::PARAM_INT);
+        }
+
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function countFilteredOrders($customerId)
+    {
+        $query = "SELECT COUNT(*) FROM orders";
+
+        if (!empty($customerId)) {
+            $query .= " WHERE user_id = :customer_id";
+        }
+
+        $stmt = $this->conn->prepare($query);
+
+        if (!empty($customerId)) {
+            $stmt->bindParam(':customer_id', $customerId, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
     //------------------------------------------------
     // THỐNG KÊ DOANH THU - CHI
     //------------------------------------------------

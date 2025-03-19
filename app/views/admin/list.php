@@ -18,10 +18,16 @@ if (isset($_SESSION['success'])) {
     unset($_SESSION['success']);
 }
 
+// Lấy danh mục sản phẩm
+$categories = $productController->getCategories();
+
 $searchTerm = '';
-$limit = isset($_POST['limit']) ? max(1, (int)$_POST['limit']) : $productController->countProducts();   // Số lượng sản phẩm hiển thị mặc định là ALL
+
+$category = isset($_POST['category']) && $_POST['category'] !== '' ? $_POST['category'] : null;
+
+$limit = isset($_POST['limit']) ? max(1, (int)$_POST['limit']) : 10;  // Mặc định 10 sản phẩm
 $page = isset($_POST['page']) ? max(1, (int)$_POST['page']) : 1;      // Trang hiện tại, mặc định là trang 1
-$offset = ($page - 1) * $limit;                                       // Tính toán offset
+$offset = ($page - 1) * $limit;                                       // Tính offset
 
 // Lấy danh sách sản phẩm hoặc tìm kiếm sản phẩm
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
@@ -34,14 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
 
     $searchTerm = isset($_POST['search_term']) ? trim($_POST['search_term']) : '';
     $products = $productController->searchProducts($searchTerm);
-    $totalProducts = count($products); // Cập nhật tổng số sản phẩm tìm thấy
+    $totalProducts = count($products); // Số sản phẩm tìm thấy
 } else {
     // Lấy danh sách sản phẩm với phân trang
-    $products = $productController->getProductsByCategoryWithPagination(null, $limit, $offset);
-    $totalProducts = $productController->countProducts(); // Tổng số sản phẩm
+    $products = $productController->getProductsByCategoryWithPagination($category, $limit, $offset);
+    $totalProducts = $category ? $productController->countProductsByCategory($category) : $productController->countProducts();
 }
 
-$totalPages = ceil($totalProducts / $limit); // Tổng số trang
+$totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
 
 // Kiểm tra hành động 'export-products'
 if (isset($_GET['action']) && $_GET['action'] === 'export-products') {
@@ -177,15 +183,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
         </div>
     </div>
 
-    <!-- Form chọn số lượng sản phẩm hiển thị -->
+    <!-- Form chọn số lượng sản phẩm hiển thị và loại sản phẩm -->
     <form method="POST" class="text-center mb-6">
         <input type="hidden" name="page" value="1">
 
-        <label for="limit" class="mr-2 text-lg">Select Number of Products:</label>
+        <!-- Chọn số lượng sản phẩm hiển thị -->
+        <label for="limit" class="mr-2 text-lg">Number of Products:</label>
         <select name="limit" id="limit" onchange="this.form.submit()" class="p-2 border rounded">
-            <option value="5" <?= $limit == 5 ? 'selected' : '' ?>>5</option>
+            <option value="" selected disabled hidden>All</option>
             <option value="10" <?= $limit == 10 ? 'selected' : '' ?>>10</option>
             <option value="20" <?= $limit == 20 ? 'selected' : '' ?>>20</option>
+            <option value="50" <?= $limit == 50 ? 'selected' : '' ?>>50</option>
+        </select>
+
+        <!-- Chọn loại sản phẩm -->
+        <label for="category" class="ml-4 mr-2 text-lg">Category:</label>
+        <select name="category" id="category" onchange="this.form.submit()" class="p-2 border rounded">
+            <option value="" selected disabled hidden>All</option>
+            <?php foreach ($categories as $cat): ?>
+                <option value="<?= htmlspecialchars($cat['id']) ?>" <?= ($category == $cat['id']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($cat['name']) ?>
+                </option>
+            <?php endforeach; ?>
         </select>
     </form>
 
@@ -249,8 +268,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 <?php endif; ?>
             </tbody>
         </table>
+
         <form method="POST" class="text-center mt-6 flex justify-center items-center space-x-4">
-            <!-- Trường ẩn để giữ giá trị limit -->
+            <!-- Trường ẩn để giữ giá trị limit và category -->
+            <input type="hidden" name="category" value="<?= htmlspecialchars($category) ?>">
             <input type="hidden" name="limit" value="<?= htmlspecialchars($limit) ?>">
 
             <!-- Dropdown chọn số trang -->
@@ -277,11 +298,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 Next
             </button>
         </form>
+
     </div>
 </div>
 
 <!--------------------------------------- Quản lý đơn hàng, cập nhật trạng thái --------------------------------------->
-<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Orders Management</h1>
+<?php
+
+// Lấy danh sách khách hàng
+$customers = $userController->getAllUsers();
+
+// Lấy dữ liệu lọc từ form
+$customerName = isset($_POST['customer_name']) ? ($_POST['customer_name']) : null;
+$limit_order = isset($_POST['limit_order']) ? max(1, (int)$_POST['limit_order']) : 10;
+$page_order = isset($_POST['page_order']) ? max(1, (int)$_POST['page_order']) : 1;
+$offset_order = ($page_order - 1) * $limit_order;
+
+// Xử lý lấy danh sách đơn hàng theo bộ lọc
+$orders = $orderController->getOrdersWithFilters($customerName, $limit_order, $offset_order);
+$totalOrders = $orderController->countFilteredOrders($customerName);
+$totalPages = ceil($totalOrders / $limit_order);
+
+?>
+
+<div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+    <h1 class="mx-6 text-3xl md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+        <span class="text-gray-700 text-4xl font-bold">[</span>
+        Products Management
+        <span class="text-gray-700 text-4xl font-bold">]</span>
+    </h1>
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+</div>
 
 <!-- Form chỉnh sửa đơn hàng (mặc định ẩn) -->
 <div id="edit-order-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
@@ -340,9 +388,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     </form>
 </div>
 
-<!-- Bảng chi tiết đơn hàng -->
+<!-- Bảng đơn hàng -->
 <div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="table-responsive">
+        <form method="POST" class="text-center mb-6">
+            <input type="hidden" name="page_order" value="1">
+
+            <!-- Chọn số lượng đơn hàng hiển thị -->
+            <label for="limit_order" class="mr-2 text-lg">Orders per page:</label>
+            <select name="limit_order" id="limit_order" onchange="this.form.submit()" class="p-2 border rounded">
+                <option value="10" <?= $limit_order == 10 ? 'selected' : '' ?>>10</option>
+                <option value="20" <?= $limit_order == 20 ? 'selected' : '' ?>>20</option>
+                <option value="50" <?= $limit_order == 50 ? 'selected' : '' ?>>50</option>
+            </select>
+
+            <!-- Lọc theo tên khách hàng -->
+            <label for="customer_name" class="ml-4 mr-2 text-lg">Customer:</label>
+            <select name="customer_name" id="customer_name" onchange="this.form.submit()" class="p-2 border rounded">
+                <option value="" selected disabled hidden>All</option>
+                <!-- <option value="" <?= empty($customerName) ? 'selected' : '' ?>>All</option> -->
+                <?php foreach ($customers as $cus): ?>
+                    <option value="<?= htmlspecialchars($cus['id']) ?>" <?= ($customerName == $cus['id']) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($cus['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </form>
+
         <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
             <thead>
                 <tr class="bg-gray-100 text-gray-800 text-center">
@@ -356,26 +428,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 </tr>
             </thead>
             <tbody>
-                <?php
-                $orderController = new OrderController($conn);
-                $orders = $orderController->getAllOrders();
-
-                if (count($orders) > 0):
-                    foreach ($orders as $order): ?>
+                <?php if (!empty($orders)): ?>
+                    <?php foreach ($orders as $order): ?>
                         <tr class="hover:bg-gray-50 text-center">
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['id']) ?></td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['customer_name']) ?></td>
                             <td class="px-3 py-2 border-b text-green-600 font-bold">$<?= number_format($order['total'], 2) ?></td>
                             <td class="px-3 py-2 border-b">
-                                <?php if ($order['status'] === 'completed'): ?>
-                                    <span class="text-green-500 font-bold">Completed</span>
-                                <?php elseif ($order['status'] === 'pending'): ?>
-                                    <span class="text-yellow-500 font-bold">Pending</span>
-                                <?php elseif ($order['status'] === 'processing'): ?>
-                                    <span class="text-blue-500 font-bold">Processing</span>
-                                <?php else: ?>
-                                    <span class="text-red-500 font-bold">Cancelled</span>
-                                <?php endif; ?>
+                                <span class="<?= $order['status'] === 'completed' ? 'text-green-500 font-bold' : ($order['status'] === 'pending' ? 'text-yellow-500 font-bold' : ($order['status'] === 'processing' ? 'text-blue-500 font-bold' : 'text-red-500 font-bold')) ?>">
+                                    <?= ucfirst($order['status']) ?>
+                                </span>
                             </td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['created_at']) ?></td>
                             <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['payment_method']) ?></td>
@@ -399,15 +461,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                                 </div>
                             </td>
                         </tr>
-                    <?php endforeach;
-                else: ?>
+                    <?php endforeach; ?>
+                <?php else: ?>
                     <tr>
-                        <td colspan="6" class="text-center text-gray-500 py-4">No orders found.</td>
+                        <td colspan="6" class="text-center text-gray-500 py-4"></td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
+
+    <!-- Phân trang -->
+    <form method="POST" class="text-center mt-6 flex justify-center items-center space-x-4">
+        <input type="hidden" name="limit_order" value="<?= htmlspecialchars($limit_order) ?>">
+        <input type="hidden" name="customer_name" value="<?= htmlspecialchars($customerName) ?>">
+
+        <div class="flex items-center">
+            <label for="page" class="text-lg mr-2">Page:</label>
+            <select name="page_order" id="page_order" onchange="this.form.submit()" class="p-2 border rounded">
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <option value="<?= $i ?>" <?= $page_order == $i ? 'selected' : '' ?>><?= $i ?></option>
+                <?php endfor; ?>
+            </select>
+        </div>
+
+        <button type="submit" name="page_order" value="<?= max(1, $page_order - 1) ?>"
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 <?= $page_order <= 1 ? 'cursor-not-allowed opacity-50' : '' ?>"
+            <?= $page_order <= 1 ? 'disabled' : '' ?>>
+            Previous
+        </button>
+
+        <button type="submit" name="page_order" value="<?= min($totalPages, $page_order + 1) ?>"
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 <?= $page_order >= $totalPages ? 'cursor-not-allowed opacity-50' : '' ?>"
+            <?= $page_order >= $totalPages ? 'disabled' : '' ?>>
+            Next
+        </button>
+    </form>
+
 </div>
 
 <script>
@@ -458,7 +548,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 </script>
 
 <!--------------------------------------- Quản lý tài khoản --------------------------------------->
-<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Accounts Management</h1>
+<div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+    <h1 class="mx-6 text-3xl md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+        <span class="text-gray-700 text-4xl font-bold">[</span>
+        Accounts Management
+        <span class="text-gray-700 text-4xl font-bold">]</span>
+    </h1>
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+</div>
 
 <!-- Form Block User (mặc định ẩn) -->
 <div id="block-user-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
@@ -572,7 +670,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="6" class="text-center text-gray-500 py-4">No users found.</td>
+                        <td colspan="6" class="text-center text-gray-500 py-4"></td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -666,7 +764,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
 }
 ?>
 
-<h1 class="text-4xl font-extrabold text-center my-8 text-blue-700 drop-shadow-lg">Feedbacks Management</h1>
+<div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+    <h1 class="mx-6 text-3xl md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+        <span class="text-gray-700 text-4xl font-bold">[</span>
+        Feedbacks Management
+        <span class="text-gray-700 text-4xl font-bold">]</span>
+    </h1>
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+</div>
+
 <div class="container mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="overflow-x-auto">
         <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -703,7 +810,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="6" class="text-center text-gray-500 py-4">No feedback found.</td>
+                        <td colspan="6" class="text-center text-gray-500 py-4"></td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -807,7 +914,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
 }
 ?>
 
-<h1 class="text-4xl font-extrabold text-center my-8 text-green-700 drop-shadow-lg">Vouchers Management</h1>
+<h1 class="text-4xl font-extrabold text-center my-8 text-green-600 drop-shadow-lg">Vouchers Management</h1>
 <div class="container mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-green-600">
     <!-- Thêm Voucher -->
     <a href="/admin/add-voucher" class="mb-4 bg-green-500 text-white px-4 py-2 rounded-lg inline-block">+ Add Voucher</a>
@@ -831,31 +938,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($vouchers as $v): ?>
-                <tr class="hover:bg-gray-50 border-b text-center" title="<?= htmlspecialchars($v['description']) ?>">
-                    <td class="px-4 py-3"><?= htmlspecialchars($v['id']) ?></td>
-                    <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['code']) ?></td>
-                    <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars(substr($v['description'], 0, 15)) ?>...</td>
-                    <td class="px-4 py-3 text-green-600 font-semibold">$<?= htmlspecialchars($v['discount_amount']) ?></td>
-                    <td class="px-4 py-3 text-blue-600 font-semibold">$<?= htmlspecialchars($v['min_order_value']) ?></td>
-                    <td class="px-4 py-3 text-purple-600 font-semibold"><?= htmlspecialchars($v['quantity']) ?></td>
-                    <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['expiration_date'] ?? '---') ?></td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center space-x-2">
-                            <!-- Nút edit -->
-                            <a href="/admin/edit-voucher/id=<?= $v['id'] ?>"
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">✏️</a>
-                            <!-- Nút delete -->
-                            <form action="/admin/delete-voucher" method="POST"
-                                onsubmit="return confirm('Are you sure you want to delete this voucher?');">
-                                <input type="hidden" name="voucher_id" value="<?= $v['id'] ?>">
-                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
-                                    title="Delete Voucher">❌</button>
-                            </form>
-                        </div>
-                    </td>
+            <?php if (!empty($vouchers)): ?>
+                <?php foreach ($vouchers as $v): ?>
+                    <tr class="hover:bg-gray-50 border-b text-center" title="<?= htmlspecialchars($v['description']) ?>">
+                        <td class="px-4 py-3"><?= htmlspecialchars($v['id']) ?></td>
+                        <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['code']) ?></td>
+                        <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars(substr($v['description'], 0, 15)) ?>...</td>
+                        <td class="px-4 py-3 text-green-600 font-semibold">$<?= htmlspecialchars($v['discount_amount']) ?></td>
+                        <td class="px-4 py-3 text-blue-600 font-semibold">$<?= htmlspecialchars($v['min_order_value']) ?></td>
+                        <td class="px-4 py-3 text-purple-600 font-semibold"><?= htmlspecialchars($v['quantity']) ?></td>
+                        <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['expiration_date'] ?? '---') ?></td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center space-x-2">
+                                <!-- Nút edit -->
+                                <a href="/admin/edit-voucher/id=<?= $v['id'] ?>"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">✏️</a>
+                                <!-- Nút delete -->
+                                <form action="/admin/delete-voucher" method="POST"
+                                    onsubmit="return confirm('Are you sure you want to delete this voucher?');">
+                                    <input type="hidden" name="voucher_id" value="<?= $v['id'] ?>">
+                                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
+                                        title="Delete Voucher">❌</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="6" class="text-center text-gray-500 py-4"></td>
                 </tr>
-            <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>
 </div>

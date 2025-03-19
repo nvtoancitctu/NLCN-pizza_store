@@ -33,7 +33,7 @@ class Product
      * @param string|null $discount_end_time
      * @return bool
      */
-    public function createProduct($name, $description, $price, $image, $category_id, $stock_quantity, $discount = null, $discount_end_time = null)
+    public function createProduct($name, $description, $price, $image, $category_id, $stock_quantity, $note = null, $discount = null, $discount_end_time = null)
     {
         // Kiểm tra nếu bảng products trống, thì reset AUTO_INCREMENT về 1
         $query = "SELECT COUNT(*) FROM products";
@@ -58,9 +58,9 @@ class Product
         // Thực thi câu lệnh ALTER TABLE để thiết lập AUTO_INCREMENT
         $this->conn->prepare($resetQuery)->execute();
 
-        $query = "INSERT INTO " . $this->table . " (name, description, price, image, category_id, stock_quantity, discount, discount_end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO " . $this->table . " (name, description, price, image, category_id, stock_quantity, note, discount, discount_end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time]);
+        return $stmt->execute([$name, $description, $price, $image, $category_id, $stock_quantity, $note, $discount, $discount_end_time]);
     }
 
     /**
@@ -175,17 +175,19 @@ class Product
      * @param int $offset
      * @return array
      */
-    public function getProductsByCategoryWithPagination($category_id = null, $limit, $offset)
+    public function getProductsByCategoryWithPagination($category_id, $limit, $offset)
     {
         if ($limit <= 0 || $offset < 0) {
             throw new InvalidArgumentException("Invalid limit or offset values");
         }
 
         $query = "SELECT * FROM " . $this->table;
+
         if ($category_id !== null) {
             $query .= " WHERE category_id = :category_id";
         }
-        $query .= " LIMIT :limit OFFSET :offset";
+
+        $query .= " ORDER BY category_id ASC LIMIT :limit OFFSET :offset";
 
         $stmt = $this->conn->prepare($query);
 
@@ -217,7 +219,8 @@ class Product
                          THEN discount
                          ELSE price
                      END AS final_price
-                FROM " . $this->table . " 
+                FROM " . $this->table . "
+                WHERE category_id = 1 
                 ORDER BY RAND() 
                 LIMIT :limit";
 
@@ -314,27 +317,10 @@ class Product
      */
     public function getCategories()
     {
-        $query = "SELECT * FROM categories";
+        $query = "SELECT id, name FROM categories WHERE id not in (1, 2, 3) ORDER BY id ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Lấy danh sách các danh mục khác nhau
-     * @return array
-     */
-    public function getDistinctCategories()
-    {
-        $query = "SELECT DISTINCT id, name FROM categories";
-        $stmt = $this->conn->query($query);
-        $categories = [];
-
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $categories[] = $row;
-        }
-
-        return $categories;
     }
 
     /**
@@ -344,9 +330,23 @@ class Product
      */
     public function getProductsByCategory($category_id)
     {
-        $query = "SELECT * FROM " . $this->table . " WHERE category_id = :category_id";
+        // Lấy ID của danh mục "Pizza"
+        $query = "SELECT id FROM categories WHERE name = 'Pizza'";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $pizzaCategory = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($pizzaCategory && $category_id == $pizzaCategory['id']) {
+            // Lấy sản phẩm thuộc Classic, Specialty, Vegan nếu chọn Pizza
+            $query = "SELECT * FROM " . $this->table . " WHERE category_id IN (1, 2, 3)";
+            $stmt = $this->conn->prepare($query);
+        } else {
+            // Lấy sản phẩm theo danh mục thông thường
+            $query = "SELECT * FROM " . $this->table . " WHERE category_id = :category_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
+        }
+
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -377,6 +377,26 @@ class Product
         return $result['total'];
     }
 
+    // Lấy số lượng sản phẩm theo danh mục
+    public function countProductsByCategory($category)
+    {
+        $sql = "SELECT COUNT(*) FROM products";
+
+        // Nếu có chọn khách hàng, thêm điều kiện WHERE
+        if (!empty($category)) {
+            $sql .= " WHERE category_id = :category";
+        }
+
+        $stmt = $this->conn->prepare($sql);
+
+        if (!empty($category)) {
+            $stmt->bindParam(':category', $category, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
     /**
      * Lấy danh sách ID sản phẩm yêu thích của người dùng
      * 
@@ -401,9 +421,11 @@ class Product
      */
     public function getFavoriteProductList($user_id)
     {
-        $sql = "SELECT p.* FROM products p
-            JOIN favorites f ON p.id = f.product_id
-            WHERE f.user_id = :user_id";
+        $sql = "SELECT p.* 
+                FROM products p
+                JOIN favorites f ON p.id = f.product_id
+                WHERE f.user_id = :user_id
+                ORDER BY p.id ASC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute(['user_id' => $user_id]);
 

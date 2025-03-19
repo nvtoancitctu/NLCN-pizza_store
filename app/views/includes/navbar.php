@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['notification_id'])) {
 ?>
 
 <nav class="bg-gray-800 text-white shadow-lg">
-  <div class="container mx-auto px-6 lg:px-20 py-3 flex justify-between items-center">
+  <div class="container mx-auto px-6 lg:px-10 py-3 flex justify-between items-center">
 
     <!-- Cột 1: Logo & Tên thương hiệu -->
     <div class="flex items-center space-x-2">
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['notification_id'])) {
       <!-- Cart Button Giống Ảnh -->
       <a href="/cart" class="inline-flex items-center space-x-2 border border-gray-300 px-3 py-1 rounded-full hover:text-yellow-400 transition">
         <!-- Số sản phẩm trong giỏ -->
-        <span class="font-semibold text-sm">
+        <span class="font-semibold text-sm text-yellow-400">
           <?= $cartItemCount ?>
         </span>
 

@@ -118,19 +118,17 @@ class ProductController
   }
 
   /**
-   * Lấy danh sách các loại danh mục khác nhau
-   */
-  public function getDistinctCategories()
-  {
-    return $this->productModel->getDistinctCategories();
-  }
-
-  /**
    * Đếm tổng số sản phẩm trong danh mục
    */
   public function countProducts($category_id = null)
   {
     return $this->productModel->countProducts($category_id);
+  }
+
+  // Lấy số lượng sản phẩm theo loại
+  public function countProductsByCategory($category_id)
+  {
+    return $this->productModel->countProductsByCategory($category_id);
   }
 
   // ========================== Quản lý sản phẩm ========================== //
