@@ -33,6 +33,7 @@ class Cart
         p.price,
         p.name, 
         p.image,
+        p.category_id,
         -- Chọn giá hiển thị (ưu tiên discount nếu có)
         CASE 
             WHEN p.discount > 0 AND (p.discount_end_time IS NULL OR p.discount_end_time >= NOW()) 

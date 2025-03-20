@@ -189,44 +189,58 @@ $Combos = $productController->listProducts(8);
   $newProducts = array_filter($products, function ($product) {
     return isset($product['note']) && strtolower($product['note']) === 'new';
   });
+
+  // Hàm cắt chuỗi mô tả ngắn gọn (30 ký tự)
+  function shortDescription($text, $length = 30)
+  {
+    return mb_strlen($text) > $length ? mb_substr($text, 0, $length) . '...' : $text;
+  }
   ?>
 
   <!-- New Pizza Section -->
-  <div class="container mx-auto p-10">
+  <div class="container mx-auto px-4 py-10">
+    <h2 class="text-3xl font-extrabold text-center text-red-600 mb-8">
+      🍕 New Arrivals 🍕
+    </h2>
+
     <?php if (!empty($newProducts)): ?>
-      <div class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <?php foreach ($newProducts as $product): ?>
-          <div class="flex bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-transform transform hover:scale-[1.02]">
+          <div class="flex bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-transform transform hover:scale-105 p-3">
             <!-- Hình ảnh -->
-            <div class="flex items-center justify-center">
+            <div class="w-1/3 flex items-center justify-center relative">
               <img src="/images/<?= htmlspecialchars($product['image']) ?>"
                 alt="<?= htmlspecialchars($product['name']) ?>"
-                class="w-3/5 h-auto object-cover">
-              <span class="absolute top-2 left-2 bg-red-500 text-white text-lg font-bold px-3 py-1 rounded-full">
+                class="max-w-[80px] max-h-[80px] object-cover rounded-md">
+              <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                 NEW
               </span>
             </div>
 
             <!-- Nội dung -->
-            <div class="w-2/3 p-5 flex flex-col justify-between">
-              <div class="mb-3">
-                <h3 class="text-3xl font-semibold text-gray-800"><?= htmlspecialchars($product['name']) ?></h3>
-                <p class="text-gray-600 mt-2"><?= htmlspecialchars($product['description']) ?></p>
-                <p class="text-red-500 text-xl font-bold mt-3">
+            <div class="w-2/3 px-3 flex flex-col justify-between">
+              <div>
+                <h3 class="text-md font-semibold text-gray-800"><?= htmlspecialchars($product['name']) ?></h3>
+                <p class="text-gray-600 text-sm truncate" title="<?= htmlspecialchars($product['description']) ?>">
+                  <?= htmlspecialchars(shortDescription($product['description'])) ?>
+                </p>
+                <p class="text-red-500 text-lg font-bold mt-1">
                   $<?= number_format($product['price'], 2) ?>
                 </p>
               </div>
 
               <!-- Nút Order -->
-              <form method="POST" action="add" class="add-to-cart-form" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
-                <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
-                <input type="hidden" name="quantity" value="1">
-                <input type="hidden" name="size" value="S">
-                <button type="button" class="add-to-cart-button px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-green-500 transition duration-300 shadow-md">
-                  🛒 Add to Cart
-                </button>
-              </form>
+              <div class="mt-2">
+                <form method="POST" action="add" class="add-to-cart-form">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
+                  <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
+                  <input type="hidden" name="quantity" value="1">
+                  <input type="hidden" name="size" value="S">
+                  <button type="button" class="add-to-cart-button px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-green-500 transition duration-300 shadow-sm">
+                    🛒 Add
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         <?php endforeach; ?>
@@ -292,7 +306,7 @@ $Combos = $productController->listProducts(8);
                 <input type="hidden" name="quantity" value="1">
                 <input type="hidden" name="size" value="S">
                 <button type="button" class="add-to-cart-button px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-green-500 transition duration-300 shadow-md">
-                  🛒 Add to Cart
+                  🛒 Add
                 </button>
               </form>
             </div>
@@ -400,7 +414,7 @@ $Combos = $productController->listProducts(8);
               <input type="hidden" name="quantity" value="1">
               <input type="hidden" name="size" value="S">
               <button type="button" class="add-to-cart-button px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-green-500 transition duration-300 shadow-md">
-                🛒 Add to Cart
+                🛒 Add
               </button>
             </form>
           </div>

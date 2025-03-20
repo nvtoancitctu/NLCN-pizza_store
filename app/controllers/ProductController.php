@@ -77,24 +77,6 @@ class ProductController
     return $this->productModel->getTopRatedPizzas();
   }
 
-  // // Lấy danh sách combo khuyến mãi
-  // public function getComboDeals($limit = 3)
-  // {
-  //   return $this->productModel->getComboDeals($limit);
-  // }
-
-  // // Lấy danh sách sản phẩm đã xem gần đây từ session
-  // public function getRecentlyViewed()
-  // {
-  //   return $this->productModel->getRecentlyViewed();
-  // }
-
-  // // Lưu sản phẩm vào danh sách đã xem gần đây
-  // public function addRecentlyViewed($product)
-  // {
-  //   return $this->productModel->addRecentlyViewed($product);
-  // }
-
   // Lấy danh sách phản hồi từ khách hàng
   public function getCustomerTestimonials($limit = 4)
   {
@@ -117,6 +99,18 @@ class ProductController
     return $this->productModel->getCategories();
   }
 
+  // Lấy danh sách các danh mục ngoài danh mục pizza
+  public function getAllCategoryNamesExceptPizza()
+  {
+    return $this->productModel->getAllCategoryNamesExceptPizza();
+  }
+
+  // ========================== Quản lý danh mục ========================== //
+
+  /**
+   * Xóa danh mục
+   */
+  public function deleteCategory($id) {}
   /**
    * Đếm tổng số sản phẩm trong danh mục
    */

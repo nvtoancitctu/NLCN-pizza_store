@@ -11,7 +11,7 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$categories = $productController->getDistinctCategories();
+$categories = $productController->getAllCategoryNamesExceptPizza();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Kiểm tra token CSRF
@@ -28,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stock_quantity = $_POST['stock_quantity'];
 
     $note = trim($_POST['note']);
-    $discount = $_POST['discount'];
-    $discount_end_time = $_POST['discount_end_time'];
+    $discount = $_POST['discount'] ?? null;
+    $discount_end_time = $_POST['discount_end_time'] ?? null;
     $image = $_POST['image'];
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {

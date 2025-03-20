@@ -64,10 +64,16 @@ if (isset($_GET['action'])) {
     YOUR CART
 </h1>
 
-<!-- Ghi chú về giá size -->
-<p class="text-center text-gray-800 mt-2 mb-4 text-sm">
-    <strong>NOTE: </strong>Size M costs +20% and Size L costs +50% of the base price, including discounted prices.
-</p>
+<!-- Ghi chú về giá size và thông tin đặc biệt -->
+<div class="mx-auto w-6/12 text-center text-gray-900 mt-4 mb-6 text-sm bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 shadow-sm">
+    <p class="font-semibold text-blue-700">💡 Pricing & Size Guide:</p>
+    <ul class="mt-2 text-gray-800 space-y-2">
+        <li>✅ <strong>Size M</strong> costs <span class="text-blue-600">+20%</span> and <strong>Size L</strong> costs <span class="text-blue-600">+50%</span> of the base price.</li>
+        <li>🍗 <strong>Fried Chicken:</strong>
+            <span class="text-gray-700">Size S - 4 pieces, Size M - 6 pieces, Size L - 9 pieces.</span>
+        </li>
+    </ul>
+</div>
 
 <!-- Container chính của giỏ hàng -->
 <div class="container mx-auto w-10/12">
@@ -115,17 +121,22 @@ if (isset($_GET['action'])) {
                                 <!-- Số lượng tồn kho -->
                                 <td class="px-6 py-4 text-center font-semibold text-green-600"><?= htmlspecialchars($item['stock_quantity']) ?></td>
 
-                                <!-- Lựa chọn size & số lượng -->
+                                <!-- Lựa chọn size & số lượng CHỈ ÁP DỤNG CHO PIZZA VÀ CHICKEN -->
                                 <td class="px-6 py-4">
                                     <form method="POST" action="/cart" class="flex justify-center items-center space-x-3">
                                         <input type="hidden" name="cart_id" value="<?= $item['id'] ?>">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
-                                        <select name="size" class="border rounded-lg px-2 py-1 bg-white text-center">
-                                            <option value="S" <?= $item['size'] === 'S' ? 'selected' : '' ?>>S</option>
-                                            <option value="M" <?= $item['size'] === 'M' ? 'selected' : '' ?>>M</option>
-                                            <option value="L" <?= $item['size'] === 'L' ? 'selected' : '' ?>>L</option>
-                                        </select>
+                                        <?php if (in_array($item['category_id'], [1, 2, 3, 6])): ?>
+                                            <select name="size" class="border rounded-lg px-2 py-1 bg-white text-center">
+                                                <option value="S" <?= $item['size'] === 'S' ? 'selected' : '' ?>>S</option>
+                                                <option value="M" <?= $item['size'] === 'M' ? 'selected' : '' ?>>M</option>
+                                                <option value="L" <?= $item['size'] === 'L' ? 'selected' : '' ?>>L</option>
+                                            </select>
+                                        <?php else: ?>
+                                            <input type="hidden" name="size" value="<?= $item['size'] ?>">
+                                            <span class="text-gray-700"><?= htmlspecialchars($item['size']) ?></span>
+                                        <?php endif; ?>
 
                                         <input type="number" name="quantity" value="<?= htmlspecialchars($item['quantity']) ?>" min="1" class="w-16 text-center border rounded-lg px-2 py-1 focus:ring focus:ring-blue-300">
 

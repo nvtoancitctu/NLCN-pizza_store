@@ -11,7 +11,7 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$categories = $productController->getDistinctCategories();
+$categories = $productController->getAllCategoryNamesExceptPizza();
 $product_id = $_GET['id'];
 $product = $productController->getProductDetails($product_id);
 
@@ -29,6 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = $_POST['price'];
     $category_id = $_POST['category_id'];
     $stock_quantity = $_POST['stock_quantity'];
+
+    $note = trim($_POST['note']) ?? null;
     $discount = !empty($_POST['discount']) ? $_POST['discount'] : null;
     $discount_end_time = !empty($_POST['discount_end_time']) ? $_POST['discount_end_time'] : null;
 
@@ -53,10 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Chạy cập nhật sản phẩm trong mọi trường hợp (dù có hoặc không có ảnh mới)
-    $productController->updateProduct($product_id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time);
+    $productController->updateProduct($product_id, $name, $description, $price, $image, $category_id, $stock_quantity, $note, $discount, $discount_end_time);
+
     $_SESSION['success'] = "Product (ID: $product_id) has been updated successfully!";
     $_SESSION['limit'] = $productController->countProducts();
     $_SESSION['page'] = 1;
+
     header("Location: /admin/list");
     exit();
 }
@@ -100,6 +104,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <!-- Cột 2 -->
                 <div>
+                    <div class="mb-4">
+                        <label for="note" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-sticky-note mr-2"></i>Note</label>
+                        <input type="text" name="note" value="<?= htmlspecialchars($product['note']) ?>"
+                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
                     <div class="mb-4">
                         <label for="discount" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-percentage mr-2"></i>Discount Price</label>
                         <input type="number" name="discount" value="<?= htmlspecialchars($product['discount']) ?>"

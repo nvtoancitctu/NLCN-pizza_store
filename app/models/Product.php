@@ -103,17 +103,17 @@ class Product
      * @param string|null $discount_end_time
      * @return bool
      */
-    public function updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time)
+    public function updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $note = null, $discount = null, $discount_end_time = null)
     {
         $query = "UPDATE " . $this->table . " SET name = ?, description = ?, price = ?, image = ?,
-                                            category_id = ?, stock_quantity = ?, discount = ?, discount_end_time = ? WHERE id = ?";
+                                            category_id = ?, stock_quantity = ?, note = ?, discount = ?, discount_end_time = ? WHERE id = ?";
         $stmt = $this->conn->prepare($query);
 
         if (!$stmt) {
             return false;
         }
 
-        $result = $stmt->execute([$name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time, $id]);
+        $result = $stmt->execute([$name, $description, $price, $image, $category_id, $stock_quantity, $note, $discount, $discount_end_time, $id]);
 
         if (!$result) {
             return false;
@@ -220,7 +220,7 @@ class Product
                          ELSE price
                      END AS final_price
                 FROM " . $this->table . "
-                WHERE category_id = 1 
+                WHERE category_id IN (1, 2, 3) AND note IS NOT NULL
                 ORDER BY RAND() 
                 LIMIT :limit";
 
@@ -271,32 +271,6 @@ class Product
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // // Lấy danh sách combo khuyến mãi
-    // public function getComboDeals($limit = 3)
-    // {
-
-    //     $stmt = $this->conn->prepare("SELECT name, description, price FROM combo_deals ORDER BY price DESC LIMIT ?");
-    //     $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-    //     $stmt->execute();
-    //     return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    // }
-
-    // // Lấy danh sách sản phẩm đã xem gần đây từ session
-    // public function getRecentlyViewed()
-    // {
-    //     return $_SESSION['recently_viewed'] ?? [];
-    // }
-
-    // // Lưu sản phẩm vào danh sách đã xem gần đây
-    // public function addRecentlyViewed($product)
-    // {
-    //     if (!isset($_SESSION['recently_viewed'])) {
-    //         $_SESSION['recently_viewed'] = [];
-    //     }
-    //     array_unshift($_SESSION['recently_viewed'], $product);
-    //     $_SESSION['recently_viewed'] = array_slice($_SESSION['recently_viewed'], 0, 5);
-    // }
-
     // Lấy danh sách phản hồi từ khách hàng
     public function getCustomerTestimonials($limit = 4)
     {
@@ -312,12 +286,12 @@ class Product
     // ------------------------------------------
 
     /**
-     * Lấy danh sách tất cả các danh mục
+     * Lấy danh sách tất cả các danh mục, gom 3 mục 1,2,3 thành Pizza
      * @return array
      */
     public function getCategories()
     {
-        $query = "SELECT id, name FROM categories WHERE id not in (1, 2, 3) ORDER BY id ASC";
+        $query = "SELECT id, name FROM categories WHERE id not in (1, 2, 3) ORDER BY id DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -347,6 +321,15 @@ class Product
             $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
         }
 
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy tên danh mục trừ mục Pizza (id = 9)
+    public function getAllCategoryNamesExceptPizza()
+    {
+        $query = "SELECT id, name FROM categories WHERE id != 9";
+        $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

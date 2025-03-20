@@ -95,6 +95,13 @@ if ($user_id) {
             <?php foreach ($products as $product): ?>
                 <div class="relative flex bg-white rounded-lg shadow-lg overflow-hidden transition-transform transform hover:scale-105 p-6">
 
+                    <!-- Hiển thị Note nếu có -->
+                    <?php if (!empty($product['note'])): ?>
+                        <div class="absolute top-2 left-2 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded">
+                            <?= htmlspecialchars($product['note']); ?>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Nếu sản phẩm đã bán hết thì hiển thị "Sold Out" -->
                     <?php if ($product['stock_quantity'] == 0): ?>
                         <div class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center border-4 border-red-600 rounded-lg z-10 pointer-events-none">

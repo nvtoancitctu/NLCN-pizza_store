@@ -19,7 +19,7 @@ if (isset($_SESSION['success'])) {
 }
 
 // Lấy danh mục sản phẩm
-$categories = $productController->getCategories();
+$categories = $productController->getAllCategoryNamesExceptPizza();
 
 $searchTerm = '';
 
