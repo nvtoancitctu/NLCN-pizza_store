@@ -108,4 +108,9 @@ class UserController
   {
     return $this->userModel->addNotification($user_id, $message);
   }
+
+  public function checkFeedbackExists($user_id, $order_id)
+  {
+    return $this->userModel->checkFeedbackExists($user_id, $order_id);
+  }
 }

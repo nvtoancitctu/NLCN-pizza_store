@@ -2,6 +2,13 @@
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // Check CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    } else {
+        unset($_SESSION['csrf_token']);
+    }
+
     // Lấy dữ liệu từ form
     $code = trim($_POST['code']);
     $description = trim($_POST['description']);

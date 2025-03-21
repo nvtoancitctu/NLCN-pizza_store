@@ -11,6 +11,13 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+// Check CSRF token
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    die('Invalid CSRF token');
+} else {
+    unset($_SESSION['csrf_token']);
+}
+
 // Kiểm tra xem có giá trị time_period từ POST không
 $timePeriod = isset($_POST['time_period']) ? $_POST['time_period'] : 'daily';
 

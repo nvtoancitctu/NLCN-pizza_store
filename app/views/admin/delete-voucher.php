@@ -2,6 +2,14 @@
 
 // Kiểm tra yêu cầu POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['voucher_id'])) {
+
+    // Check CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    } else {
+        unset($_SESSION['csrf_token']);
+    }
+
     $voucher_id = $_POST['voucher_id'];
 
     try {

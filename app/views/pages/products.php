@@ -132,7 +132,7 @@ if ($user_id) {
                             <?php if ($user_id): ?>
                                 <?php $isFavorite = in_array($product['id'], $favoriteProductIds); ?>
                                 <form method="POST" action="/toggle-favorite">
-                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                     <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']); ?>">
                                     <button type="submit" class="text-xl w-10 h-10 flex items-center justify-center rounded-full transition duration-300 
                                     <?= $isFavorite ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-300 text-gray-800 hover:bg-gray-400' ?>">

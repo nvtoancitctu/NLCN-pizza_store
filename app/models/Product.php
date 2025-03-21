@@ -415,23 +415,6 @@ class Product
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // XUẤT FILE CSV GỒM TẤT CẢ BẢNG DỮ LIỆU
-
-    public function exportProducts()
-    {
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=products.csv');
-        $output = fopen('php://output', 'w');
-        fputcsv($output, ['ID', 'Name', 'Price', 'Stock', 'Category']);
-
-        $products = $this->conn->getAllProducts(); // Lấy danh sách sản phẩm từ model
-        foreach ($products as $product) {
-            fputcsv($output, [$product['id'], $product['name'], $product['price'], $product['stock'], $product['category']]);
-        }
-        fclose($output);
-        exit();
-    }
-
     // THÊM SẢN PHẨM MỚI BẰNG CÁCH IMPORT FILE CSV
 
     public function importOrUpdateProduct($data)

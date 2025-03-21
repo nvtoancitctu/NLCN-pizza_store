@@ -31,6 +31,7 @@ $offset = ($page - 1) * $limit;                                       // Tính o
 
 // Lấy danh sách sản phẩm hoặc tìm kiếm sản phẩm
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
+
     // Kiểm tra token CSRF
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         http_response_code(403);
@@ -49,13 +50,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
 
 $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
 
-// Kiểm tra hành động 'export-products'
-if (isset($_GET['action']) && $_GET['action'] === 'export-products') {
-    $productController->exportProducts();
-}
-
 // Kiểm tra xem form đã được submit chưa
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
+
+    // Kiểm tra token CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        http_response_code(403);
+        echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
+        exit();
+    }
+
     // Lấy dữ liệu từ form, kiểm tra sự tồn tại và làm sạch dữ liệu đầu vào
     $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : null;
     $customer_name = isset($_POST['customer_name']) ? trim(htmlspecialchars($_POST['customer_name'])) : '';
@@ -86,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
             $_SESSION['error'] = "Failed to update order (ID: $order_id).";
         }
 
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         header("Location: " . $_SERVER['HTTP_REFERER']);
         exit;
     }
@@ -93,6 +98,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 
 // Cập nhật số ngày khóa tài khoản
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+
+    // Kiểm tra token CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        http_response_code(403);
+        echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
+        exit();
+    }
 
     $user_id = $_POST['user_id'];
 
@@ -131,6 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
         }
     }
 
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     header("Location: " . $_SERVER['HTTP_REFERER']);
     exit();
 }
@@ -158,10 +171,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
             <!-- Nút xuất/nhập dữ liệu -->
             <div class="d-flex align-items-center mb-3 flex-wrap">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <button class="btn btn-outline-success me-4 mb-2" onclick="window.location.href='/admin/export-products'">Export to CSV</button>
                 <form method="POST" action="/admin/import-products" enctype="multipart/form-data" class="d-flex align-items-center flex-wrap">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                     <input type="file" name="product_file" id="product_file" class="form-control w-auto me-3 mb-2" accept=".csv" required>
                     <button type="submit" class="btn btn-primary mb-2">Import</button>
                 </form>
@@ -226,10 +237,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
             <tbody>
                 <?php if (count($products) > 0): ?>
                     <?php foreach ($products as $product): ?>
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50" title="<?php echo htmlspecialchars($product['description']); ?>">
                             <td class="px-3 py-2 border-b text-center"><?= htmlspecialchars($product['id']) ?></td>
                             <td class="px-3 py-2 border-b text-center">
-                                <img src="/images/<?= htmlspecialchars($product['image']); ?>" class="w-16 h-16 object-cover mx-auto rounded-lg" alt="<?= htmlspecialchars($product['name']); ?>">
+                                <img src="/images/<?= htmlspecialchars($product['image']); ?>" class="w-16 h-16 object-cover mx-auto rounded-lg"
+                                    alt="<?= htmlspecialchars($product['name']); ?>">
                             </td>
                             <td class="px-3 py-2 border-b font-semibold text-gray-800"><?= htmlspecialchars($product['name']) ?></td>
                             <td class="px-3 py-2 border-b text-gray-600"><?= htmlspecialchars(substr($product['description'], 0, 20)) ?>...</td>
@@ -325,7 +337,7 @@ $totalPages = ceil($totalOrders / $limit_order);
     <div class="flex-grow border-t-2 border-gray-700"></div>
     <h1 class="mx-6 text-3xl md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
         <span class="text-gray-700 text-4xl font-bold">[</span>
-        Products Management
+        Orders Management
         <span class="text-gray-700 text-4xl font-bold">]</span>
     </h1>
     <div class="flex-grow border-t-2 border-gray-700"></div>
@@ -333,7 +345,7 @@ $totalPages = ceil($totalOrders / $limit_order);
 
 <!-- Form chỉnh sửa đơn hàng (mặc định ẩn) -->
 <div id="edit-order-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
-    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-green-400">
+    <form action="/admin" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-green-400">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
         <!-- Bố cục 2 cột -->
@@ -404,15 +416,26 @@ $totalPages = ceil($totalOrders / $limit_order);
 
             <!-- Lọc theo tên khách hàng -->
             <label for="customer_name" class="ml-4 mr-2 text-lg">Customer:</label>
-            <select name="customer_name" id="customer_name" onchange="this.form.submit()" class="p-2 border rounded">
-                <option value="" selected disabled hidden>All</option>
-                <!-- <option value="" <?= empty($customerName) ? 'selected' : '' ?>>All</option> -->
+
+            <select name="customer_name" id="customer_name" onchange="handleCategoryChange(this)" class="p-2 border rounded">
+                <option value="all" <?= (empty($customerName) || $customerName === 'all') ? 'selected' : '' ?>>All</option>
                 <?php foreach ($customers as $cus): ?>
                     <option value="<?= htmlspecialchars($cus['id']) ?>" <?= ($customerName == $cus['id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($cus['name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
+
+            <script>
+                function handleCategoryChange(select) {
+                    if (select.value === "all") {
+                        window.location.href = '/admin';
+                    } else {
+                        select.form.submit();
+                    }
+                }
+            </script>
+
         </form>
 
         <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -545,6 +568,130 @@ $totalPages = ceil($totalOrders / $limit_order);
     document.getElementById('cancelEdit').addEventListener('click', function() {
         document.getElementById('edit-order-form').classList.add('hidden');
     });
+</script>
+
+<!--------------------------------------- Quản lý phản hồi --------------------------------------->
+<?php
+// Lấy danh sách phản hồi
+$stmt = $conn->query("SELECT * FROM feedback WHERE user_id != 1 ORDER BY created_at ASC");
+$feedbacks = $stmt->fetchAll();
+
+// Xử lý phản hồi của admin
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id'])) {
+    $id = intval($_POST['id']);
+    $response = trim($_POST['response']);
+
+    if ($id > 0 && !empty($response)) {
+        $stmt = $conn->prepare("UPDATE feedback SET response = ?, responsed_at = NOW() WHERE id = ?");
+        $stmt->execute([$response, $id]);
+
+        // Lấy user_id từ bảng feedback để gửi thông báo
+        $stmt = $conn->prepare("SELECT user_id FROM feedback WHERE id = ?");
+        $stmt->execute([$id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            $user_id = $user['user_id'];
+            $message = "Your feedback #$id has been responded to by the admin.";
+
+            // Gọi hàm thêm notification
+            $userController->addNotification($user_id, $message);
+        }
+
+        $_SESSION['success'] = "Feedback #$id has been responded to successfully.";
+    } else {
+        $_SESSION['success'] = "Invalid feedback ID or response cannot be empty.";
+    }
+    header("Location: " . $_SERVER['HTTP_REFERER']);
+    exit;
+}
+?>
+
+<div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+    <h1 class="mx-6 text-3xl md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+        <span class="text-gray-700 text-4xl font-bold">[</span>
+        Feedbacks Management
+        <span class="text-gray-700 text-4xl font-bold">]</span>
+    </h1>
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+</div>
+
+<div class="container mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+    <div class="overflow-x-auto">
+        <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
+            <thead>
+                <tr class="bg-blue-100 text-gray-800 text-center uppercase text-sm">
+                    <th class="px-4 py-3 border-b">ID</th>
+                    <th class="px-4 py-3 border-b">Sender</th>
+                    <th class="px-4 py-3 border-b">Order</th>
+                    <th class="px-4 py-3 border-b">Message</th>
+                    <th class="px-4 py-3 border-b">Rating</th>
+                    <th class="px-4 py-3 border-b">Created</th>
+                    <th class="px-4 py-3 border-b">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($feedbacks)): ?>
+                    <?php foreach ($feedbacks as $fb): ?>
+                        <tr class="hover:bg-gray-50 border-b text-center">
+                            <td class="px-4 py-3"><?= htmlspecialchars($fb['id']) ?></td>
+                            <td class="px-4 py-3"><?= htmlspecialchars($fb['name']) ?></td>
+                            <td class="px-4 py-3 font-semibold">#<?= htmlspecialchars($fb['order_id']) ?></td>
+                            <td class="px-4 py-3 text-left text-sm text-gray-700 max-w-xs break-words">
+                                <?= nl2br(htmlspecialchars($fb['message'])) ?>
+                            </td>
+                            <td class="px-4 py-3 text-yellow-500 font-semibold"><?= htmlspecialchars($fb['rating']) ?><i class="fas fa-star"></i></td>
+                            <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars($fb['created_at']) ?></td>
+                            <td class="px-4 py-3">
+                                <button onclick="openReplyModal(<?= $fb['id'] ?>, '<?= htmlspecialchars($fb['message'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($fb['response'] ?? '', ENT_QUOTES, 'UTF-8') ?>')"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-md transition-all">
+                                    ✏️
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="6" class="text-center text-gray-500 py-4"></td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Reponse-->
+<div id="replyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 p-6">
+        <h2 class="text-xl font-semibold mb-4">Reply to Feedback</h2>
+        <form method="post">
+            <input type="hidden" id="replyFeedbackId" name="id">
+            <label class="block mb-2 font-semibold">Customer Feedback:</label>
+            <textarea id="replyMessage" class="w-full p-2 border rounded-lg bg-gray-100" readonly></textarea>
+
+            <label class="block mt-4 mb-2 font-semibold">Your Response:</label>
+            <textarea name="response" id="replyResponse" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400"></textarea>
+
+            <div class="flex justify-end space-x-3 mt-4">
+                <button type="button" onclick="closeReplyModal()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Close</button>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">Reply</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openReplyModal(feedbackId, message, response) {
+        document.getElementById('replyFeedbackId').value = feedbackId;
+        document.getElementById('replyMessage').value = message;
+        document.getElementById('replyResponse').value = response;
+        document.getElementById('replyModal').classList.remove('hidden');
+    }
+
+    function closeReplyModal() {
+        document.getElementById('replyModal').classList.add('hidden');
+    }
 </script>
 
 <!--------------------------------------- Quản lý tài khoản --------------------------------------->
@@ -727,130 +874,6 @@ $totalPages = ceil($totalOrders / $limit_order);
     });
 </script>
 
-<!--------------------------------------- Quản lý phản hồi --------------------------------------->
-<?php
-// Lấy danh sách phản hồi
-$stmt = $conn->query("SELECT * FROM feedback WHERE user_id != 1 ORDER BY created_at ASC");
-$feedbacks = $stmt->fetchAll();
-
-// Xử lý phản hồi của admin
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id'])) {
-    $id = intval($_POST['id']);
-    $response = trim($_POST['response']);
-
-    if ($id > 0 && !empty($response)) {
-        $stmt = $conn->prepare("UPDATE feedback SET response = ?, responsed_at = NOW() WHERE id = ?");
-        $stmt->execute([$response, $id]);
-
-        // Lấy user_id từ bảng feedback để gửi thông báo
-        $stmt = $conn->prepare("SELECT user_id FROM feedback WHERE id = ?");
-        $stmt->execute([$id]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($user) {
-            $user_id = $user['user_id'];
-            $message = "Your feedback #$id has been responded to by the admin.";
-
-            // Gọi hàm thêm notification
-            $userController->addNotification($user_id, $message);
-        }
-
-        $_SESSION['success'] = "Feedback #$id has been responded to successfully.";
-    } else {
-        $_SESSION['success'] = "Invalid feedback ID or response cannot be empty.";
-    }
-    header("Location: " . $_SERVER['HTTP_REFERER']);
-    exit;
-}
-?>
-
-<div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
-    <div class="flex-grow border-t-2 border-gray-700"></div>
-    <h1 class="mx-6 text-3xl md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
-        <span class="text-gray-700 text-4xl font-bold">[</span>
-        Feedbacks Management
-        <span class="text-gray-700 text-4xl font-bold">]</span>
-    </h1>
-    <div class="flex-grow border-t-2 border-gray-700"></div>
-</div>
-
-<div class="container mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
-    <div class="overflow-x-auto">
-        <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
-            <thead>
-                <tr class="bg-blue-100 text-gray-800 text-center uppercase text-sm">
-                    <th class="px-4 py-3 border-b">ID</th>
-                    <th class="px-4 py-3 border-b">Sender</th>
-                    <th class="px-4 py-3 border-b">Order</th>
-                    <th class="px-4 py-3 border-b">Message</th>
-                    <th class="px-4 py-3 border-b">Rating</th>
-                    <th class="px-4 py-3 border-b">Created</th>
-                    <th class="px-4 py-3 border-b">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($feedbacks)): ?>
-                    <?php foreach ($feedbacks as $fb): ?>
-                        <tr class="hover:bg-gray-50 border-b text-center">
-                            <td class="px-4 py-3"><?= htmlspecialchars($fb['id']) ?></td>
-                            <td class="px-4 py-3"><?= htmlspecialchars($fb['name']) ?></td>
-                            <td class="px-4 py-3 font-semibold">#<?= htmlspecialchars($fb['order_id']) ?></td>
-                            <td class="px-4 py-3 text-left text-sm text-gray-700 max-w-xs break-words">
-                                <?= nl2br(htmlspecialchars($fb['message'])) ?>
-                            </td>
-                            <td class="px-4 py-3 text-yellow-500 font-semibold"><?= htmlspecialchars($fb['rating']) ?><i class="fas fa-star"></i></td>
-                            <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars($fb['created_at']) ?></td>
-                            <td class="px-4 py-3">
-                                <button onclick="openReplyModal(<?= $fb['id'] ?>, '<?= htmlspecialchars($fb['message'], ENT_QUOTES, 'UTF-8') ?>', '<?= htmlspecialchars($fb['response'] ?? '', ENT_QUOTES, 'UTF-8') ?>')"
-                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-md transition-all">
-                                    ✏️
-                                </button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="6" class="text-center text-gray-500 py-4"></td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Modal Reponse-->
-<div id="replyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 p-6">
-        <h2 class="text-xl font-semibold mb-4">Reply to Feedback</h2>
-        <form method="post">
-            <input type="hidden" id="replyFeedbackId" name="id">
-            <label class="block mb-2 font-semibold">Customer Feedback:</label>
-            <textarea id="replyMessage" class="w-full p-2 border rounded-lg bg-gray-100" readonly></textarea>
-
-            <label class="block mt-4 mb-2 font-semibold">Your Response:</label>
-            <textarea name="response" id="replyResponse" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400"></textarea>
-
-            <div class="flex justify-end space-x-3 mt-4">
-                <button type="button" onclick="closeReplyModal()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Close</button>
-                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">Reply</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    function openReplyModal(feedbackId, message, response) {
-        document.getElementById('replyFeedbackId').value = feedbackId;
-        document.getElementById('replyMessage').value = message;
-        document.getElementById('replyResponse').value = response;
-        document.getElementById('replyModal').classList.remove('hidden');
-    }
-
-    function closeReplyModal() {
-        document.getElementById('replyModal').classList.add('hidden');
-    }
-</script>
-
 <!--------------------------------------- Quản lý Voucherss --------------------------------------->
 <?php
 
@@ -914,8 +937,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
 }
 ?>
 
-<h1 class="text-4xl font-extrabold text-center my-8 text-green-600 drop-shadow-lg">Vouchers Management</h1>
-<div class="container mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-green-600">
+<h1 class="text-4xl font-extrabold text-center my-8 text-blue-600 drop-shadow-lg">Vouchers Management</h1>
+<div class="container mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <!-- Thêm Voucher -->
     <a href="/admin/add-voucher" class="mb-4 bg-green-500 text-white px-4 py-2 rounded-lg inline-block">+ Add Voucher</a>
 

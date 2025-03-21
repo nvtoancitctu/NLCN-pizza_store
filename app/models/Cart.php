@@ -153,9 +153,16 @@ class Cart
         $stmt->execute([$product_id]);
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Kiểm tra số lượng tồn kho
-        if (!$product || $product['stock_quantity'] + $old_quantity < $quantity) {
-            $_SESSION['message'] = "The quantity you want to buy exceeds the remaining stock";
+        if (!$product) {
+            $_SESSION['message'] = "Sản phẩm không tồn tại.";
+            return false;
+        }
+
+        $current_stock = $product['stock_quantity'];
+
+        // Kiểm tra số lượng cập nhật có hợp lệ không
+        if ($quantity > $current_stock + $old_quantity) {
+            $_SESSION['message'] = "Quá số lượng hàng tồn kho, không thể thêm.";
             return false;
         }
 
@@ -167,6 +174,11 @@ class Cart
 
         if ($existingItem) {
             $newQuantity = $existingItem['quantity'] + $quantity;
+
+            if ($newQuantity > $current_stock + $old_quantity) {
+                $_SESSION['message'] = "Quá số lượng hàng tồn kho, không thể thêm.";
+                return false;
+            }
 
             $query = "UPDATE " . $this->table . " SET quantity = ? WHERE id = ?";
             $stmt = $this->conn->prepare($query);
@@ -184,7 +196,7 @@ class Cart
         }
 
         // Cập nhật lại stock_quantity trong bảng products
-        $new_stock = $product['stock_quantity'] + $old_quantity - $quantity;
+        $new_stock = $current_stock + $old_quantity - $quantity;
         $query = "UPDATE products SET stock_quantity = ? WHERE id = ?";
         $stmt = $this->conn->prepare($query);
 

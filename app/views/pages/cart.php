@@ -22,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
     // Check CSRF token
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         die('Invalid CSRF token');
+    } else {
+        unset($_SESSION['csrf_token']);
     }
 
     $cart_id = $_POST['cart_id'];
@@ -41,14 +43,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
 // Xử lý xóa sản phẩm khỏi giỏ hàng
 if (isset($_GET['action'])) {
     if ($_GET['action'] === 'delete' && isset($_GET['cart_id']) && is_numeric($_GET['cart_id'])) {
+
         // Check CSRF token
         if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) {
             die('Invalid CSRF token');
+        } else {
+            unset($_SESSION['csrf_token']);
         }
+
         // Xóa sản phẩm
         $cart_id = (int) $_GET['cart_id'];
         $cartController->deleteCartItem($cart_id);
 
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         header("Location: /cart");
         exit();
     } else {
@@ -124,8 +131,8 @@ if (isset($_GET['action'])) {
                                 <!-- Lựa chọn size & số lượng CHỈ ÁP DỤNG CHO PIZZA VÀ CHICKEN -->
                                 <td class="px-6 py-4">
                                     <form method="POST" action="/cart" class="flex justify-center items-center space-x-3">
-                                        <input type="hidden" name="cart_id" value="<?= $item['id'] ?>">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                                        <input type="hidden" name="cart_id" value="<?= $item['id'] ?>">
 
                                         <?php if (in_array($item['category_id'], [1, 2, 3, 6])): ?>
                                             <select name="size" class="border rounded-lg px-2 py-1 bg-white text-center">

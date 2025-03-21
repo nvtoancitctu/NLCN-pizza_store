@@ -1,5 +1,9 @@
 <?php
 
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $id = $_GET['id'] ?? null;
 if (!$id) {
     header("Location: vouchers.php?error=invalid_id");
@@ -19,6 +23,14 @@ if (!$voucher) {
 // Cập nhật voucher khi submit form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $code = $_POST['code'];
+
+    // Check CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    } else {
+        unset($_SESSION['csrf_token']);
+    }
+
     $description = $_POST['description'];
     $discount = $_POST['discount'];
     $min_order_value = $_POST['min_order_value'];
@@ -48,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="w-full max-w-3xl rounded-lg border-2 border-blue-400 p-6 bg-white">
         <h2 class="text-xl font-bold mb-6 text-center text-blue-500">Edit Voucher</h2>
         <form method="POST" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Cột 1 -->
                 <div>

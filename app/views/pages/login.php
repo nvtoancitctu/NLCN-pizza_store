@@ -23,9 +23,12 @@ if (isset($_SESSION['user_id'])) {
 
 // Xử lý khi người dùng gửi biểu mẫu đăng nhập
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
   // Check CSRF token
   if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
     die('Invalid CSRF token');
+  } else {
+    unset($_SESSION['csrf_token']);
   }
 
   $email = $_POST['email'];
@@ -34,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   $result = $userController->login($email, $password);
 
   if (is_array($result) && isset($result['error'])) {
-    // Hiển thị lỗi nếu tài khoản bị khóa
     $error = $result['error'];
   } elseif (is_array($result) && isset($result['success'])) {
     // Đăng nhập thành công

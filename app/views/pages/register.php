@@ -9,11 +9,12 @@ $error = '';    // Khởi tạo biến để lưu thông báo lỗi
 
 // Kiểm tra nếu form đã được gửi
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Kiểm tra token CSRF
+
+    // Check CSRF token
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        http_response_code(403);
-        echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
-        exit();
+        die('Invalid CSRF token');
+    } else {
+        unset($_SESSION['csrf_token']);
     }
 
     // Lấy dữ liệu từ form và loại bỏ khoảng trắng
@@ -54,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="container mx-auto max-w-md p-8 bg-white shadow-lg rounded-xl mt-8 mb-8 alert alert-info">
     <form method="POST" action="/register">
         <!-- CSRF Token -->
-        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']) ?>">
 
         <div class="mb-6">
             <label for="name" class="block text-gray-700 font-bold mb-2">Name:</label>

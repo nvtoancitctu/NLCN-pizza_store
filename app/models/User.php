@@ -373,6 +373,18 @@ class User
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    //
+    public function checkFeedbackExists($user_id, $order_id)
+    {
+        $query = "SELECT COUNT(*) FROM feedback WHERE user_id = :user_id AND order_id = :order_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([
+            ':user_id' => $user_id,
+            ':order_id' => $order_id
+        ]);
+        return $stmt->fetchColumn() > 0; // Trả về true nếu có feedback
+    }
+
     // Thêm thông báo liên quan đến người dùng
     public function addNotification($user_id, $message)
     {

@@ -162,14 +162,6 @@ class ProductController
   }
 
   /**
-   * Xuất danh sách sản phẩm
-   */
-  public function exportProducts()
-  {
-    return $this->productModel->exportProducts();
-  }
-
-  /**
    * Nhập hoặc cập nhật sản phẩm từ dữ liệu bên ngoài
    */
   public function importOrUpdateProduct($data)

@@ -2,6 +2,14 @@
 
 // Kiểm tra yêu cầu POST
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['order_id'])) {
+
+    // Check CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        die('Invalid CSRF token');
+    } else {
+        unset($_SESSION['csrf_token']);
+    }
+
     $order_id = intval($_POST['order_id']); // Chuyển thành số nguyên để tránh lỗi
 
     if ($order_id > 0) {

@@ -14,11 +14,14 @@ if (empty($_SESSION['csrf_token'])) {
 $categories = $productController->getAllCategoryNamesExceptPizza();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     // Kiểm tra token CSRF
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         http_response_code(403);
         echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
         exit();
+    } else {
+        unset($_SESSION['csrf_token']);
     }
 
     $name = trim($_POST['name']);

@@ -33,9 +33,12 @@ $userVouchers = $userController->getUserVouchers($user['id']);
 $voucherDiscount = 0;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
+
   // Check CSRF token
   if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
     die('Invalid CSRF token');
+  } else {
+    unset($_SESSION['csrf_token']);
   }
 
   // Lấy thông tin từ form
@@ -77,9 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 <h1 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">CHECK OUT</h1>
 
 <div class="container mx-auto px-4">
-  <form method="POST" action="/checkout" id="checkout-form" enctype="multipart/form-data"
-    class="bg-white shadow-lg alert alert-info rounded-lg p-8 max-w-4xl mx-auto mb-6">
-    <!-- CSRF Token -->
+  <form method="POST" action="/checkout" id="checkout-form" enctype="multipart/form-data" class="bg-white shadow-lg alert alert-info rounded-lg p-8 max-w-4xl mx-auto mb-6">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
     <!-- Bố cục chia thành hai cột -->

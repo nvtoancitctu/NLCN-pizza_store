@@ -9,6 +9,13 @@ if (!isset($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 $voucherId = $_POST['voucher_id'];
 
+// Check CSRF token
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    die('Invalid CSRF token');
+} else {
+    unset($_SESSION['csrf_token']);
+}
+
 // Kiểm tra user đã claim voucher này chưa
 $checkClaim = $conn->prepare("SELECT COUNT(*) FROM user_voucher WHERE user_id = ? AND voucher_id = ? AND status = 'unused'");
 $checkClaim->execute([$userId, $voucherId]);

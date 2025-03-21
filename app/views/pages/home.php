@@ -88,7 +88,7 @@ $Combos = $productController->listProducts(8);
 <div class="container mx-auto px-12">
 
   <!-- Jumbotron -->
-  <div class="relative bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 shadow-md text-white text-center p-16 rounded-3xl mt-10 overflow-hidden">
+  <div class="relative bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 shadow-md text-white text-center p-14 rounded-3xl mt-10 overflow-hidden border-8 border-white">
     <!-- Nội dung chính -->
     <div class="relative z-10 flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0">
       <!-- Nội dung văn bản -->
@@ -115,10 +115,10 @@ $Combos = $productController->listProducts(8);
       <div class="flex justify-center relative">
         <?php if (!empty($Combos)): ?>
           <div class="relative w-full max-w-lg">
-            <div class="relative overflow-hidden rounded-xl shadow-lg border-white">
+            <div class="relative overflow-hidden rounded-xl shadow-lg border-8 border-white rounded-3xl p-2">
               <img id="comboImage" src="/images/<?= htmlspecialchars($Combos[0]['image']) ?>"
                 alt="<?= htmlspecialchars($Combos[0]['name']) ?>"
-                class="w-full h-auto object-cover rounded-xl transition-all duration-500 transform hover:scale-105">
+                class="w-full h-auto object-cover rounded-3xl transition-all duration-500 transform hover:scale-110">
 
               <!-- Nút chuyển ảnh nếu có nhiều combo -->
               <?php if (count($Combos) > 1): ?>
@@ -198,15 +198,22 @@ $Combos = $productController->listProducts(8);
   ?>
 
   <!-- New Pizza Section -->
-  <div class="container mx-auto px-4 py-10">
-    <h2 class="text-3xl font-extrabold text-center text-red-600 mb-8">
-      🍕 New Arrivals 🍕
-    </h2>
+  <div class="container mx-auto px-4">
+
+    <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+      <div class="flex-grow border-t-2 border-gray-700"></div>
+      <div class="mx-6 md:text-2xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+        <span class="text-gray-700 text-2xl font-bold">[</span>
+        New Arrivals
+        <span class="text-gray-700 text-2xl font-bold">]</span>
+      </div>
+      <div class="flex-grow border-t-2 border-gray-700"></div>
+    </div>
 
     <?php if (!empty($newProducts)): ?>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <?php foreach ($newProducts as $product): ?>
-          <div class="flex bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-transform transform hover:scale-105 p-3">
+          <div class="flex bg-white border-1 border-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-transform transform hover:scale-105 p-3">
             <!-- Hình ảnh -->
             <div class="w-1/3 flex items-center justify-center relative">
               <img src="/images/<?= htmlspecialchars($product['image']) ?>"
@@ -251,7 +258,14 @@ $Combos = $productController->listProducts(8);
   </div>
 
   <!-- Discount Products -->
-  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">🍕 Special Offer 🍕</h2>
+  <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+    <div class="mx-6 md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+      Special Offer
+    </div>
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+  </div>
+
   <?php if (!empty($discountProduct)): ?>
     <?php foreach ($discountProduct as $product): ?>
       <?php if ($product['stock_quantity'] > 0): ?>
@@ -394,7 +408,14 @@ $Combos = $productController->listProducts(8);
   <?php endif; ?>
 
   <!-- Featured Pizzas -->
-  <h2 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">🍕 You may also like 🍕</h2>
+  <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+    <div class="mx-6 md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+      You may also like!
+    </div>
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+  </div>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
     <?php foreach ($randomProducts as $product): ?>
       <div class="rounded-2xl shadow-md bg-white overflow-hidden transition-transform transform hover:scale-105 hover:shadow-xl border-2 border-blue-500"
@@ -423,6 +444,15 @@ $Combos = $productController->listProducts(8);
     <?php endforeach; ?>
   </div>
 
+  <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+    <div class="mx-6 md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+      Some things you need!
+    </div>
+    <div class="flex-grow border-t-2 border-gray-700"></div>
+  </div>
+
+  <!-- XỬ LÝ CÁC MỤC PHỤ -->
   <?php
   $vouchers = $productController->getActiveVouchers();
   $topPizzas = $productController->getTopRatedPizzas();
@@ -457,6 +487,7 @@ $Combos = $productController->listProducts(8);
               <span class="text-center font-bold">🎟 <?= htmlspecialchars($voucher['code']) ?></span>
             </div>
             <form method="post" action="index.php?page=claim_voucher" class="mt-3">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
               <input type="hidden" name="voucher_id" value="<?= htmlspecialchars($voucher['id']) ?>">
               <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">Claim Now</button>
             </form>

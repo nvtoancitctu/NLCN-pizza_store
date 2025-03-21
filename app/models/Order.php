@@ -95,7 +95,7 @@ class Order
 
             if ($voucher) {
                 $voucher_id = $voucher['id'];
-                $discount_amount = $voucher['discount_amount'];
+                $discount_amount = $voucher['discount_amount'] < 1 ? $total * $voucher['discount_amount'] : $voucher['discount_amount'];
 
                 // Cập nhật voucher_id vào đơn hàng
                 $updateVoucherID = "UPDATE orders SET voucher_id = :voucher_id WHERE id = :order_id";

@@ -16,7 +16,7 @@ $orders = $orderController->getOrdersByUserId($user_id);
 $feedbacks = $userController->getUserFeedback($user_id);
 
 // Xử lý các yêu cầu POST
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['csrf_token']) && $_POST['csrf_token'] === $_SESSION['csrf_token']) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['csrf_token']) && hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
 
     $action = $_POST['action'] ?? '';
 
@@ -26,6 +26,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['csrf_token']) && $_POS
         $order_id = filter_var($_POST['order_id'], FILTER_VALIDATE_INT);
         $user_message = htmlspecialchars(trim($_POST['message']), ENT_QUOTES, 'UTF-8');
         $rating = (isset($_POST['rating'])) ? $_POST['rating'] : NULL;
+
+        // Kiểm tra xem order này đã có feedback từ user chưa
+        $hasFeedback = $userController->checkFeedbackExists($user_id, $order_id);
+
 
         if (!empty($name) && !empty($email) && $order_id > 0) {
             if ($userController->handleAddFeedback($user_id, $name, $email, $order_id, $user_message, $rating)) {
@@ -59,6 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['csrf_token']) && $_POS
         }
     }
 
+    unset($_SESSION['csrf_token']);
     header("Location: " . $_SERVER['HTTP_REFERER']);
     exit;
 }
@@ -100,7 +105,7 @@ if (isset($_SESSION['success'])) {
                         </svg>
                         Your Name:
                     </label>
-                    <input type="text" name="name" value="<?= $user_name ?>" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400" required>
+                    <input type="text" name="name" value="<?= $user_name ?>" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 opacity-75 font-bold" readonly>
                 </div>
 
                 <!-- Email -->
@@ -112,7 +117,7 @@ if (isset($_SESSION['success'])) {
                         </svg>
                         Your Email:
                     </label>
-                    <input type="email" name="email" value="<?= $user_email ?>" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400" required>
+                    <input type="email" name="email" value="<?= $user_email ?>" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 opacity-75 font-bold" readonly>
                 </div>
             </div>
 
@@ -124,7 +129,7 @@ if (isset($_SESSION['success'])) {
                     </svg>
                     Order ID:
                 </label>
-                <select name="order_id" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400" required>
+                <select name="order_id" class="w-full p-3 border border-gray-300 rounded-lg" required>
                     <option value="">Select an order</option>
                     <?php foreach ($orders as $order): ?>
                         <?php
@@ -147,7 +152,7 @@ if (isset($_SESSION['success'])) {
                     </svg>
                     Rating:
                 </label>
-                <select name="rating" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400" required>
+                <select name="rating" class="w-full p-3 border border-gray-300 rounded-lg " required>
                     <option value="">Select a rating</option>
                     <?php for ($i = 1; $i <= 5; $i++): ?>
                         <option value="<?= $i ?>">⭐ <?= $i ?> Star<?= $i > 1 ? 's' : '' ?></option>
@@ -163,7 +168,7 @@ if (isset($_SESSION['success'])) {
                     </svg>
                     Message:
                 </label>
-                <textarea name="message" rows="2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400"></textarea>
+                <textarea name="message" rows="2" class="w-full p-3 border border-gray-300 rounded-lg "></textarea>
             </div>
 
             <!-- Submit Button -->

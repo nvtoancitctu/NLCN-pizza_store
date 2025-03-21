@@ -21,18 +21,26 @@ $userVouchers = $userController->getUserVouchers($user['id']);
 
 // Xử lý điều kiện khi người dùng nhấn vào nút Admin Panel, Logout, hoặc cập nhật thông tin
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  // Check CSRF token
-  if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    die('Invalid CSRF token');
-  }
 
   if (isset($_POST['admin_panel']) && $user['role'] === 'admin') {
+    // Check CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+      die('Invalid CSRF token');
+    } else {
+      unset($_SESSION['csrf_token']);
+    }
     // Điều hướng đến trang quản lý sản phẩm nếu người dùng có quyền admin
     header("Location: /admin/list");
     exit();
   }
 
   if (isset($_POST['update_profile'])) {
+    // Check CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+      die('Invalid CSRF token');
+    } else {
+      unset($_SESSION['csrf_token']);
+    }
     // Lấy dữ liệu từ form cập nhật
     $name = $_POST['name'];
     $phone = $_POST['phone'];
@@ -46,6 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       $message = "Failed to update profile.";
     }
+
+    $_SESSION['message'] = $message;
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     header("Location: /account");
     exit();
   }
@@ -53,10 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <!-- Hiển thị alert bằng JavaScript nếu có thông báo -->
-<?php if (!empty($message)): ?>
+<?php if (!empty($_SESSION['message'])): ?>
   <script>
-    alert("<?= htmlspecialchars($message) ?>");
+    alert("<?= htmlspecialchars($_SESSION['message']) ?>");
   </script>
+  <?php unset($_SESSION['message']); ?>
 <?php endif; ?>
 
 <!-- Profile Section -->
