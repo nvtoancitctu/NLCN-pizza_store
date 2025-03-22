@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (in_array(strtolower($file_ext), $allowed)) {
             $image = $_FILES['image']['name'];
-            if (move_uploaded_file($_FILES['image']['tmp_name'], "images/$image")) {
+            if (move_uploaded_file($_FILES['image']['tmp_name'], "images/product/$image")) {
                 // Image uploaded successfully
             } else {
                 $error = "Failed to upload the image. Please try again.";

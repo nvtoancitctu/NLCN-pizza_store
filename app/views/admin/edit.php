@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (in_array(strtolower($file_ext), $allowed)) {
             // Đặt tên mới cho ảnh để tránh trùng tên
             $newImageName = basename($_FILES['image']['name']);
-            if (move_uploaded_file($_FILES['image']['tmp_name'], "images/$newImageName")) {
+            if (move_uploaded_file($_FILES['image']['tmp_name'], "images/product/$newImageName")) {
                 $image = $newImageName; // Cập nhật đường dẫn ảnh mới nếu tải lên thành công
             } else {
                 $error = "Failed to upload the image. Please try again.";
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="flex items-center gap-6">
                             <!-- Ảnh cũ -->
                             <?php if (!empty($product['image'])): ?>
-                                <img src="/images/<?= htmlspecialchars($product['image']) ?>" alt="Product Image"
+                                <img src="/images/product/<?= htmlspecialchars($product['image']) ?>" alt="Product Image"
                                     class="w-32 h-32 object-cover border rounded-lg shadow">
                             <?php else: ?>
                                 <p class="text-sm text-gray-600">No image uploaded.</p>

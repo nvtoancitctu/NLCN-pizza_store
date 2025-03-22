@@ -148,17 +148,53 @@ class User
      * @param string $address - Địa chỉ mới của người dùng
      * @return bool - Trả về true nếu cập nhật thành công, ngược lại trả về false
      */
-    public function updateUserProfile($user_id, $name, $phone, $address)
+    public function updateUserProfile($user_id, $name, $phone, $address, $avatar)
     {
         // Cập nhật thông tin người dùng trong database
-        $query = "UPDATE " . $this->table . " SET name = :name, phone = :phone, address = :address WHERE id = :id";
+        $query = "UPDATE " . $this->table . " SET name = :name, phone = :phone, address = :address, avatar = :avatar WHERE id = :id";
         $stmt = $this->conn->prepare($query);
 
         // Bind giá trị vào các tham số
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':phone', $phone);
         $stmt->bindParam(':address', $address);
+        $stmt->bindParam(':avatar', $avatar);
         $stmt->bindParam(':id', $user_id, PDO::PARAM_INT);
+
+        // Nếu có hình ảnh, đổi tên ảnh theo định dạng: order_id + "_" + YYYY-MM-DD + extension
+        if (!empty($avatar)) {
+            // Truy vấn để lấy tên file ảnh từ CSDL
+            $stmt = $this->conn->prepare("SELECT avatar FROM users WHERE id = ?");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && !empty($user['avatar'])) {
+                $imagePath = "images/avatar/" . $user['avatar'];
+
+                // Kiểm tra xem file có tồn tại không, nếu có thì xóa
+                if (file_exists($imagePath)) {
+                    unlink($imagePath); // Xóa file ảnh
+                }
+            }
+
+            $ext = pathinfo($avatar, PATHINFO_EXTENSION);
+            $newImageName = "USER" . $user_id . "-" . date("Ymd") . "." . $ext;
+            $oldPath = "images/avatar/" . $avatar;
+            $newPath = "images/avatar/" . $newImageName;
+            if (file_exists($oldPath)) {
+                // Đổi tên file trên server
+                if (rename($oldPath, $newPath)) {
+                    // Cập nhật trường images trong bảng orders với tên ảnh mới
+                    $updateImageQuery = "UPDATE users SET avatar = :avatar WHERE id = :user_id";
+                    $updateStmt = $this->conn->prepare($updateImageQuery);
+                    $updateStmt->bindParam(':avatar', $newImageName, PDO::PARAM_STR);
+                    $updateStmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+                    $updateStmt->execute();
+                    // Cập nhật biến $image nếu cần sử dụng sau này
+                    $avatar = $newImageName;
+                }
+            }
+        }
 
         // Thực thi câu lệnh và kiểm tra kết quả
         if ($stmt->execute()) {
@@ -240,6 +276,28 @@ class User
             }
         }
         return "This account is not blocked.";
+    }
+
+    /** Xóa tài khoản */
+    public function deleteUser($id)
+    {
+        // Truy vấn để lấy tên file ảnh từ CSDL
+        $stmt = $this->conn->prepare("SELECT avatar FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && !empty($user['avatar'])) {
+            $imagePath = "images/avatar/" . $user['avatar'];
+
+            // Kiểm tra xem file có tồn tại không, nếu có thì xóa
+            if (file_exists($imagePath)) {
+                unlink($imagePath); // Xóa file ảnh
+            }
+        }
+        // Truy vấn để xóa tài khoản
+        $query = "DELETE FROM " . $this->table . " WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([$id]);
     }
 
     // ------------------------------------------

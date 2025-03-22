@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
 
 $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
 
-// Kiểm tra xem form đã được submit chưa
+// Xử lý đơn hàng
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 
     // Kiểm tra token CSRF
@@ -141,6 +141,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
         } else {
             $_SESSION['success'] = "Failed to unblock user has ID: $user_id.";
         }
+    }
+    // Trường hợp xóa tài khoản
+    elseif (isset($_POST['delete_user'])) {
+        $userController->deleteUser($user_id);
+        $_SESSION['success'] = "User (ID: $user_id) has been deleted successfully.";
+    } else {
+        $_SESSION['success'] = "Invalid action.";
     }
 
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -240,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                         <tr class="hover:bg-gray-50" title="<?php echo htmlspecialchars($product['description']); ?>">
                             <td class="px-3 py-2 border-b text-center"><?= htmlspecialchars($product['id']) ?></td>
                             <td class="px-3 py-2 border-b text-center">
-                                <img src="/images/<?= htmlspecialchars($product['image']); ?>" class="w-16 h-16 object-cover mx-auto rounded-lg"
+                                <img src="/images/product/<?= htmlspecialchars($product['image']); ?>" class="w-16 h-16 object-cover mx-auto rounded-lg"
                                     alt="<?= htmlspecialchars($product['name']); ?>">
                             </td>
                             <td class="px-3 py-2 border-b font-semibold text-gray-800"><?= htmlspecialchars($product['name']) ?></td>
@@ -468,14 +475,15 @@ $totalPages = ceil($totalOrders / $limit_order);
                                 <div class="d-flex justify-content-center flex-wrap">
                                     <button type="button" class="btn btn-warning me-2 edit-btn"
                                         data-id="<?= $order['id'] ?>"
-                                        data-customer="<?= htmlspecialchars($order['customer_name']) ?>"
+                                        data-customer="<?= ($order['customer_name']) ?>"
                                         data-total="<?= $order['total'] ?>"
                                         data-status="<?= $order['status'] ?>"
-                                        data-payment="<?= htmlspecialchars($order['payment_method']) ?>"
-                                        data-image="<?= isset($order['images']) ? htmlspecialchars($order['images']) : '' ?>">
+                                        data-payment="<?= ($order['payment_method']) ?>"
+                                        data-image="<?= isset($order['images']) ? ($order['images']) : '' ?>">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <form action="/admin/delete-order" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
                                         <button type="submit" class="btn btn-danger" title="Delete Product">
                                             <i class="fas fa-trash-alt"></i>
@@ -537,7 +545,7 @@ $totalPages = ceil($totalOrders / $limit_order);
         const bankTransferImage = document.getElementById('bankTransferImage');
 
         if (payment.toLowerCase() === "bank_transfer" && image) {
-            bankTransferImage.src = "/banking_images/" + image;
+            bankTransferImage.src = "/images/banking/" + image;
             bankTransferImageContainer.classList.remove("hidden");
         } else {
             bankTransferImageContainer.classList.add("hidden");
@@ -804,11 +812,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
                                     </button>
 
                                     <!-- Nút mở khóa (Unblock) -->
-                                    <form action="/admin/list" method="POST" onsubmit="return confirm('Are you sure you want to unblock this user?');">
+                                    <form action="/admin/list" method="POST" onsubmit="return confirm('Are you sure want to continute this action?');">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+
                                         <button type="submit" name="unblock" title="Unblock"
-                                            class="unblock-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md">
+                                            class="unblock-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md ml-2">
                                             <i class="fas fa-unlock"></i>
+                                        </button>
+
+                                        <button type="submit" name="delete_user" title="Delete User"
+                                            class="block-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md ml-2">
+                                            <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
                                 </div>

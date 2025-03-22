@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 
     if (in_array(strtolower($file_ext), $allowed)) {
       $image = $_FILES['image']['name'];
-      if (move_uploaded_file($_FILES['image']['tmp_name'], "banking_images/$image")) {
+      if (move_uploaded_file($_FILES['image']['tmp_name'], "images/banking/$image")) {
         // Image uploaded successfully
       } else {
         $error = "Failed to upload the image. Please try again.";
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
             <?php foreach ($cartItems as $item): ?>
               <div class="flex items-center justify-between border-b pb-4">
                 <div class="flex items-center space-x-4">
-                  <img src="/images/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-12 h-12 rounded-lg object-cover">
+                  <img src="/images/product/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-12 h-12 rounded-lg object-cover">
                   <div>
                     <p class="font-semibold text-gray-800"><?= htmlspecialchars($item['name']) ?></p>
                     <p class="text-sm text-gray-600">Quantity: <?= htmlspecialchars($item['quantity']) ?></p>

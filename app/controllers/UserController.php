@@ -41,6 +41,12 @@ class UserController
     return $this->userModel->checkblockUser($userId);
   }
 
+  // Xóa tài khoản
+  public function deleteUser($userId)
+  {
+    return $this->userModel->deleteUser($userId);
+  }
+
   // Lấy tất cả thông tin người dùng
   public function getAllUsers()
   {
@@ -54,9 +60,9 @@ class UserController
   }
 
   // Cập nhật thông tin người dùng
-  public function updateUserProfile($userId, $name, $phone, $address)
+  public function updateUserProfile($userId, $name, $phone, $address, $avatar)
   {
-    return $this->userModel->updateUserProfile($userId, $name, $phone, $address);
+    return $this->userModel->updateUserProfile($userId, $name, $phone, $address, $avatar);
   }
 
   // Quản lý sản phẩm yêu thích

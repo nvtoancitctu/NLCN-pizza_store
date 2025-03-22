@@ -53,9 +53,9 @@ class Order
         // Nếu có hình ảnh, đổi tên ảnh theo định dạng: order_id + "_" + YYYY-MM-DD + extension
         if (!empty($image)) {
             $ext = pathinfo($image, PATHINFO_EXTENSION);
-            $newImageName = $order_id . "_" . date("Y-m-d") . "." . $ext;
-            $oldPath = "banking_images/" . $image;
-            $newPath = "banking_images/" . $newImageName;
+            $newImageName = "OD" . $order_id . "-" . date("Ymd") . "." . $ext;
+            $oldPath = "images/banking/" . $image;
+            $newPath = "images/banking/" . $newImageName;
             if (file_exists($oldPath)) {
                 // Đổi tên file trên server
                 if (rename($oldPath, $newPath)) {
@@ -280,7 +280,7 @@ class Order
         $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($order && !empty($order['images'])) {
-            $imagePath = "banking_images/" . $order['images'];
+            $imagePath = "images/banking/" . $order['images'];
 
             // Kiểm tra xem file có tồn tại không, nếu có thì xóa
             if (file_exists($imagePath)) {

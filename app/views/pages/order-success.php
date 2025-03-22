@@ -36,7 +36,7 @@ $orderDetails = $orderController->getOrderDetails($order_id, $user_id);
         <div class="space-y-4">
           <?php foreach ($orderDetails['items'] as $item): ?>
             <div class="flex items-center gap-4 p-4 bg-white rounded-lg shadow">
-              <img src="/images/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>"
+              <img src="/images/product/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>"
                 class="w-16 h-16 rounded-lg object-cover">
               <div class="text-sm">
                 <p class="font-semibold text-gray-800"><?= htmlspecialchars($item['name']) ?></p>
@@ -73,7 +73,7 @@ $orderDetails = $orderController->getOrderDetails($order_id, $user_id);
 
           <span class="text-gray-700">🎟️ Voucher:</span>
           <span class="font-semibold text-green-600" title="<?= htmlspecialchars($orderDetails['description']) ?>">
-            <?= htmlspecialchars($orderDetails['code']) ?>
+            <?= htmlspecialchars($orderDetails['code'] ?? "None") ?>
           </span>
 
           <span class="text-gray-700 font-bold">💳 Total:</span>

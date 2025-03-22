@@ -135,7 +135,7 @@ class Product
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($product && !empty($product['image'])) {
-            $imagePath = "images/" . $product['image'];
+            $imagePath = "images/product/" . $product['image'];
 
             // Kiểm tra xem file có tồn tại không, nếu có thì xóa
             if (file_exists($imagePath)) {
@@ -259,12 +259,13 @@ class Product
     public function getTopRatedPizzas()
     {
         $stmt = $this->conn->prepare("SELECT 
-                                        p.name, 
+                                        p.name, p.image, p.description, p.category_id AS id,
                                         ROUND(AVG(fb.rating), 1) AS avg_rating, 
                                         SUM(oi.quantity) AS total_sales 
                                     FROM feedback fb 
                                     JOIN order_items oi ON fb.order_id = oi.order_id
                                     JOIN products p ON p.id = oi.product_id
+                                    WHERE p.category_id IN (1, 2, 3)
                                     GROUP BY p.id, p.name
                                     ORDER BY avg_rating DESC, total_sales DESC");
         $stmt->execute();

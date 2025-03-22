@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 $voucherId = $_POST['voucher_id'];
+$voucherCode = $_POST['voucher_code'];
 
 // Check CSRF token
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
@@ -23,7 +24,7 @@ $alreadyClaimed = $checkClaim->fetchColumn();
 
 if ($alreadyClaimed > 0) {
     // Nếu đã claim thì thông báo và quay lại trang trước
-    $_SESSION['success'] = "You have already claimed this voucher!";
+    $_SESSION['success'] = "You have already claimed this voucher ($voucherCode)!";
     header("Location: " . $_SERVER['HTTP_REFERER']);
     exit;
 }
@@ -40,10 +41,10 @@ try {
     $insertClaim->execute([$userId, $voucherId]);
 
     $conn->commit();
-    $_SESSION['success'] = "You have successfully claimed the voucher!";
+    $_SESSION['success'] = "You have successfully claimed the voucher ($voucherCode)!";
 } catch (Exception $e) {
     $conn->rollBack();
-    $_SESSION['error'] = "An unexpected error occurred.";
+    $_SESSION['success'] = "An unexpected error occurred.";
 }
 
 header("Location: " . $_SERVER['HTTP_REFERER']);

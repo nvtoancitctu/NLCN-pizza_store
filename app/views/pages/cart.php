@@ -92,7 +92,7 @@ if (isset($_GET['action'])) {
                     <!-- Tiêu đề bảng -->
                     <thead>
                         <tr class="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm uppercase">
-                            <th class="px-6 py-4 text-left">Product</th>
+                            <th class="px-6 py-4 text-center">Product</th>
                             <th class="px-6 py-4 text-center">Price</th>
                             <th class="px-6 py-4 text-center">Stock</th>
                             <th class="px-6 py-4 text-center">Size & Quantity</th>
@@ -105,7 +105,7 @@ if (isset($_GET['action'])) {
                             <tr class="border-t border-gray-300 hover:bg-gray-100 transition">
                                 <!-- Hình ảnh và tên sản phẩm -->
                                 <td class="px-6 py-4 flex items-center space-x-4">
-                                    <img src="/images/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-16 h-16 rounded-md shadow">
+                                    <img src="/images/product/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-16 h-16 rounded-md shadow">
                                     <span class="text-gray-900 font-medium"><?= htmlspecialchars($item['name']) ?></span>
                                 </td>
 

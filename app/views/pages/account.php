@@ -45,9 +45,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'];
     $phone = $_POST['phone'];
     $address = $_POST['address'];
+    $image = $_POST['image'] ?? NULL;
 
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+      $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+      $file_ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+
+      if (in_array(strtolower($file_ext), $allowed)) {
+        $image = $_FILES['image']['name'];
+        if (move_uploaded_file($_FILES['image']['tmp_name'], "images/avatar/$image")) {
+          // Image uploaded successfully
+        } else {
+          $error = "Failed to upload the image. Please try again.";
+        }
+      } else {
+        $error = "Invalid file format. Only JPG, JPEG, PNG, and GIF are allowed.";
+      }
+    }
     // Gọi hàm cập nhật thông tin
-    $updated = $userController->updateUserProfile($user_id, $name, $phone, $address);
+    $updated = $userController->updateUserProfile($user_id, $name, $phone, $address, $image);
 
     if ($updated) {
       $message = "Profile updated successfully.";
@@ -75,73 +91,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container mx-auto w-4/5">
   <h2 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">PROFILE</h2>
 
-  <!-- Thông tin người dùng hiển thị dưới dạng lưới -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-white shadow-md rounded-xl mx-auto mb-8 border-2 border-yellow-400">
-    <!-- Name -->
-    <div class="flex items-center space-x-4">
-      <i class="fas fa-user text-3xl text-yellow-500"></i>
-      <div>
-        <p class="font-semibold text-gray-800">Name</p>
-        <p class="text-gray-600"><?= htmlspecialchars($user['name'] ?? 'N/A') ?></p>
-      </div>
-    </div>
-    <!-- Email -->
-    <div class="flex items-center space-x-4">
-      <i class="fas fa-envelope text-3xl text-yellow-500"></i>
-      <div>
-        <p class="font-semibold text-gray-800">Email</p>
-        <p class="text-gray-600"><?= htmlspecialchars($user['email'] ?? 'N/A') ?></p>
-      </div>
+  <!-- Thông tin người dùng hiển thị dưới dạng 2 phần -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-8 p-8 bg-white shadow-md rounded-xl mx-auto mb-8 border-2 border-yellow-400">
+    <!-- Phần Avatar bên trái -->
+    <div class="flex flex-col items-center md:col-span-1">
+      <img src="/images/avatar/<?= $user['avatar'] ?? 'user.png' ?>" alt="User Avatar"
+        class="w-32 h-32 rounded-full border-4 border-yellow-400 shadow-md">
+      <p class="text-gray-700 font-semibold mt-3"><?= htmlspecialchars($user['name'] ?? 'N/A') ?></p>
     </div>
 
-    <!-- Nút Admin Panel -->
-    <div class="flex justify-center space-x-4 col-span-1 w-full">
-      <?php if ($user['role'] === 'admin'): ?>
-        <form method="POST" action="/account">
-          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-          <button type="submit" name="admin_panel"
-            class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg transition duration-200">
-            Admin Panel
+    <!-- Phần Thông tin bên phải (3 cột) -->
+    <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Name -->
+      <div class="flex items-center space-x-4">
+        <i class="fas fa-user text-3xl text-yellow-500"></i>
+        <div>
+          <p class="font-semibold text-gray-800">ID</p>
+          <p class="text-gray-600">#<?= htmlspecialchars($user['id'] ?? 'N/A') ?></p>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="flex items-center space-x-4">
+        <i class="fas fa-envelope text-3xl text-yellow-500"></i>
+        <div>
+          <p class="font-semibold text-gray-800">Email</p>
+          <p class="text-gray-600"><?= htmlspecialchars($user['email'] ?? 'N/A') ?></p>
+        </div>
+      </div>
+
+      <!-- Admin Panel -->
+      <div class="flex justify-center items-center space-x-4 col-span-1">
+        <?php if ($user['role'] === 'admin'): ?>
+          <form method="POST" action="/account">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+            <button type="submit" name="admin_panel"
+              class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg transition duration-200">
+              Admin Panel
+            </button>
+          </form>
+        <?php else: ?>
+          <button class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold p-3 rounded-lg transition duration-200">
+            Customer
           </button>
-        </form>
-      <?php else: ?>
-        <button class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg transition duration-200">Customer</button>
-      <?php endif; ?>
-    </div>
-
-    <!-- Phone -->
-    <div class="flex items-center space-x-4">
-      <i class="fas fa-phone text-3xl text-yellow-500"></i>
-      <div>
-        <p class="font-semibold text-gray-800">Phone</p>
-        <p class="text-gray-600"><?= htmlspecialchars($user['phone'] ?? 'N/A') ?></p>
+        <?php endif; ?>
       </div>
-    </div>
 
-    <!-- Address -->
-    <div class="flex items-center space-x-4">
-      <i class="fas fa-map-marker-alt text-3xl text-yellow-500"></i>
-      <div>
-        <p class="font-semibold text-gray-800">Address</p>
-        <p class="text-gray-600"><?= htmlspecialchars($user['address'] ?? 'N/A') ?></p>
+      <!-- Phone -->
+      <div class="flex items-center space-x-4">
+        <i class="fas fa-phone text-3xl text-yellow-500"></i>
+        <div>
+          <p class="font-semibold text-gray-800">Phone</p>
+          <p class="text-gray-600"><?= htmlspecialchars($user['phone'] ?? 'N/A') ?></p>
+        </div>
       </div>
+
+      <!-- Address -->
+      <div class="flex items-center space-x-4">
+        <i class="fas fa-map-marker-alt text-3xl text-yellow-500"></i>
+        <div>
+          <p class="font-semibold text-gray-800">Address</p>
+          <p class="text-gray-600"><?= htmlspecialchars($user['address'] ?? 'N/A') ?></p>
+        </div>
+      </div>
+
+      <!-- Update Profile -->
+      <div class="flex justify-center items-center space-x-4 col-span-1">
+        <button onclick="toggleForm()"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-bold p-3 rounded-lg transition duration-200">
+          Update Profile
+        </button>
+      </div>
+
     </div>
-
-    <!-- Nút Update Profile -->
-    <div class="flex justify-center space-x-4 col-span-1 bg-white">
-      <button onclick="toggleForm()"
-        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg transition duration-200">
-        Update Profile
-      </button>
-    </div>
-
-
   </div>
 
   <!-- Form Cập Nhật Thông Tin Người Dùng, mặc định bị ẩn -->
   <div id="update-profile-form" class="space-y-6 mt-4 mb-8 hidden mx-auto">
-    <form action="/account" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-blue-200">
+    <form action="/account" method="POST" enctype="multipart/form-data" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-blue-200">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+      <!-- Name, Phone -->
       <div class="flex flex-col md:flex-row justify-between">
         <div class="w-full md:w-1/2 pr-0 md:pr-3 mb-4 md:mb-0">
           <label for="name" class="block text-gray-700 font-semibold">Name</label>
@@ -153,10 +182,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <input type="text" id="phone" name="phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" class="w-full p-3 border border-gray-300 rounded-md">
         </div>
       </div>
+      <!--  -->
+      <div class="flex flex-col md:flex-row justify-between">
+        <div class="w-full md:w-1/2 pr-0 md:pr-3 mb-4 md:mb-0">
+          <label for="image" class="block text-red-500 text-sm font-medium mb-2"><i class="fas fa-image mr-2"></i>Product Image</label>
+          <div class="flex items-center gap-4">
+            <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)">
+            <label for="image" class="border border-gray-200 rounded-lg px-4 py-2 text-gray-600 cursor-pointer hover:bg-blue-100">
+              <i class="fas fa-upload"></i>
+            </label>
+            <span id="file-name" class="text-gray-500">No file chosen</span>
+          </div>
+          <div class="mt-2">
+            <img id="image-preview" class="hidden w-32 h-32 object-cover rounded-lg" />
+          </div>
+        </div>
 
-      <div>
-        <label for="address" class="block text-gray-700 font-semibold">Address</label>
-        <input type="text" id="address" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>" class="w-full p-3 border border-gray-300 rounded-md">
+        <div class="w-full md:w-1/2 pl-0 md:pl-3">
+          <label for="address" class="block text-gray-700 font-semibold">Address</label>
+          <input type="text" id="address" name="address" value="<?= htmlspecialchars($user['address'] ?? '') ?>" class="w-full p-3 border border-gray-300 rounded-md">
+        </div>
       </div>
 
       <div class="flex justify-center">
@@ -171,8 +216,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Ẩn/Hiện form
         form.classList.toggle('hidden');
       }
-    </script>
 
+      function updateFileName(input) {
+        const file = input.files[0];
+        if (file) {
+          document.getElementById("file-name").innerText = file.name;
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = document.getElementById("image-preview");
+            img.src = e.target.result;
+            img.classList.remove("hidden");
+          };
+          reader.readAsDataURL(file);
+        } else {
+          document.getElementById("file-name").innerText = "No file chosen";
+          document.getElementById("image-preview").classList.add("hidden");
+        }
+      }
+    </script>
   </div>
 
   <!-- Danh sách voucher đã nhận -->
@@ -206,16 +267,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Order History Section -->
   <h3 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Order History</h3>
-  <div class="relative bg-white p-8 rounded-2xl drop-shadow-lg mb-8 border-2 border-yellow-400">
-    <?php if (empty($orders)): ?>
-      <p class="text-center text-gray-600 text-lg">No order history available.</p>
-    <?php else: ?>
-      <?php foreach ($orders as $order): ?>
-        <?php
-        $orderdetails = $orderController->getOrderDetailsByOrderId($order['id']);
-        $orderStatus = strtolower($order['status'] ?? 'unknown');
-        $isCanceled = $orderStatus === 'cancelled';
-        ?>
+  <?php if (empty($orders)): ?>
+    <p class="text-center text-gray-600 text-lg">No order history available.</p>
+  <?php else: ?>
+    <?php foreach ($orders as $order): ?>
+      <?php
+      $orderdetails = $orderController->getOrderDetailsByOrderId($order['id']);
+      $orderStatus = strtolower($order['status'] ?? 'unknown');
+      $isCanceled = $orderStatus === 'cancelled';
+      ?>
+      <div class="relative bg-white p-8 rounded-2xl drop-shadow-lg mb-8 border-2 border-yellow-400">
         <!-- Thông báo nếu đơn hàng bị hủy -->
         <?php if ($isCanceled): ?>
           <div class="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-md flex items-center justify-center z-20 rounded-2xl">
@@ -329,10 +390,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </ul>
           </div>
         </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
-  </div>
+      </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
 </div>
+
 <!-- Logout Button -->
 <form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure you want to logout?');">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">

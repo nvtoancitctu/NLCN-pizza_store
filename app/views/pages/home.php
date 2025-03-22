@@ -88,7 +88,7 @@ $Combos = $productController->listProducts(8);
 <div class="container mx-auto px-12">
 
   <!-- Jumbotron -->
-  <div class="relative bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 shadow-md text-white text-center p-14 rounded-3xl mt-10 overflow-hidden border-8 border-white">
+  <div class="relative bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 shadow-md text-white text-center p-14 rounded-3xl mt-10 overflow-hidden border-8 border-yellow-200">
     <!-- Nội dung chính -->
     <div class="relative z-10 flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0">
       <!-- Nội dung văn bản -->
@@ -116,7 +116,7 @@ $Combos = $productController->listProducts(8);
         <?php if (!empty($Combos)): ?>
           <div class="relative w-full max-w-lg">
             <div class="relative overflow-hidden rounded-xl shadow-lg border-8 border-white rounded-3xl p-2">
-              <img id="comboImage" src="/images/<?= htmlspecialchars($Combos[0]['image']) ?>"
+              <img id="comboImage" src="/images/product/<?= htmlspecialchars($Combos[0]['image']) ?>"
                 alt="<?= htmlspecialchars($Combos[0]['name']) ?>"
                 class="w-full h-auto object-cover rounded-3xl transition-all duration-500 transform hover:scale-110">
 
@@ -139,7 +139,7 @@ $Combos = $productController->listProducts(8);
                   function updateImage(index) {
                     comboImageElement.classList.add('opacity-0');
                     setTimeout(() => {
-                      comboImageElement.src = "/images/" + comboImages[index];
+                      comboImageElement.src = "/images/product/" + comboImages[index];
                       comboImageElement.classList.remove('opacity-0');
                     }, 300);
                   }
@@ -200,12 +200,10 @@ $Combos = $productController->listProducts(8);
   <!-- New Pizza Section -->
   <div class="container mx-auto px-4">
 
-    <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+    <div class="w-full lg:w-6/12 flex items-center justify-center mx-auto my-10">
       <div class="flex-grow border-t-2 border-gray-700"></div>
       <div class="mx-6 md:text-2xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
-        <span class="text-gray-700 text-2xl font-bold">[</span>
         New Arrivals
-        <span class="text-gray-700 text-2xl font-bold">]</span>
       </div>
       <div class="flex-grow border-t-2 border-gray-700"></div>
     </div>
@@ -216,7 +214,7 @@ $Combos = $productController->listProducts(8);
           <div class="flex bg-white border-1 border-gray-500 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-transform transform hover:scale-105 p-3">
             <!-- Hình ảnh -->
             <div class="w-1/3 flex items-center justify-center relative">
-              <img src="/images/<?= htmlspecialchars($product['image']) ?>"
+              <img src="/images/product/<?= htmlspecialchars($product['image']) ?>"
                 alt="<?= htmlspecialchars($product['name']) ?>"
                 class="max-w-[80px] max-h-[80px] object-cover rounded-md">
               <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
@@ -258,7 +256,7 @@ $Combos = $productController->listProducts(8);
   </div>
 
   <!-- Discount Products -->
-  <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+  <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-14">
     <div class="flex-grow border-t-2 border-gray-700"></div>
     <div class="mx-6 md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
       Special Offer
@@ -286,7 +284,7 @@ $Combos = $productController->listProducts(8);
             <div class="flex-shrink-0 w-1/3 flex justify-center items-center">
 
               <!-- Pizza xoay tròn khi hover -->
-              <img src="/images/<?php echo htmlspecialchars($product['image']); ?>"
+              <img src="/images/product/<?php echo htmlspecialchars($product['image']); ?>"
                 class="w-4/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:scale-110"
                 alt="<?php echo htmlspecialchars($product['name']); ?>">
             </div>
@@ -408,7 +406,7 @@ $Combos = $productController->listProducts(8);
   <?php endif; ?>
 
   <!-- Featured Pizzas -->
-  <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+  <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-14">
     <div class="flex-grow border-t-2 border-gray-700"></div>
     <div class="mx-6 md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
       You may also like!
@@ -420,7 +418,7 @@ $Combos = $productController->listProducts(8);
     <?php foreach ($randomProducts as $product): ?>
       <div class="rounded-2xl shadow-md bg-white overflow-hidden transition-transform transform hover:scale-105 hover:shadow-xl border-2 border-blue-500"
         title="<?= htmlspecialchars($product['description']) ?>">
-        <img src="/images/<?php echo htmlspecialchars($product['image']); ?>"
+        <img src="/images/product/<?php echo htmlspecialchars($product['image']); ?>"
           class="w-3/5 h-auto mx-auto object-cover rounded-lg transition duration-500 ease-in-out transform hover:scale-110"
           alt="<?php echo htmlspecialchars($product['name']); ?>">
 
@@ -444,10 +442,10 @@ $Combos = $productController->listProducts(8);
     <?php endforeach; ?>
   </div>
 
-  <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
+  <div class="w-full lg:w-10/12 flex items-center justify-center mx-auto my-16">
     <div class="flex-grow border-t-2 border-gray-700"></div>
-    <div class="mx-6 md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
-      Some things you need!
+    <div class="mx-6 md:text-5xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
+      Some Things You Need
     </div>
     <div class="flex-grow border-t-2 border-gray-700"></div>
   </div>
@@ -472,55 +470,98 @@ $Combos = $productController->listProducts(8);
     $highestRated = null;
     $bestSeller = null;
   }
+
+  $totalVouchers = count($vouchers);
+  $hasToggle = $totalVouchers > 3;
   ?>
 
-  <!-- Exclusive Vouchers -->
-  <section class="bg-red-50 p-6 rounded-xl shadow-lg border border-red-200">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">🔥 Coupon Tickets 🔥</h2>
+  <!-- Thêm Alpine.js -->
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-    <?php if (!empty($vouchers)): ?>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        <?php foreach ($vouchers as $voucher): ?>
-          <div class="relative bg-white p-5 rounded-lg shadow-md border border-red-300 text-center" title="<?= htmlspecialchars($voucher['description']) ?>">
-            <p class="text-gray-700">Expires: <?= htmlspecialchars($voucher['expiration_date']) ?></p>
-            <div class="ticket flex flex-col justify-center items-center p-3 bg-red-500 text-white rounded-md mt-3 space-y-2">
-              <span class="text-center font-bold">🎟 <?= htmlspecialchars($voucher['code']) ?></span>
-            </div>
-            <form method="post" action="index.php?page=claim_voucher" class="mt-3">
+  <!-- Exclusive Vouchers -->
+  <section class="bg-gray-50 p-8 rounded-2xl shadow-sm border-2 border-purple-300">
+    <h2 class="text-2xl font-extrabold text-gray-900 mb-8">Exclusive Coupons</h2>
+
+    <div x-data="{ showAll: false }">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <?php foreach ($vouchers as $index => $voucher): ?>
+          <div title="<?= htmlspecialchars($voucher['description']) ?>"
+            class="voucher-item bg-white p-6 rounded-2xl shadow-md border border-blue-300 text-center transition transform hover:scale-105 hover:shadow-lg"
+            x-show="showAll || <?= $index < 3 ? 'true' : 'false' ?>"
+            x-transition>
+            <p class="text-gray-700 text-sm mb-2">🕒 Expires: <span class="font-semibold"><?= htmlspecialchars($voucher['expiration_date']) ?></span></p>
+            <form method="post" action="index.php?page=claim_voucher">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+              <input type="hidden" name="voucher_code" value="<?= htmlspecialchars($voucher['code']) ?>">
               <input type="hidden" name="voucher_id" value="<?= htmlspecialchars($voucher['id']) ?>">
-              <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition">Claim Now</button>
+              <button type="submit" class="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition font-semibold">
+                🎟 <?= htmlspecialchars($voucher['code']) ?>
+              </button>
             </form>
           </div>
         <?php endforeach; ?>
       </div>
-    <?php else: ?>
-      <p class="text-center text-gray-600 text-lg mt-4">No available vouchers right now. Stay tuned for more deals!</p>
-    <?php endif; ?>
+
+      <?php if ($hasToggle): ?>
+        <!-- Toggle Button -->
+        <div class="flex justify-center mt-6">
+          <button
+            @click="showAll = !showAll"
+            class="bg-gray-500 text-white px-5 py-2.5 rounded-lg hover:bg-gray-600 transition">
+            <span x-text="showAll ? 'Show Less ⬆' : 'Read All ⬇'"></span>
+          </button>
+        </div>
+      <?php endif; ?>
+    </div>
   </section>
 
   <!-- Top Rated & Best Seller Pizzas -->
-  <section class="mt-12 bg-white p-6 rounded-xl shadow-lg border text-center">
-    <h2 class="text-2xl font-bold mb-2">🔥 Best Pizzas This Week 🔥</h2>
-    <p class="text-gray-500 text-sm mb-6">Updated on <?= date('d/m/Y') ?></p>
+  <section class="bg-gray-50 p-8 mt-12 rounded-2xl shadow-sm text-center border-2 border-purple-300">
+    <h2 class="text-3xl font-extrabold text-gray-900 mb-4">🍕 BEST OF THIS WEEK 🍕</h2>
+    <p class="text-gray-500 text-sm mb-8">
+      Consistent date:<strong class="text-red-500">
+        <?php
+        $date = new DateTime('now', new DateTimeZone('Asia/Ho_Chi_Minh'));
+        echo $date->format('Y-m-d H:i:s');
+        ?></strong>
+    </p>
 
     <?php if ($highestRated && $bestSeller): ?>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="p-6 bg-yellow-100 rounded-xl shadow-xl border-4 border-yellow-500">
-          <h3 class="text-xl font-bold">🏆 Highest Rated Pizza</h3>
-          <h2 class="text-3xl font-extrabold mt-2 text-yellow-700 animate-pulse">
-            <?= htmlspecialchars($highestRated['name']) ?>
-          </h2>
-          <p class="text-gray-700 text-xl mt-2">⭐ <?= number_format($highestRated['avg_rating'], 1) ?> / 5</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Highest Rated Pizza -->
+        <div class="flex bg-yellow-50 rounded-2xl shadow-md border-1 border-yellow-400 transition transform hover:scale-105 p-10 w-full">
+          <img src="/images/product/<?= htmlspecialchars($highestRated['image']) ?>"
+            alt="Highest Rated Pizza" title="<?php echo htmlspecialchars($highestRated['description']); ?>"
+            class="w-2/5 h-auto object-cover rounded-xl shadow-md">
+
+          <div class="flex-1 ml-6 flex flex-col justify-center">
+            <h3 class="text-lg font-semibold text-yellow-700">🏆 Highest Rated</h3>
+            <h2 class="text-2xl font-extrabold text-gray-900 mt-2"><?= htmlspecialchars($highestRated['name']) ?></h2>
+            <p class="text-yellow-600 text-xl font-bold mt-2">⭐ <?= number_format($highestRated['avg_rating'], 1) ?> / 5</p>
+            <a href="/products&category_id=<?= $highestRated['id'] ?>"
+              class="mt-4 inline-block bg-yellow-500 text-white px-5 py-2 rounded-lg hover:bg-yellow-600 transition">
+              View Details
+            </a>
+          </div>
         </div>
 
-        <div class="p-6 bg-green-100 rounded-xl shadow-xl border-4 border-green-500">
-          <h3 class="text-xl font-bold">📈 Best Seller</h3>
-          <h2 class="text-3xl font-extrabold mt-2 text-green-700 animate-pulse">
-            <?= htmlspecialchars($bestSeller['name']) ?>
-          </h2>
-          <p class="text-gray-700 text-xl mt-2">🔥 Sold: <strong><?= number_format($bestSeller['total_sales']) ?></strong> times</p>
+        <!-- Best Seller Pizza -->
+        <div class="flex bg-green-50 rounded-2xl shadow-md border-1 border-green-400 transition transform hover:scale-105 p-10 w-full">
+          <img src="/images/product/<?= htmlspecialchars($bestSeller['image']) ?>"
+            alt="Best Seller Pizza" title="<?php echo htmlspecialchars($bestSeller['description']); ?>"
+            class="w-2/5 h-auto object-cover rounded-xl shadow-md">
+
+          <div class="flex-1 ml-6 flex flex-col justify-center">
+            <h3 class="text-lg font-semibold text-green-700">📈 Best Seller</h3>
+            <h2 class="text-2xl font-extrabold text-gray-900 mt-2"><?= htmlspecialchars($bestSeller['name']) ?></h2>
+            <p class="text-green-600 text-xl font-bold mt-2">🔥 Sold: <strong><?= number_format($bestSeller['total_sales']) ?></strong> times</p>
+            <a href="/products&category_id=<?= $bestSeller['id'] ?>"
+              class="mt-4 inline-block bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition">
+              View Details
+            </a>
+          </div>
         </div>
+
       </div>
     <?php else: ?>
       <p class="text-center text-gray-600 text-lg mt-4">No top-rated or best-selling pizzas available this week.</p>
@@ -528,15 +569,20 @@ $Combos = $productController->listProducts(8);
   </section>
 
   <!-- Customer Testimonials -->
-  <section class="mt-12 bg-blue-50 p-6 rounded-xl shadow-lg border border-blue-200">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">💬 What Our Customers Say 💬</h2>
+  <section class="bg-gray-50 p-8 mt-12 rounded-2xl shadow-sm border-2 border-purple-300">
+    <h2 class="text-2xl font-extrabold text-gray-900 mb-6">What Our Customers Say 💬</h2>
 
     <?php if (!empty($testimonials)): ?>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <?php foreach ($testimonials as $review): ?>
-          <div class="bg-white p-4 rounded-lg shadow-md border border-blue-300">
-            <p class="text-gray-700 italic">"<?= htmlspecialchars($review['message']) ?>"</p>
-            <p class="text-right font-semibold text-blue-700">- <?= htmlspecialchars($review['name']) ?></p>
+          <div class="bg-white p-6 rounded-xl shadow-md border border-blue-300 flex items-start space-x-4 transition transform hover:scale-105">
+            <!-- Avatar (giả lập nếu không có hình) -->
+            <img src="/images/avatar/user.png" alt="User Avatar" class="w-14 h-14 rounded-full shadow">
+
+            <div>
+              <p class="text-gray-700 italic text-lg leading-relaxed">“<?= htmlspecialchars($review['message']) ?>”</p>
+              <p class="text-right font-semibold text-blue-700 mt-2">- <?= htmlspecialchars($review['name']) ?></p>
+            </div>
           </div>
         <?php endforeach; ?>
       </div>
@@ -546,8 +592,8 @@ $Combos = $productController->listProducts(8);
   </section>
 
   <!-- Special Policies -->
-  <section class="bg-gray-50 p-8 rounded-xl shadow-lg border border-gray-200 mt-12 mb-12">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">🌟 Our Special Policies 🌟</h2>
+  <section class="bg-gray-50 p-8 mt-12 rounded-2xl shadow-sm border-2 border-purple-300 mb-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">🌟 Our Special Policies 🌟</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div class="flex flex-col items-center bg-white p-6 rounded-xl shadow-md border border-yellow-300 transition-transform hover:scale-105">
         <span class="text-5xl text-yellow-500">🚀</span>
