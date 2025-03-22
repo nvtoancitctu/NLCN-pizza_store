@@ -27,8 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   // Check CSRF token
   if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
     die('Invalid CSRF token');
-  } else {
-    unset($_SESSION['csrf_token']);
   }
 
   $email = $_POST['email'];
@@ -39,13 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   if (is_array($result) && isset($result['error'])) {
     $error = $result['error'];
   } elseif (is_array($result) && isset($result['success'])) {
-    // Đăng nhập thành công
+
+    // Kiểm tra role của user và điều hướng tương ứng
     if ($_SESSION['user_role'] == 'admin') {
       $_SESSION['success'] = 'Welcome back my admin! Go to admin page.';
+      unset($_SESSION['csrf_token']);
       header("Location: /admin/list");
       exit();
     } else {
       $_SESSION['success'] = "Login successful! Welcome to Lover's Hub Pizza Store.";
+      unset($_SESSION['csrf_token']);
       header("Location: /home");
       exit();
     }
@@ -70,34 +71,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   </script>
 <?php endif; ?>
 
-<!-- Giao diện người dùng -->
-<h1 class="text-center text-4xl font-bold mt-6 text-gray-900">Login</h1>
-<div class="container mx-auto max-w-md p-8 bg-white shadow-lg rounded-xl mt-8 mb-8 alert alert-info">
-  <form method="POST" action="/login">
-    <!-- CSRF Token -->
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+<!-- Giao diện đăng nhập -->
+<div class="flex min-h-screen items-center justify-center bg-gradient-to-r from-blue-50 to-blue-100">
+  <div class="w-full max-w-md bg-white shadow-lg rounded-xl p-8">
 
-    <div class="mb-6">
-      <label for="email" class="block text-gray-700 font-bold mb-2">Email:</label>
-      <input type="email" name="email" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
-    </div>
+    <h1 class="text-center text-3xl font-extrabold text-blue-700 mb-6">🔐 Login</h1>
 
-    <div class="mb-6 relative">
-      <label for="password" class="block text-gray-700 font-bold mb-2">Password:</label>
-      <div class="relative">
-        <input type="password" name="password" id="passwordInput" class="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
-        <!-- Nút hiển thị / ẩn mật khẩu -->
-        <button type="button" id="togglePassword" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700">
-          <span id="eyeIcon">👁️</span>
+    <form method="POST" action="/login" class="space-y-6">
+      <!-- CSRF Token -->
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+
+      <!-- Email Input -->
+      <div>
+        <label for="email" class="block text-gray-700 font-semibold mb-2">Email:</label>
+        <div class="relative">
+          <input type="email" name="email" class="border border-gray-300 rounded-lg w-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+          <span class="absolute right-4 top-3 text-gray-400">
+            📧
+          </span>
+        </div>
+      </div>
+
+      <!-- Password Input -->
+      <div>
+        <label for="password" class="block text-gray-700 font-semibold mb-2">Password:</label>
+        <div class="relative">
+          <input type="password" name="password" id="passwordInput" class="border border-gray-300 rounded-lg w-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+          <button type="button" id="togglePassword" class="absolute inset-y-0 right-4 flex items-center text-gray-500 hover:text-gray-700">
+            <span id="eyeIcon">👁️</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Login Button -->
+      <div class="text-center">
+        <button type="submit" class="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all duration-200">
+          Login
         </button>
       </div>
-    </div>
+    </form>
 
-    <div class="text-center">
-      <button type="submit" class="w-2/5 text-center p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md transition duration-200">Login</button>
-    </div>
-  </form>
-  <p class="text-center mt-6 text-gray-600">Don't have an account? <a href="/register" class="text-blue-600 hover:underline">Register here</a></p>
+    <!-- Register Link -->
+    <p class="text-center mt-6 text-gray-600">
+      Don't have an account?
+      <a href="/register" class="text-blue-600 font-semibold hover:underline">Register here</a>
+    </p>
+  </div>
 </div>
 
 <script>
@@ -107,10 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (passwordInput.type === "password") {
       passwordInput.type = "text";
-      eyeIcon.textContent = "🙈"; // Icon mắt đóng
+      eyeIcon.textContent = "🙈"; // Mắt đóng
     } else {
       passwordInput.type = "password";
-      eyeIcon.textContent = "👁️"; // Icon mắt mở
+      eyeIcon.textContent = "👁️"; // Mắt mở
     }
   });
 </script>

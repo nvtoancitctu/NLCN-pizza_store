@@ -16,7 +16,7 @@
             'home' => ['label' => 'Home', 'icon' => 'fas fa-home'],
             'products' => ['label' => 'Menus', 'icon' => 'fas fa-pizza-slice'],
             'feedback' => ['label' => 'Feedback', 'icon' => 'fas fa-comment'],
-            'profile' => ['label' => 'Profile', 'icon' => 'fas fa-user']
+            'account' => ['label' => 'Profile', 'icon' => 'fas fa-user']
           ];
           foreach ($footerLinks as $page => $data): ?>
             <a href="/<?= $page ?>" class="flex items-center space-x-1 text-gray-300 hover:text-yellow-400 transition">

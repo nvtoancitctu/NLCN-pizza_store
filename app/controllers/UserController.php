@@ -92,9 +92,9 @@ class UserController
   }
 
   // Cập nhật feedback
-  public function updateFeedback($feedback_id, $user_id, $message)
+  public function updateFeedback($feedback_id, $user_id, $message, $rating)
   {
-    return $this->userModel->updateFeedback($feedback_id, $user_id, $message);
+    return $this->userModel->updateFeedback($feedback_id, $user_id, $message, $rating);
   }
 
   // Xóa phản hồi

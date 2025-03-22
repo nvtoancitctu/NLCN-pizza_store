@@ -154,7 +154,7 @@ class Cart
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$product) {
-            $_SESSION['message'] = "Sản phẩm không tồn tại.";
+            $_SESSION['message'] = "Product not found!";
             return false;
         }
 
@@ -162,7 +162,7 @@ class Cart
 
         // Kiểm tra số lượng cập nhật có hợp lệ không
         if ($quantity > $current_stock + $old_quantity) {
-            $_SESSION['message'] = "Quá số lượng hàng tồn kho, không thể thêm.";
+            $_SESSION['message'] = "Exceeds available stock, cannot add. Please check again!";
             return false;
         }
 
@@ -176,7 +176,7 @@ class Cart
             $newQuantity = $existingItem['quantity'] + $quantity;
 
             if ($newQuantity > $current_stock + $old_quantity) {
-                $_SESSION['message'] = "Quá số lượng hàng tồn kho, không thể thêm.";
+                $_SESSION['message'] = "Exceeds available stock, cannot add. Please check again!";
                 return false;
             }
 

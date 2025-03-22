@@ -77,30 +77,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 ?>
 
 <!-- Thông tin thanh toán -->
-<h1 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">CHECK OUT</h1>
+<div class="flex min-h-screen items-center justify-center bg-gradient-to-r from-blue-50 to-blue-100">
 
-<div class="container mx-auto px-4">
-  <form method="POST" action="/checkout" id="checkout-form" enctype="multipart/form-data" class="bg-white shadow-lg alert alert-info rounded-lg p-8 max-w-4xl mx-auto mb-6">
+  <div class="text-center -mr-20 ml-10">
+    <h2 class="text-5xl font-bold p-4 text-blue-700 flex items-center justify-center">
+      CHECK-OUT
+    </h2>
+    <img src="/images/logo.png" alt="System Logo" class="mx-auto w-50 h-50 object-contain">
+  </div>
+
+  <form method="POST" action="/checkout" id="checkout-form" enctype="multipart/form-data"
+    class="bg-white shadow-sm rounded-lg p-8 w-3/5 mx-auto mb-10 mt-10 border-1 border-yellow-300">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
     <!-- Bố cục chia thành hai cột -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       <!-- Cột bên trái: Thông tin giỏ hàng và địa chỉ giao hàng -->
       <div class="space-y-6">
 
         <!-- Thông tin giỏ hàng -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-          <h2 class="text-xl font-bold mb-4 text-gray-800">Your Cart</h2>
+          <!-- <h2 class="text-xl font-bold mb-4 text-gray-800">Your Cart</h2> -->
           <div class="space-y-4">
             <?php foreach ($cartItems as $item): ?>
               <div class="flex items-center justify-between border-b pb-4">
                 <div class="flex items-center space-x-4">
-                  <img src="/images/product/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="w-12 h-12 rounded-lg object-cover">
+                  <img src="/images/product/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>"
+                    class="w-12 h-12 rounded-lg object-cover">
                   <div>
                     <p class="font-semibold text-gray-800"><?= htmlspecialchars($item['name']) ?></p>
-                    <p class="text-sm text-gray-600">Quantity: <?= htmlspecialchars($item['quantity']) ?></p>
-                    <p class="text-sm text-gray-600">Size: <?= htmlspecialchars($item['size']) ?></p>
+                    <p class="text-sm text-gray-600">Quantity: <?= htmlspecialchars($item['quantity']) ?> (<?= htmlspecialchars($item['size']) ?>)</p>
                   </div>
                 </div>
                 <p class="font-semibold text-gray-800">
@@ -113,41 +120,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 
         <!-- Thông tin giao hàng -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-          <h2 class="text-xl font-bold mb-4 text-gray-800">Shipping Information</h2>
+          <h2 class="text-xl font-bold mb-2 text-gray-800">Shipping Address</h2>
           <textarea name="address" id="address" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
-        </div>
-
-        <!-- Lưu ý đơn hàng -->
-        <p class="text-gray-800 p-2 text-sm">
-          <strong>NOTE: </strong>All orders with an invoice under $100 will have a shipping fee of $1.50.
-        </p>
-      </div>
-
-      <!-- Cột bên phải: Tổng số tiền và thanh toán -->
-      <div class="space-y-6">
-
-        <!-- Phương thức thanh toán -->
-        <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-          <h2 class="text-xl font-bold mb-4 text-gray-800">Payment Method</h2>
-          <select name="payment_method" id="payment_method" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required onchange="toggleBankTransfer()">
-            <option value="" selected disabled hidden>-- Select Payment Method --</option>
-            <option value="bank_transfer">Bank Transfer</option>
-            <option value="cash_on_delivery">Cash on Delivery</option>
-          </select>
-
-          <!-- QR Code + Upload hình -->
-          <div id="bank_transfer_section" class="hidden mt-4 bg-white p-4 rounded-lg shadow">
-            <p class="font-semibold text-gray-800">Scan QR Code to Pay:</p>
-            <img src="/images/qr-code.png" alt="QR Code" class="w-3/5 h-auto mx-auto my-2">
-
-            <label class="block text-gray-700 font-semibold mt-4">Upload Payment Proof:</label>
-            <input type="file" name="image" id="image" class="w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
-          </div>
         </div>
 
         <!-- Áp dụng Voucher Code -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-          <h2 class="text-xl font-bold mb-4 text-gray-800">Voucher Code</h2>
+          <h2 class="text-xl font-bold mb-2 text-gray-800">Voucher Code</h2>
           <select name="voucher_code" id="voucher_code" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" onchange="updateDiscount()">
             <option value="" data-discount="0">-- Select a voucher --</option>
             <?php foreach ($userVouchers as $voucher): ?>
@@ -162,6 +141,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
               <?php endif; ?>
             <?php endforeach; ?>
           </select>
+        </div>
+      </div>
+
+      <!-- Cột bên phải: Tổng số tiền và thanh toán -->
+      <div class="space-y-6">
+
+        <!-- Lưu ý đơn hàng -->
+        <p class="text-gray-800 p-2 text-sm">
+          <strong>NOTE: </strong>All orders with an invoice under $100 will have a shipping fee of $1.50.
+        </p>
+
+        <!-- Phương thức thanh toán -->
+        <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
+          <h2 class="text-xl font-bold mb-2 text-gray-800">Payment Method</h2>
+          <select name="payment_method" id="payment_method" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required onchange="toggleBankTransfer()">
+            <option value="" selected disabled hidden>-- Select Payment Method --</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="cash_on_delivery">Cash on Delivery</option>
+          </select>
+
+          <!-- QR Code + Upload hình -->
+          <div id="bank_transfer_section" class="hidden mt-4 bg-white p-4 rounded-lg shadow">
+            <p class="font-semibold text-gray-800">Scan QR Code to Pay:</p>
+            <img src="/images/qr-code.png" alt="QR Code" class="w-3/5 h-auto mx-auto my-2">
+
+            <label class="block text-gray-700 font-semibold mt-4">Upload Payment Proof:</label>
+            <input type="file" name="image" id="image" class="w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+          </div>
         </div>
 
         <!-- Tổng số tiền -->
@@ -241,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
       return;
     }
 
-    const confirmOrder = confirm("Are you sure you want to place an order?");
+    const confirmOrder = confirm("Are you sure want to place an order?");
     if (confirmOrder) {
       document.getElementById('checkout-form').submit();
     }

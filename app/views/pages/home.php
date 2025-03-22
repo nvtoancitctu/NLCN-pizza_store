@@ -291,7 +291,7 @@ $Combos = $productController->listProducts(8);
 
             <div class="flex-grow p-4">
               <h5 class="text-3xl font-extrabold text-gray-800 mb-2"><?php echo htmlspecialchars($product['name']); ?></h5>
-              <p class="text-gray-700"><?php echo htmlspecialchars($product['description']); ?></p>
+              <p class="text-gray-500"><?php echo htmlspecialchars($product['description']); ?></p>
 
               <!-- Đánh giá sao và nhận xét của khách hàng -->
               <div class="flex items-center mb-2">

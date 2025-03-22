@@ -32,10 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update'])) {
 
     $cartController->updateCartItem($cart_id, $quantity, $size);
 
-    if (!$cartController) {
-        echo $_SESSION['message'];
-    }
-
     header("Location: /cart");
     exit();
 }
@@ -55,7 +51,6 @@ if (isset($_GET['action'])) {
         $cart_id = (int) $_GET['cart_id'];
         $cartController->deleteCartItem($cart_id);
 
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         header("Location: /cart");
         exit();
     } else {
@@ -65,6 +60,14 @@ if (isset($_GET['action'])) {
     }
 }
 ?>
+
+<!-- Hiển thị alert bằng JavaScript nếu có thông báo -->
+<?php if (!empty($_SESSION['message'])): ?>
+    <script>
+        alert("<?= htmlspecialchars($_SESSION['message']) ?>");
+    </script>
+    <?php unset($_SESSION['message']); ?>
+<?php endif; ?>
 
 <!-- Tiêu đề chính -->
 <h1 class="text-4xl font-extrabold mt-8 text-center text-blue-700 drop-shadow-lg">
@@ -145,7 +148,8 @@ if (isset($_GET['action'])) {
                                             <span class="text-gray-700"><?= htmlspecialchars($item['size']) ?></span>
                                         <?php endif; ?>
 
-                                        <input type="number" name="quantity" value="<?= htmlspecialchars($item['quantity']) ?>" min="1" class="w-16 text-center border rounded-lg px-2 py-1 focus:ring focus:ring-blue-300">
+                                        <input type="number" name="quantity" value="<?= htmlspecialchars($item['quantity']) ?>" min="1"
+                                            class="w-16 text-center border rounded-lg px-2 py-1 focus:ring focus:ring-blue-300">
 
                                         <button type="submit" name="update" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold transition">
                                             Update

@@ -379,7 +379,14 @@ class User
         $this->conn->prepare($resetQuery)->execute();
 
         try {
-            $stmt = $this->conn->prepare("INSERT INTO feedback (user_id, name, email, order_id, message, rating, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            $stmt = $this->conn->prepare("INSERT INTO feedback (user_id, name, email, order_id, message, rating, created_at) 
+                                          VALUES (?, ?, ?, ?, ?, ?, NOW())");
+
+            // Đánh dấu note của order_id là feedbacked
+            $note_stmt = $this->conn->prepare("UPDATE orders SET note = 'feedbacked' WHERE id = ?");
+            $note_stmt->execute([$order_id]);
+
+            // Thực thi câu lệnh INSERT INTO để thêm feedback vào bảng feedback
             return $stmt->execute([$user_id, $name, $email, $order_id, $user_message, $rating]);
         } catch (PDOException $e) {
             error_log("Database Error: " . $e->getMessage());
@@ -401,25 +408,34 @@ class User
     }
 
     // Chỉnh sửa feedback
-    public function updateFeedback($feedback_id, $user_id, $message)
+    public function updateFeedback($feedback_id, $user_id, $message, $rating)
     {
-        $sql = "UPDATE feedback SET message = :message, updated_at = NOW() WHERE id = :feedback_id AND user_id = :user_id";
+        $sql = "UPDATE feedback SET message = :message, rating = :rating, updated_at = NOW() 
+                WHERE id = :feedback_id AND user_id = :user_id";
+
         $stmt = $this->conn->prepare($sql);
         $stmt->bindParam(':message', $message, PDO::PARAM_STR);
+        $stmt->bindParam(':rating', $rating, PDO::PARAM_INT);
         $stmt->bindParam(':feedback_id', $feedback_id, PDO::PARAM_INT);
         $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-
         return $stmt->execute();
     }
 
     // Xóa feedback
     public function deleteFeedback($feedback_id, $user_id)
     {
+        // Cập nhật note của order_id thành 'unfeedbacked'
+        $note_stmt = $this->conn->prepare("UPDATE orders SET note = 'unfeedbacked' WHERE id = (SELECT order_id FROM feedback WHERE id = ?)");
+        $note_stmt->execute([$feedback_id]);
+
+        // Thực hiện xóa feedback
         $stmt = $this->conn->prepare("DELETE FROM feedback WHERE id = ? AND user_id = ?");
         return $stmt->execute([$feedback_id, $user_id]);
     }
 
-    // Lấy danh sách vouchers của người dùng
+    // ------------------------------------------
+    // Xử lý VOUCHER
+    // ------------------------------------------
     public function getUserVouchers($user_id)
     {
         $stmt = $this->conn->prepare("SELECT v.id, v.code, v.description, v.expiration_date, uv.status, 

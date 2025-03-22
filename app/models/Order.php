@@ -113,6 +113,7 @@ class Order
                                         AND voucher_id = :voucher_id 
                                         AND status = 'unused' 
                                         LIMIT 1";
+
                 $updateVoucherStatusStmt = $this->conn->prepare($updateVoucherStatus);
                 $updateVoucherStatusStmt->execute(['user_id' => $user_id, 'voucher_id' => $voucher_id]);
             }
@@ -164,7 +165,8 @@ class Order
     /** Lấy danh sách tất cả đơn hàng */
     public function getAllOrders()
     {
-        $query = "SELECT o.id, u.name AS customer_name, o.total, o.status, o.created_at, o.payment_method, o.images 
+        $query = "SELECT o.id, o.total, o.status, o.created_at, o.payment_method, o.images, 
+                        u.name AS customer_name, 
                 FROM orders o
                 JOIN users u ON o.user_id = u.id
                 WHERE u.role != 'admin'
@@ -189,6 +191,7 @@ class Order
                 FROM orders o
                 LEFT JOIN vouchers v ON o.voucher_id = v.id
                 WHERE o.id = ? AND o.user_id = ?";
+
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$order_id, $user_id]);
         $order = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -231,18 +234,12 @@ class Order
      */
     public function getOrdersByUserId($user_id)
     {
-        $query = "SELECT 
-                o.id, 
-                o.address, 
-                o.created_at, 
-                o.total, 
-                o.payment_method, 
-                o.status, 
-                v.code AS voucher_code,
-                v.description
-              FROM orders o
-              LEFT JOIN vouchers v ON o.voucher_id = v.id
-              WHERE o.user_id = :user_id";
+        $query = "SELECT o.id, o.address, o.created_at, o.total, o.payment_method, o.status, o.note,
+                        v.code AS voucher_code,
+                        v.description
+                FROM orders o
+                LEFT JOIN vouchers v ON o.voucher_id = v.id
+                WHERE o.user_id = :user_id";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
@@ -310,6 +307,7 @@ class Order
                     FROM orders o 
                     JOIN users u ON o.user_id = u.id 
                     WHERE o.id = :order_id LIMIT 1";
+
             $stmt = $this->conn->prepare($sql);
             $stmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
             $stmt->execute();

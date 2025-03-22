@@ -393,12 +393,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endforeach; ?>
   <?php endif; ?>
-</div>
 
-<!-- Logout Button -->
-<form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure you want to logout?');">
-  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-  <button type="submit" name="logout" title="Logout"
-    class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
-    Logout</button>
-</form>
+  <!-- Logout Button -->
+  <form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure want to logout?');">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+    <button type="submit" name="logout" title="Logout"
+      class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
+      Logout</button>
+  </form>
+</div>
