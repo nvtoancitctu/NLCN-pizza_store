@@ -74,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   // Xóa giỏ hàng sau khi đặt hàng thành công
   $cartController->clearCart($user_id);
 
-  // Điều hướng đến trang thành công đơn hàng
-  header("Location: /order-success/order_id=$order_id");
+  // Sau khi tạo đơn hàng thành công, tự động gửi email thông báo đến khách hàng
+  header("Location: /index.php?page=send-email&order_id=$order_id");
   exit();
 }
 

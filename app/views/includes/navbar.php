@@ -94,10 +94,11 @@ $nav_links = [
         </button>
 
         <!-- Dropdown Notification -->
-        <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg hidden">
+        <div id="notification-dropdown" class="position-absolute top-100 end-0 bg-white shadow-lg rounded-xl hidden"
+          style="z-index: 1050; min-width: 550px;">
           <div class="p-3 text-gray-800 text-sm">
             <?php
-            $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = :user_id ORDER BY created_at DESC LIMIT 5");
+            $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = :user_id ORDER BY created_at DESC");
             $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
             $stmt->execute();
             $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);

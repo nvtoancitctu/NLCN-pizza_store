@@ -187,9 +187,10 @@ class Order
     public function getOrderDetails($order_id, $user_id)
     {
         // Lấy thông tin đơn hàng, bao gồm thông tin voucher (nếu có)
-        $query = "SELECT o.*, v.code, v.discount_amount, v.description
+        $query = "SELECT o.*, v.code, v.discount_amount, v.description, u.name, u.email
                 FROM orders o
                 LEFT JOIN vouchers v ON o.voucher_id = v.id
+                LEFT JOIN users u ON o.user_id = u.id
                 WHERE o.id = ? AND o.user_id = ?";
 
         $stmt = $this->conn->prepare($query);
@@ -234,9 +235,7 @@ class Order
      */
     public function getOrdersByUserId($user_id)
     {
-        $query = "SELECT o.id, o.address, o.created_at, o.total, o.payment_method, o.status, o.note,
-                        v.code AS voucher_code,
-                        v.description
+        $query = "SELECT o.*, v.code AS voucher_code, v.description
                 FROM orders o
                 LEFT JOIN vouchers v ON o.voucher_id = v.id
                 WHERE o.user_id = :user_id";

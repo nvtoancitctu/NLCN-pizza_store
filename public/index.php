@@ -54,20 +54,23 @@ switch ($page) {
     case 'checkout':
         include '../app/views/pages/checkout.php';
         break;
+    case 'send-email':
+        include '../app/views/pages/send-email.php';
+        break;
+    case 'order-success':
+        include '../app/views/pages/order-success.php';
+        break;
+    case 'feedback':
+        include '../app/views/pages/feedback.php';
+        break;
     case 'login':
         include '../app/views/pages/login.php';
         break;
     case 'account':
         include '../app/views/pages/account.php';
         break;
-    case 'feedback':
-        include '../app/views/pages/feedback.php';
-        break;
     case 'register':
         include '../app/views/pages/register.php';
-        break;
-    case 'order-success':
-        include '../app/views/pages/order-success.php';
         break;
     case 'list':
         include '../app/views/admin/list.php';

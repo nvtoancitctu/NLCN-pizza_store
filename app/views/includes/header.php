@@ -30,7 +30,6 @@
             font-family: 'Poppins', sans-serif;
         }
 
-
         #back-to-top {
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }

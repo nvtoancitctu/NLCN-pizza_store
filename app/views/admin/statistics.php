@@ -6,18 +6,6 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-// Tạo token CSRF nếu chưa tồn tại
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-// Check CSRF token
-if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    die('Invalid CSRF token');
-} else {
-    unset($_SESSION['csrf_token']);
-}
-
 // Kiểm tra xem có giá trị time_period từ POST không
 $timePeriod = isset($_POST['time_period']) ? $_POST['time_period'] : 'daily';
 
@@ -125,7 +113,7 @@ foreach ($salesData as $sales) {
 <!-- Nút quay lại -->
 <div class="text-center mb-6">
     <button type="button" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-all duration-200"
-        onclick="window.location.href='/admin/list'">⬅ Back to Admin</button>
+        onclick="window.location.href='/admin'">⬅ Back to Admin</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -265,7 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </section>
 
-  <!-- Order History Section -->
+  <!-- Modal ẩn order details -->
   <h3 class="text-4xl font-extrabold my-8 text-center text-blue-700 drop-shadow-lg">Order History</h3>
   <?php if (empty($orders)): ?>
     <p class="text-center text-gray-600 text-lg">No order history available.</p>
@@ -277,29 +277,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $isCanceled = $orderStatus === 'cancelled';
       ?>
       <div class="relative bg-white p-8 rounded-2xl drop-shadow-lg mb-8 border-2 border-yellow-400">
-        <!-- Thông báo nếu đơn hàng bị hủy -->
-        <?php if ($isCanceled): ?>
-          <div class="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-md flex items-center justify-center z-20 rounded-2xl">
-            <div class="bg-yellow-100 border border-yellow-500 text-red-600 p-8 rounded-xl shadow-lg text-center w-2/5">
-              <p class="font-bold text-3xl">Order Canceled</p>
-              <p class="text-gray-800 mt-2">We will contact you shortly for further details.</p>
-            </div>
+
+        <!-- Nội dung Order ID có thể click -->
+        <div class="cursor-pointer bg-blue-100 p-4 rounded-lg border border-blue-300 flex items-center justify-between" onclick="toggleOrderDetails('order-<?= $order['id'] ?>')">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-receipt text-blue-500 text-xl"></i>
+            <p class="font-semibold text-gray-800">
+              #<?= htmlspecialchars($order['id']) ?> (<?= htmlspecialchars($order['created_at']) ?>)
+              <?= ($order['note'] === "feedbacked") ? "💬" : "" ?>
+              <?php if (!empty($order['shipping_link'])): ?>
+                <a href="<?= htmlspecialchars($order['shipping_link']) ?>" target="_blank" class="text-red-500">
+                  <i class="fas fa-map-marker-alt"></i>
+                </a>
+              <?php endif; ?>
+            </p>
           </div>
-        <?php endif; ?>
 
-        <!-- Nội dung đơn hàng -->
-        <div class="space-y-8 <?= $isCanceled ? 'opacity-50' : '' ?>">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <i class="fas fa-chevron-down text-gray-600" id="icon-order-<?= $order['id'] ?>"></i> <!-- Thông báo nếu đơn hàng bị hủy -->
 
-            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
-              <i class="fas fa-receipt text-blue-500 text-xl"></i>
-              <div>
-                <p class="text-sm text-gray-600">Order ID</p>
-                <p class="font-semibold text-gray-800">#<?= htmlspecialchars($order['id']) ?></p>
+          <?php if ($isCanceled): ?>
+            <div class="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-md flex items-center justify-center z-20 rounded-2xl">
+              <div class="bg-yellow-100 text-red-600 p-4 rounded-xl shadow-lg text-center w-3/5">
+                <p class="font-bold text-2xl">Cancelled</p>
+                <p class="text-gray-800 mt-2">We will contact you shortly for further details.
+                  <br>Please checked your email for more information.
+                </p>
               </div>
             </div>
+          <?php endif; ?>
+        </div>
 
-            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
+        <!-- Nội dung đơn hàng (ẩn mặc định) -->
+        <div id="order-<?= $order['id'] ?>" class="space-y-8 mt-4 hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+
+            <div class="bg-white p-3 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <i class="fas fa-map-marker-alt text-pink-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Shipping Address</p>
@@ -307,15 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
-              <i class="fas fa-calendar-alt text-indigo-500 text-xl"></i>
-              <div>
-                <p class="text-sm text-gray-600">Order Date</p>
-                <p class="font-semibold text-gray-800"><?= htmlspecialchars($order['created_at']) ?></p>
-              </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
+            <div class="bg-white p-3 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <i class="fas fa-dollar-sign text-green-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Total Amount</p>
@@ -330,11 +334,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </div>
             </div>
 
-            <div class="bg-white p-4 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
+            <div class="bg-white p-3 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <i class="fas fa-credit-card text-purple-500 text-xl"></i>
               <div>
                 <p class="text-sm text-gray-600">Payment Method</p>
-                <p class="font-semibold text-gray-800"><?= ucfirst(htmlspecialchars($order['payment_method'])) ?></p>
+                <p class="font-semibold text-gray-800"><?= ucfirst(htmlspecialchars($order['payment_method']) == "bank_transfer" ? "Banking" : "COD") ?></p>
               </div>
             </div>
 
@@ -348,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statusColor = $statusColors[$orderStatus] ?? 'text-gray-500';
             ?>
 
-            <div class="relative bg-white p-4 rounded-lg border-2 border-blue-100">
+            <div class="relative bg-white p-3 rounded-lg border-2 border-blue-100">
               <div class="flex items-center space-x-3">
                 <i class="fas fa-truck <?= $statusColor ?> text-xl"></i>
                 <div>
@@ -361,6 +365,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
           </div>
+
           <!-- Bảng chi tiết đơn hàng -->
           <div class="overflow-x-auto bg-white border-2 border-blue-100 rounded-lg shadow-sm p-4">
             <ul class="divide-y divide-gray-300 text-sm">
@@ -393,6 +398,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endforeach; ?>
   <?php endif; ?>
+
+  <script>
+    function toggleOrderDetails(orderId) {
+      var details = document.getElementById(orderId);
+      var icon = document.getElementById("icon-" + orderId);
+
+      if (details.classList.contains("hidden")) {
+        details.classList.remove("hidden");
+        icon.classList.replace("fa-chevron-down", "fa-chevron-up");
+      } else {
+        details.classList.add("hidden");
+        icon.classList.replace("fa-chevron-up", "fa-chevron-down");
+      }
+    }
+  </script>
 
   <!-- Logout Button -->
   <form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure want to logout?');">
