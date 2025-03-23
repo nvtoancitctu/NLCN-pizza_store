@@ -15,8 +15,7 @@
           $footerLinks = [
             'home' => ['label' => 'Home', 'icon' => 'fas fa-home'],
             'products' => ['label' => 'Menus', 'icon' => 'fas fa-pizza-slice'],
-            'feedback' => ['label' => 'Feedback', 'icon' => 'fas fa-comment'],
-            'account' => ['label' => 'Profile', 'icon' => 'fas fa-user']
+            'feedback' => ['label' => 'Feedback', 'icon' => 'fas fa-comment']
           ];
           foreach ($footerLinks as $page => $data): ?>
             <a href="/<?= $page ?>" class="flex items-center space-x-1 text-gray-300 hover:text-yellow-400 transition">
@@ -30,13 +29,20 @@
       <!-- Cột 3: Follow Us -->
       <div class="flex flex-col items-center">
         <div class="flex space-x-4">
-          <a href="#" class="text-gray-400 hover:text-blue-400 transition">
+          <a href="https://www.google.com/maps?q=10.2250925,105.563688"
+            class="text-gray-400 hover:text-yellow-400 transition mr-4 font-bold">
+            <i class="fas fa-map-marker-alt text-xl"></i> GPS
+          </a>
+          <a href="https://www.facebook.com/loverhut.localhost"
+            class="text-gray-400 hover:text-blue-400 transition">
             <i class="fab fa-facebook text-lg"></i>
           </a>
-          <a href="#" class="text-gray-400 hover:text-blue-300 transition">
-            <i class="fab fa-twitter text-lg"></i>
+          <a href="https://www.youtube.com/@LoversHut-PizzaStore"
+            class="text-gray-400 hover:text-red-500 transition">
+            <i class="fab fa-youtube text-lg"></i>
           </a>
-          <a href="#" class="text-gray-400 hover:text-red-400 transition">
+          <a href="https://www.instagram.com/loverhut.pizzastore"
+            class="text-gray-400 hover:text-red-400 transition">
             <i class="fab fa-instagram text-lg"></i>
           </a>
         </div>
@@ -54,7 +60,7 @@
 
     <!-- Bản quyền -->
     <div class="text-center text-gray-500 text-xs mt-2 border-t border-gray-700 pt-2">
-      © 2025 - Pizza Store by Nguyen Van Toan B2111824
+      © 2025 - Designed by Nguyen Van Toan B2111824 - Pizza Store
     </div>
   </div>
 </footer>

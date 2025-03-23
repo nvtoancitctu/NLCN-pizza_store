@@ -13,9 +13,9 @@ class OrderController
   }
 
   // Tạo mới một đơn hàng
-  public function createOrder($user_id, $total, $payment_method, $address, $image, $voucher_code)
+  public function createOrder($user_id, $total, $payment_method, $address, $shipping_link, $image, $voucher_code)
   {
-    return $this->orderModel->createOrder($user_id, $total, $payment_method, $address, $image, $voucher_code);
+    return $this->orderModel->createOrder($user_id, $total, $payment_method, $address, $shipping_link, $image, $voucher_code);
   }
 
   // Thêm sản phẩm vào đơn hàng

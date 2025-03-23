@@ -20,7 +20,7 @@ class Order
      * @return int - ID của đơn hàng vừa tạo
      * @throws InvalidArgumentException - Nếu $items không phải là mảng
      */
-    public function createOrder($user_id, $items, $payment_method, $address, $image, $voucher_code)
+    public function createOrder($user_id, $items, $payment_method, $address, $shipping_link, $image, $voucher_code)
     {
         if (!is_array($items)) {
             throw new InvalidArgumentException('Items must be an array');
@@ -44,9 +44,9 @@ class Order
         $this->conn->prepare($resetQuery)->execute();
 
         // Tạo đơn hàng
-        $query = "INSERT INTO orders (user_id, total, payment_method, address, images, voucher_id) VALUES (?, 0, ?, ?, ?, NULL)";
+        $query = "INSERT INTO orders (user_id, total, payment_method, address, shipping_link, images, voucher_id) VALUES (?, 0, ?, ?, ?, ?, NULL)";
         $stmt = $this->conn->prepare($query);
-        $stmt->execute([$user_id, $payment_method, $address, $image]);
+        $stmt->execute([$user_id, $payment_method, $address, $shipping_link, $image]);
 
         $order_id = $this->conn->lastInsertId();
 

@@ -33,6 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['notification_id'])) {
   header("Location: " . $_SERVER['HTTP_REFERER']);
   exit;
 }
+
+$nav_links = [
+  '' => ['label' => 'Home', 'icon' => 'fas fa-home'],
+  'products' => ['label' => 'Menu', 'icon' => 'fas fa-pizza-slice'],
+  'about' => ['label' => 'About', 'icon' => 'fas fa-info-circle'],
+  'feedback' => ['label' => 'Contact', 'icon' => 'fas fa-phone'],
+];
 ?>
 
 <nav class="bg-gray-800 text-white shadow-lg">
@@ -170,9 +177,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['notification_id'])) {
 
     </div>
 
+    <!-- Button mở menu mobile -->
+    <button id="mobile-menu-button" class="lg:hidden text-white p-2">
+      <i class="fas fa-bars text-2xl"></i>
+    </button>
+
     <!-- Mobile Menu -->
-    <div class="lg:hidden hidden" id="mobile-menu">
-      <ul class="flex flex-col items-center bg-gray-800 py-4 space-y-2">
+    <div class="lg:hidden hidden absolute top-16 left-0 w-full bg-gray-800 shadow-lg" id="mobile-menu">
+      <ul class="flex flex-col items-center py-4 space-y-2">
         <?php foreach ($nav_links as $page => $data): ?>
           <li>
             <a href="/<?= $page ?>" class="block px-3 py-2 text-white hover:bg-yellow-400 flex items-center space-x-2">
@@ -183,19 +195,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['notification_id'])) {
         <?php endforeach; ?>
 
         <?php if (isset($_SESSION['user_name'])): ?>
-          <button class="block px-3 py-2 text-white hover:bg-yellow-400 flex items-center space-x-2">
-            <i class="fas fa-user"></i>
-            <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
-          </button>
-          <div id="mobile-user-dropdown" class="hidden">
-            <?php if ($_SESSION['user_role'] === 'admin'): ?>
-              <a href="/admin/list" class="block px-3 py-2 text-white hover:bg-yellow-400">Admin Panel</a>
-            <?php endif; ?>
-            <a href="/account" class="block px-3 py-2 text-white hover:bg-yellow-400">Profile</a>
-            <form method="POST" id="mobile-logout-form">
-              <button type="submit" name="logout" class="block w-full text-left px-3 py-2 text-white hover:bg-yellow-400">Logout</button>
-            </form>
-          </div>
+          <li class="relative">
+            <button id="mobile-user-button" class="block px-3 py-2 text-white hover:bg-yellow-400 flex items-center space-x-2">
+              <i class="fas fa-user"></i>
+              <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+            </button>
+
+            <div id="mobile-user-dropdown" class="hidden absolute left-0 w-full bg-gray-700 mt-2 rounded shadow-md">
+              <?php if ($_SESSION['user_role'] === 'admin'): ?>
+                <a href="/admin/list" class="block px-3 py-2 text-white hover:bg-yellow-400">Admin Panel</a>
+              <?php endif; ?>
+
+              <a href="/account" class="block px-3 py-2 text-white hover:bg-yellow-400">Profile</a>
+
+              <form method="POST" id="mobile-logout-form" onsubmit="return confirm('Are you sure want to logout?');">
+                <button type="submit" name="logout" class="block w-full text-left px-3 py-2 text-white hover:bg-yellow-400">Logout</button>
+              </form>
+            </div>
+          </li>
         <?php else: ?>
           <li>
             <a href="/login" class="block px-3 py-2 text-white hover:bg-yellow-400 flex items-center space-x-2">
@@ -206,4 +223,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['notification_id'])) {
         <?php endif; ?>
       </ul>
     </div>
+
+    <style>
+      #mobile-menu {
+        transition: all 0.3s ease-in-out;
+      }
+    </style>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const menuButton = document.getElementById("mobile-menu-button");
+        const mobileMenu = document.getElementById("mobile-menu");
+        const userButton = document.getElementById("mobile-user-button");
+        const userDropdown = document.getElementById("mobile-user-dropdown");
+
+        // Toggle menu khi bấm nút
+        menuButton.addEventListener("click", function() {
+          mobileMenu.classList.toggle("hidden");
+        });
+
+        // Toggle dropdown user khi bấm vào tên người dùng
+        if (userButton) {
+          userButton.addEventListener("click", function() {
+            userDropdown.classList.toggle("hidden");
+          });
+        }
+      });
+    </script>
+
 </nav>

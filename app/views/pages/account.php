@@ -42,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       unset($_SESSION['csrf_token']);
     }
     // Lấy dữ liệu từ form cập nhật
-    $name = $_POST['name'];
-    $phone = $_POST['phone'];
-    $address = $_POST['address'];
+    $name = trim($_POST['name']);
+    $phone = trim($_POST['phone']);
+    $address = trim($_POST['address']);
     $image = $_POST['image'] ?? NULL;
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {

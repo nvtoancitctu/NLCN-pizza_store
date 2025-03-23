@@ -46,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   $payment_method = $_POST['payment_method'];
   $image = !empty($_POST['image']) ? $_POST['image'] : null;
   $voucher_code = !empty($_POST['voucher_code']) ? $_POST['voucher_code'] : null;
+  $shipping_link = trim($_POST['shipping_link']) ?? null;
 
   if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
     $allowed = ['jpg', 'jpeg', 'png', 'gif'];
@@ -64,7 +65,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   }
 
   // Gọi OrderController để tạo một đơn hàng mới
-  $order_id = $orderController->createOrder($user_id, $cartItems, $payment_method, $address, $image, $voucher_code);
+  $order_id = $orderController->createOrder($user_id, $cartItems, $payment_method, $address, $shipping_link, $image, $voucher_code);
+
+  // Thông báo đến cửa hàng có đơn hàng mới
+  $message = "Have a new order from User: #$user_id with Order: #$order_id. Please check the order detail";
+  $userController->addNotification(1, $message);
 
   // Xóa giỏ hàng sau khi đặt hàng thành công
   $cartController->clearCart($user_id);
@@ -121,8 +126,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
         <!-- Thông tin giao hàng -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-2 text-gray-800">Shipping Address</h2>
-          <textarea name="address" id="address" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
+
+          <!-- Ô nhập địa chỉ -->
+          <textarea name="address" id="address"
+            class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
+
+          <!-- Nút sử dụng vị trí hiện tại -->
+          <button type="button" onclick="getLocation()"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 mt-2 rounded-lg transition duration-200 w-full">
+            Use Current Location
+          </button>
+
+          <!-- Hiển thị tọa độ -->
+          <div class="mt-2 text-gray-700 flex justify-between text-sm">
+            <p><strong>Latitude:</strong> <span id="latitude">N/A</span></p>
+            <p><strong>Longitude:</strong> <span id="longitude">N/A</span></p>
+          </div>
+
+          <!-- Link đến Google Maps -->
+          <p class="mt-2 text-center text-sm text-gray-600">
+            <input type="hidden" name="shipping_link" id="map_url"> <!-- Input ẩn chứa link Google Maps -->
+            <a name="shipping_link" id="mapLink" href="#" target="_blank" class="text-blue-500 underline hidden">Google Maps</a>
+          </p>
         </div>
+
+        <!-- JavaScript để lấy và hiển thị vị trí -->
+        <script>
+          function getLocation() {
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                document.getElementById("latitude").textContent = lat;
+                document.getElementById("longitude").textContent = lon;
+
+                // Tạo link Google Maps
+                const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+
+                // Cập nhật vào thẻ <a> để có thể click
+                const mapLink = document.getElementById("mapLink");
+                mapLink.href = mapUrl;
+                mapLink.classList.remove("hidden"); // Hiển thị link
+
+                // Lưu link vào input ẩn để gửi lên server
+                document.getElementById("map_url").value = mapLink;
+              }, showError);
+            } else {
+              alert("Geolocation is not supported by this browser.");
+            }
+          }
+
+          function showError(error) {
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                alert("User denied the request for Geolocation.");
+                break;
+              case error.POSITION_UNAVAILABLE:
+                alert("Location information is unavailable.");
+                break;
+              case error.TIMEOUT:
+                alert("The request to get user location timed out.");
+                break;
+              case error.UNKNOWN_ERROR:
+                alert("An unknown error occurred.");
+                break;
+            }
+          }
+        </script>
 
         <!-- Áp dụng Voucher Code -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
@@ -216,16 +288,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
         <input type="hidden" name="checkout" value="1">
 
         <!-- Nút thao tác -->
-        <div class="flex flex-col space-y-4">
-          <button type="submit" onclick="confirmCheckout(event)"
-            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 w-full">
-            Place Order
-          </button>
+        <div class="space-x-2 flex justify-between">
           <button type="button" onclick="window.location.href='/cart'"
-            class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 w-full">
+            class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 w-full">
             Cancel
           </button>
+          <button type="submit" onclick="confirmCheckout(event)"
+            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 w-full">
+            Place Order
+          </button>
         </div>
+
       </div>
     </div>
   </form>

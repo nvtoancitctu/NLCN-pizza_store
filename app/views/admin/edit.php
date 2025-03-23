@@ -27,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Lấy dữ liệu từ form
-    $name = $_POST['name'];
-    $description = $_POST['description'];
+    $name = trim($_POST['name']);
+    $description = trim($_POST['description']);
     $price = $_POST['price'];
     $category_id = $_POST['category_id'];
     $stock_quantity = $_POST['stock_quantity'];

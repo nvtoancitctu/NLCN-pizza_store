@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         unset($_SESSION['csrf_token']);
     }
 
-    $description = $_POST['description'];
+    $description = trim($_POST['description']);
     $discount = $_POST['discount'];
     $min_order_value = $_POST['min_order_value'];
     $quantity = $_POST['quantity'];

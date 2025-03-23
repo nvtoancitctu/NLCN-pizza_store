@@ -88,9 +88,9 @@ $Combos = $productController->listProducts(8);
 <div class="container mx-auto px-12">
 
   <!-- Jumbotron -->
-  <div class="relative bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 shadow-md text-white text-center p-14 rounded-3xl mt-10 overflow-hidden border-8 border-yellow-200">
+  <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 shadow-md text-white text-center p-14 rounded-3xl mt-10 overflow-hidden border-8 border-yellow-200">
     <!-- Nội dung chính -->
-    <div class="relative z-10 flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0">
+    <div class="z-10 flex flex-col md:flex-row items-center justify-between space-y-8 md:space-y-0">
       <!-- Nội dung văn bản -->
       <div class="md:w-1/2 text-center md:text-left">
         <h1 class="text-4xl md:text-6xl font-extrabold tracking-wide drop-shadow-xl animate-fade-in">
@@ -112,7 +112,7 @@ $Combos = $productController->listProducts(8);
       </div>
 
       <!-- Hình ảnh combo -->
-      <div class="flex justify-center relative">
+      <div class="flex justify-center">
         <?php if (!empty($Combos)): ?>
           <div class="relative w-full max-w-lg">
             <div class="relative overflow-hidden rounded-xl shadow-lg border-8 border-white rounded-3xl p-2">
@@ -169,15 +169,6 @@ $Combos = $productController->listProducts(8);
           <p class="text-lg font-semibold">No combo available.</p>
         <?php endif; ?>
       </div>
-    </div>
-
-    <!-- Hiệu ứng lượn sóng -->
-    <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-0">
-      <svg class="relative block w-full" viewBox="0 0 1440 160" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#fff" fill-opacity="1"
-          d="M0,100 C180,140 360,60 540,100 C720,140 900,40 1080,80 C1260,120 1440,80 1440,80V160H0Z">
-        </path>
-      </svg>
     </div>
   </div>
 
@@ -489,7 +480,11 @@ $Combos = $productController->listProducts(8);
             class="voucher-item bg-white p-6 rounded-2xl shadow-md border border-blue-300 text-center transition transform hover:scale-105 hover:shadow-lg"
             x-show="showAll || <?= $index < 3 ? 'true' : 'false' ?>"
             x-transition>
-            <p class="text-gray-700 text-sm mb-2">🕒 Expires: <span class="font-semibold"><?= htmlspecialchars($voucher['expiration_date']) ?></span></p>
+
+            <p class="text-gray-700 text-sm mb-2">🕒 Expires:
+              <span class="font-semibold"><?= htmlspecialchars($voucher['expiration_date']) ?></span>
+            </p>
+
             <form method="post" action="index.php?page=claim_voucher">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
               <input type="hidden" name="voucher_code" value="<?= htmlspecialchars($voucher['code']) ?>">

@@ -30,6 +30,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['csrf_token']) && hash_
         if (!empty($name) && !empty($email) && $order_id > 0) {
             if ($userController->handleAddFeedback($user_id, $name, $email, $order_id, $user_message, $rating)) {
                 $_SESSION['success'] = "Your feedback has been submitted!";
+
+                // Thông báo đến cửa hàng có phản hồi mới
+                $message = "Customer: $name has submitted feedback for Order ID: $order_id";
+                $userController->addNotification(1, $message);
             } else {
                 $_SESSION['success'] = "Error submitting feedback.";
             }
@@ -133,8 +137,7 @@ if (isset($_SESSION['success'])) {
                 <select name="order_id" class="w-full p-3 border border-gray-300 rounded-lg" required>
                     <option value="">Select an order</option>
                     <?php foreach ($orders as $order): ?>
-                        <?php if ($order['note'] !== 'feedbacked'): // Chỉ hiển thị đơn chưa feedback 
-                        ?>
+                        <?php if ($order['note'] !== 'feedbacked'): ?> <!-- Chỉ hiển thị đơn chưa feedback -->
                             <?php
                             $hasValidOrders = true; // Đánh dấu là có đơn hợp lệ
                             $orderdetails = $orderController->getOrderDetailsByOrderId($order['id']);
