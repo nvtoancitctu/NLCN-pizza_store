@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       unset($_SESSION['csrf_token']);
     }
     // Điều hướng đến trang quản lý sản phẩm nếu người dùng có quyền admin
-    header("Location: /admin/list");
+    header("Location: /admin");
     exit();
   }
 
@@ -415,7 +415,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </script>
 
   <!-- Logout Button -->
-  <form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure want to logout?');">
+  <form method="POST" class="flex justify-center mb-8 mt-8" onsubmit="return confirm('Are you sure want to logout?');">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
     <button type="submit" name="logout" title="Logout"
       class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">

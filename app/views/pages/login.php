@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($_SESSION['user_role'] == 'admin') {
       $_SESSION['success'] = 'Welcome back my admin! Go to admin page.';
       unset($_SESSION['csrf_token']);
-      header("Location: /admin/list");
+      header("Location: /admin");
       exit();
     } else {
       $_SESSION['success'] = "Login successful! Welcome to Lover's Hub Pizza Store.";
@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <h1 class="text-center text-3xl font-extrabold text-blue-700 mb-6">🔐 Login</h1>
 
-    <form method="POST" action="/login" class="space-y-6">
+    <form method="POST" action="/login" class="space-y-4">
       <!-- CSRF Token -->
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       </div>
 
       <!-- Password Input -->
-      <div>
+      <div class="mb-2">
         <label for="password" class="block text-gray-700 font-semibold mb-2">Password:</label>
         <div class="relative">
           <input type="password" name="password" id="passwordInput" class="border border-gray-300 rounded-lg w-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
@@ -102,6 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           </button>
         </div>
       </div>
+
+      <!-- Nút Quên mật khẩu -->
+      <a href="/send-otp" class="text-blue-600 text-sm font-semibold hover:underline">Forgot password?</a>
 
       <!-- Login Button -->
       <div class="text-center">

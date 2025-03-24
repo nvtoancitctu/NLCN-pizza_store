@@ -1,44 +1,45 @@
 RewriteEngine On
-RewriteBase /
+RewriteBase /NLCN_Project_PizzaStore/public/
 
 # Trang chính và trang người dùng
-RewriteRule ^home$          /index.php?page=home [L]
-RewriteRule ^login$         /index.php?page=login [L]
-RewriteRule ^register$      /index.php?page=register [L]
-RewriteRule ^account$       /index.php?page=account [L]
-
+RewriteRule ^home$ /index.php?page=home [L]
+RewriteRule ^login$ /index.php?page=login [L]
+RewriteRule ^register$ /index.php?page=register [L]
+RewriteRule ^account$ /index.php?page=account [L]
+RewriteRule ^send-otp$ /index.php?page=send-otp [L]
+RewriteRule ^reset-password$ /index.php?page=reset-password [L]
 # Trang sản phẩm
-RewriteRule ^products$                          /index.php?page=products [L]
-RewriteRule ^toggle-favorite$                   /index.php?page=toggle-favorite [L]
-RewriteRule ^products&category_id=([0-9]+)$     /index.php?page=products&category_id=$1 [L]
-RewriteRule ^products&favorite_user=([0-9]+)$   /index.php?page=products&favorite=$1 [L]
+RewriteRule ^products$ /index.php?page=products [L]
+RewriteRule ^toggle-favorite$ /index.php?page=toggle-favorite [L]
+RewriteRule ^products&category_id=([0-9]+)$ /index.php?page=products&category_id=$1 [L]
+RewriteRule ^products&favorite_user=([0-9]+)$ /index.php?page=products&favorite=$1 [L]
 
 # Giỏ hàng và thanh toán
-RewriteRule ^cart$                              /index.php?page=cart [L]
-RewriteRule ^checkout$                          /index.php?page=checkout [L]
-RewriteRule ^order-success$                     /index.php?page=order-success [L]
-RewriteRule ^order-success/order_id=([0-9]+)$   /index.php?page=order-success&order_id=$1 [L]
+RewriteRule ^cart$ /index.php?page=cart [L]
+RewriteRule ^checkout$ /index.php?page=checkout [L]
+RewriteRule ^order-success$ /index.php?page=order-success [L]
+RewriteRule ^order-success/order_id=([0-9]+)$ /index.php?page=order-success&order_id=$1 [L]
 
 # Trang liên hệ
-RewriteRule ^feedback$      /index.php?page=feedback [L]
+RewriteRule ^feedback$ /index.php?page=feedback [L]
 
 # Quản trị admin
-RewriteRule ^admin$                             /index.php?page=list [L]
-RewriteRule ^admin/list$                        /index.php?page=list [L]
-RewriteRule ^admin/add$                         /index.php?page=add [L]
-RewriteRule ^admin/add-voucher$                 /index.php?page=add-voucher [L]
-RewriteRule ^admin/edit-product/id=([0-9]+)$    /index.php?page=edit&id=$1 [L]
-RewriteRule ^admin/edit-voucher/id=([0-9]+)$    /index.php?page=edit-voucher&id=$1 [L]
-RewriteRule ^admin/delete$                      /index.php?page=delete [L]
-RewriteRule ^admin/delete-order$                /index.php?page=delete-order [L]
-RewriteRule ^admin/delete-voucher$              /index.php?page=delete-voucher [L]
+RewriteRule ^admin$ /index.php?page=list [L]
+RewriteRule ^admin/list$ /index.php?page=list [L]
+RewriteRule ^admin/add$ /index.php?page=add [L]
+RewriteRule ^admin/add-voucher$ /index.php?page=add-voucher [L]
+RewriteRule ^admin/edit-product/id=([0-9]+)$ /index.php?page=edit&id=$1 [L]
+RewriteRule ^admin/edit-voucher/id=([0-9]+)$ /index.php?page=edit-voucher&id=$1 [L]
+RewriteRule ^admin/delete$ /index.php?page=delete [L]
+RewriteRule ^admin/delete-order$ /index.php?page=delete-order [L]
+RewriteRule ^admin/delete-voucher$ /index.php?page=delete-voucher [L]
 
 # Export và Import dữ liệu admin
-RewriteRule ^admin/export-products$             /index.php?page=export-products [L]
-RewriteRule ^admin/import-products$             /index.php?page=import-products [L]
+RewriteRule ^admin/export-products$ /index.php?page=export-products [L]
+RewriteRule ^admin/import-products$ /index.php?page=import-products [L]
 
 # Thống kê admin
-RewriteRule ^admin/statistics$                  /index.php?page=statistics [L]
+RewriteRule ^admin/statistics$ /index.php?page=statistics [L]
 
 # Trang lỗi 404
-RewriteRule ^404$           /index.php?page=404 [L]
+RewriteRule ^404$ /index.php?page=404 [L]

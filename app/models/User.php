@@ -151,14 +151,13 @@ class User
     public function updateUserProfile($user_id, $name, $phone, $address, $avatar)
     {
         // Cập nhật thông tin người dùng trong database
-        $query = "UPDATE " . $this->table . " SET name = :name, phone = :phone, address = :address, avatar = :avatar WHERE id = :id";
+        $query = "UPDATE " . $this->table . " SET name = :name, phone = :phone, address = :address WHERE id = :id";
         $stmt = $this->conn->prepare($query);
 
         // Bind giá trị vào các tham số
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':phone', $phone);
         $stmt->bindParam(':address', $address);
-        $stmt->bindParam(':avatar', $avatar);
         $stmt->bindParam(':id', $user_id, PDO::PARAM_INT);
 
         // Nếu có hình ảnh, đổi tên ảnh theo định dạng: order_id + "_" + YYYY-MM-DD + extension

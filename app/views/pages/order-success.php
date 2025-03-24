@@ -1,7 +1,7 @@
 <?php
 
 // Điều hướng đến trang login nếu chưa đăng nhập
-if (!isset($_SESSION['user_id'])) {
+if (!isset($_SESSION['user_id']) && !isset($_GET['order_id'])) {
   header("Location: /login");
   exit();
 }

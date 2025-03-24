@@ -66,6 +66,12 @@ switch ($page) {
     case 'login':
         include '../app/views/pages/login.php';
         break;
+    case 'send-otp':
+        include '../app/views/pages/send-otp.php';
+        break;
+    case 'reset-password':
+        include '../app/views/pages/reset-password.php';
+        break;
     case 'account':
         include '../app/views/pages/account.php';
         break;
@@ -104,6 +110,12 @@ switch ($page) {
         break;
     case 'import-products':
         include '../app/views/admin/import-products.php';
+        break;
+    case 'send-email_order':
+        include '../app/views/admin/send-email_order.php';
+        break;
+    case 'send-email_user':
+        include '../app/views/admin/send-email_user.php';
         break;
     default:
         include '../app/views/pages/404.php'; // Trang lỗi 404

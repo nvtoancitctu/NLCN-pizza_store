@@ -351,7 +351,7 @@ class Order
         }
 
         try {
-            $sql = "UPDATE orders SET total = :total, status = :status WHERE id = :order_id";
+            $sql = "UPDATE orders SET total = :total, status = :status, status_at = NOW() WHERE id = :order_id";
             $stmt = $this->conn->prepare($sql);
 
             $stmt->bindParam(':total', $total, PDO::PARAM_STR);

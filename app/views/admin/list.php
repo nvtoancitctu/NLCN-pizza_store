@@ -25,9 +25,9 @@ $searchTerm = '';
 
 $category = isset($_POST['category']) && $_POST['category'] !== '' ? $_POST['category'] : null;
 
-$limit = isset($_POST['limit']) ? max(1, (int)$_POST['limit']) : 10;  // Mặc định 10 sản phẩm
-$page = isset($_POST['page']) ? max(1, (int)$_POST['page']) : 1;      // Trang hiện tại, mặc định là trang 1
-$offset = ($page - 1) * $limit;                                       // Tính offset
+$limit = isset($_POST['limit']) ? max(1, (int)$_POST['limit']) : 5;     // Mặc định 5 sản phẩm
+$page = isset($_POST['page']) ? max(1, (int)$_POST['page']) : 1;        // Trang hiện tại, mặc định là trang 1
+$offset = ($page - 1) * $limit;                                         // Tính offset
 
 // Lấy danh sách sản phẩm hoặc tìm kiếm sản phẩm
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
@@ -49,112 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
 }
 
 $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
-
-// Xử lý đơn hàng
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
-
-    // Kiểm tra token CSRF
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        http_response_code(403);
-        echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
-        exit();
-    }
-
-    // Lấy dữ liệu từ form, kiểm tra sự tồn tại và làm sạch dữ liệu đầu vào
-    $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : null;
-    $customer_name = isset($_POST['customer_name']) ? trim(htmlspecialchars($_POST['customer_name'])) : '';
-    $total_price = isset($_POST['total']) ? floatval($_POST['total']) : 0;
-    $order_status = isset($_POST['status']) ? trim(htmlspecialchars($_POST['status'])) : '';
-
-    // Kiểm tra xem order_id có hợp lệ không
-    if ($order_id && !empty($customer_name) && $total_price >= 0 && !empty($order_status)) {
-        // Gọi phương thức updateOrder trong controller
-        $updated = $orderController->updateOrder($order_id, $customer_name, $total_price, $order_status);
-
-        if ($updated) {
-            $_SESSION['success'] = "Order (ID: $order_id) is updated successfully.";
-
-            // Lấy user_id từ bảng orders để gửi thông báo
-            $stmt = $conn->prepare("SELECT user_id FROM orders WHERE id = ?");
-            $stmt->execute([$order_id]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user) {
-                $user_id = $user['user_id'];
-                $message = "Your order (ID: $order_id) has been updated to status: $order_status.";
-
-                // Gọi hàm thêm notification
-                $userController->addNotification($user_id, $message);
-            }
-        } else {
-            $_SESSION['error'] = "Failed to update order (ID: $order_id).";
-        }
-
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        header("Location: " . $_SERVER['HTTP_REFERER']);
-        exit;
-    }
-}
-
-// Cập nhật số ngày khóa tài khoản
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
-
-    // Kiểm tra token CSRF
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        http_response_code(403);
-        echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
-        exit();
-    }
-
-    $user_id = $_POST['user_id'];
-
-    // Trường hợp khóa tài khoản
-    if (isset($_POST['block_user'])) {
-        $_POST['days'] = intval($_POST['days']);
-        $days = $_POST['days'];
-
-        if ($days > 0) {
-            $userController->blockUser($user_id, $days);
-            $_SESSION['success'] = "User (ID: $user_id) is blocked for $days days successfully.";
-
-            // Gửi thông báo đến người dùng bị khóa
-            $message = "Your account has been blocked for $days days due to policy violations.";
-            $userController->addNotification($user_id, $message);
-        } else {
-            $_SESSION['success'] = "Please enter a valid block duration (minimum 1 day).";
-        }
-    }
-    // Trường hợp kiểm tra block
-    elseif (isset($_POST['check_block'])) {
-        $message = $userController->checkblockUser($user_id);
-        $_SESSION['success'] = $message;
-    }
-    // Trường hợp mở khóa tài khoản
-    elseif (isset($_POST['unblock'])) {
-        $result = $userController->unblockUser($user_id);
-        if ($result) {
-            $_SESSION['success'] = "User (ID: $user_id) has been unblocked successfully.";
-
-            // Gửi thông báo đến người dùng về việc mở khóa
-            $message = "Your account has been unblocked. You can now access your account again.";
-            $userController->addNotification($user_id, $message);
-        } else {
-            $_SESSION['success'] = "Failed to unblock user has ID: $user_id.";
-        }
-    }
-    // Trường hợp xóa tài khoản
-    elseif (isset($_POST['delete_user'])) {
-        $userController->deleteUser($user_id);
-        $_SESSION['success'] = "User (ID: $user_id) has been deleted successfully.";
-    } else {
-        $_SESSION['success'] = "Invalid action.";
-    }
-
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    header("Location: " . $_SERVER['HTTP_REFERER']);
-    exit();
-}
-
 ?>
 
 <!-- Hiển thị thông báo thành công nếu có -->
@@ -329,8 +223,9 @@ $customers = $userController->getAllUsers();
 
 // Lấy dữ liệu lọc từ form
 $customerName = isset($_POST['customer_name']) ? ($_POST['customer_name']) : null;
-$limit_order = isset($_POST['limit_order']) ? max(1, (int)$_POST['limit_order']) : 10;
-$page_order = isset($_POST['page_order']) ? max(1, (int)$_POST['page_order']) : 1;
+
+$limit_order = isset($_POST['limit_order']) ? max(1, $_POST['limit_order']) : 5;
+$page_order = isset($_POST['page_order']) ? max(1, $_POST['page_order']) : 1;
 $offset_order = ($page_order - 1) * $limit_order;
 
 // Xử lý lấy danh sách đơn hàng theo bộ lọc
@@ -338,6 +233,54 @@ $orders = $orderController->getOrdersWithFilters($customerName, $limit_order, $o
 $totalOrders = $orderController->countFilteredOrders($customerName);
 $totalPages = ceil($totalOrders / $limit_order);
 
+// Xử lý trạng thái đơn hàng
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
+
+    // Kiểm tra token CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        http_response_code(403);
+        echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
+        exit();
+    }
+
+    // Lấy dữ liệu từ form, kiểm tra sự tồn tại và làm sạch dữ liệu đầu vào
+    $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : null;
+    $customer_name = isset($_POST['customer_name']) ? trim(htmlspecialchars($_POST['customer_name'])) : '';
+    $total_price = isset($_POST['total']) ? floatval($_POST['total']) : 0;
+    $order_status = isset($_POST['status']) ? trim(htmlspecialchars($_POST['status'])) : '';
+
+    // Kiểm tra xem order_id có hợp lệ không
+    if ($order_id && !empty($customer_name) && $total_price >= 0 && !empty($order_status)) {
+
+        // Lấy user_id từ bảng orders để kiểm tra status hiện tại của đơn hàng
+        $stmt = $conn->prepare("SELECT user_id, status FROM orders WHERE id = ?");
+        $stmt->execute([$order_id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && $user['status'] !== $order_status) {
+            // Gọi phương thức updateOrder trong controller và lưu session thông báo thành công
+            $updated = $orderController->updateOrder($order_id, $customer_name, $total_price, $order_status);
+            $_SESSION['success'] = "Order (ID: $order_id) is updated successfully.";
+
+            // Gọi hàm thêm notification để thông báo trạng thái đơn hàng cho khách hàng
+            $user_id = $user['user_id'];
+            $message = "Your order (ID: $order_id) has been updated to status: $order_status.";
+            $userController->addNotification($user_id, $message);
+
+            // Gửi email nếu đơn hàng thành công (status = 'completed') hoặc bị hủy (status = 'canceled')
+            if ($order_status === 'completed' || $order_status === 'cancelled') {
+                header("Location: /index.php?page=send-email_order&order_id=$order_id&status=$order_status&user_id=$user_id&csrf_token=" . $_SESSION['csrf_token']);
+                exit();
+            }
+        } else {
+            $_SESSION['success'] = "Failed to update order (ID: $order_id).";
+        }
+
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        header("Location: /admin");
+        exit;
+    }
+}
 ?>
 
 <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
@@ -416,6 +359,7 @@ $totalPages = ceil($totalOrders / $limit_order);
             <!-- Chọn số lượng đơn hàng hiển thị -->
             <label for="limit_order" class="mr-2 text-lg">Orders per page:</label>
             <select name="limit_order" id="limit_order" onchange="this.form.submit()" class="p-2 border rounded">
+                <option value="" selected disabled hidden>All</option>
                 <option value="10" <?= $limit_order == 10 ? 'selected' : '' ?>>10</option>
                 <option value="20" <?= $limit_order == 20 ? 'selected' : '' ?>>20</option>
                 <option value="50" <?= $limit_order == 50 ? 'selected' : '' ?>>50</option>
@@ -424,27 +368,17 @@ $totalPages = ceil($totalOrders / $limit_order);
             <!-- Lọc theo tên khách hàng -->
             <label for="customer_name" class="ml-4 mr-2 text-lg">Customer:</label>
 
-            <select name="customer_name" id="customer_name" onchange="handleCategoryChange(this)" class="p-2 border rounded">
-                <option value="all" <?= (empty($customerName) || $customerName === 'all') ? 'selected' : '' ?>>All</option>
+            <select name="customer_name" id="customer_name" onchange="this.form.submit()" class="p-2 border rounded">
+                <option value="" <?= (empty($customerName) || $customerName === 'all') ? 'selected' : '' ?>>All</option>
                 <?php foreach ($customers as $cus): ?>
                     <option value="<?= htmlspecialchars($cus['id']) ?>" <?= ($customerName == $cus['id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($cus['name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
-
-            <script>
-                function handleCategoryChange(select) {
-                    if (select.value === "all") {
-                        window.location.href = '/admin';
-                    } else {
-                        select.form.submit();
-                    }
-                }
-            </script>
-
         </form>
 
+        <!-- DANH SÁCH ĐƠN HÀNG -->
         <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
             <thead>
                 <tr class="bg-gray-100 text-gray-800 text-center">
@@ -703,6 +637,67 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
 </script>
 
 <!--------------------------------------- Quản lý tài khoản --------------------------------------->
+<?php
+// Cập nhật số ngày khóa tài khoản
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+
+    // Kiểm tra token CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        http_response_code(403);
+        echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
+        exit();
+    }
+
+    $user_id = $_POST['user_id'];
+
+    // Trường hợp khóa tài khoản
+    if (isset($_POST['block_user'])) {
+        $_POST['days'] = intval($_POST['days']);
+        $days = $_POST['days'];
+
+        if ($days > 0) {
+            $userController->blockUser($user_id, $days);
+            $_SESSION['success'] = "User (ID: $user_id) is blocked for $days days successfully.";
+
+            // Gửi thông báo đến người dùng bị khóa
+            $message = "Your account has been blocked for $days days due to policy violations.";
+            $userController->addNotification($user_id, $message);
+        } else {
+            $_SESSION['success'] = "Please enter a valid block duration (minimum 1 day).";
+        }
+    }
+    // Trường hợp kiểm tra block
+    elseif (isset($_POST['check_block'])) {
+        $message = $userController->checkblockUser($user_id);
+        $_SESSION['success'] = $message;
+    }
+    // Trường hợp mở khóa tài khoản
+    elseif (isset($_POST['unblock'])) {
+        $result = $userController->unblockUser($user_id);
+        if ($result) {
+            $_SESSION['success'] = "User (ID: $user_id) has been unblocked successfully.";
+
+            // Gửi thông báo đến người dùng về việc mở khóa
+            $message = "Your account has been unblocked. You can now access your account again.";
+            $userController->addNotification($user_id, $message);
+        } else {
+            $_SESSION['success'] = "Failed to unblock user has ID: $user_id.";
+        }
+    }
+    // Trường hợp xóa tài khoản
+    elseif (isset($_POST['delete_user'])) {
+        $userController->deleteUser($user_id);
+        $_SESSION['success'] = "User (ID: $user_id) has been deleted successfully.";
+    } else {
+        $_SESSION['success'] = "Invalid action.";
+    }
+
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    header("Location: " . $_SERVER['HTTP_REFERER']);
+    exit();
+}
+?>
+
 <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
     <div class="flex-grow border-t-2 border-gray-700"></div>
     <h1 class="mx-6 text-3xl md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">

@@ -100,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <!-- Register Button -->
             <div class="text-center">
-                <button type="submit" class="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
+                <button type="submit" class="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md">
                     Register
                 </button>
             </div>

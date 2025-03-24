@@ -204,7 +204,7 @@ $nav_links = [
 
             <div id="mobile-user-dropdown" class="hidden absolute left-0 w-full bg-gray-700 mt-2 rounded shadow-md">
               <?php if ($_SESSION['user_role'] === 'admin'): ?>
-                <a href="/admin/list" class="block px-3 py-2 text-white hover:bg-yellow-400">Admin Panel</a>
+                <a href="/admin" class="block px-3 py-2 text-white hover:bg-yellow-400">Admin Panel</a>
               <?php endif; ?>
 
               <a href="/account" class="block px-3 py-2 text-white hover:bg-yellow-400">Profile</a>
