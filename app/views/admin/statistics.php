@@ -26,11 +26,15 @@ foreach ($salesData as $sales) {
     } elseif ($timePeriod === 'product') {
         $labels[] = $sales['product_name'];
         $revenues[] = $sales['revenue'];
+    } elseif ($timePeriod === 'status') {
+        $labels[] = $sales['status'];
+        $revenues[] = $sales['revenue'];
     } else {
         $labels[] = $sales['date'];
         $revenues[] = $sales['revenue'];
     }
 }
+
 ?>
 
 <h1 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">📊 Sales Statistics</h1>
@@ -46,68 +50,93 @@ foreach ($salesData as $sales) {
         <option value="yearly" <?= $timePeriod === 'yearly' ? 'selected' : '' ?>>Yearly</option>
         <option value="payment_method" <?= $timePeriod === 'payment_method' ? 'selected' : '' ?>>Payment Method</option>
         <option value="product" <?= $timePeriod === 'product' ? 'selected' : '' ?>>Product</option>
+        <option value="status" <?= $timePeriod === 'status' ? 'selected' : '' ?>>Order Status</option>
     </select>
 </form>
 
 <!-- Thống kê tổng quan -->
-<div class="container mx-auto p-6 bg-white shadow-xl rounded-lg mb-6">
+<div class="container mx-auto p-6 bg-white shadow-xl rounded-xl mb-6 border-2 border-yellow-300">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-white">
-        <div class="bg-blue-600 p-6 rounded-xl shadow-lg text-center">
-            <h3 class="text-lg font-bold">💰 Total Sales</h3>
-            <p class="text-3xl font-semibold">$<?= number_format(array_sum($revenues), 2) ?></p>
+        <div class="bg-blue-600 p-6 rounded-xl shadow-sm text-center">
+            <h3 class="text-lg font-bold">💰 Total Revenue</h3>
+            <p class="text-3xl font-semibold">
+                $<?= !empty($revenues) ? number_format(array_sum($revenues), 2) : '0.00' ?>
+            </p>
         </div>
-        <div class="bg-green-600 p-6 rounded-xl shadow-lg text-center">
+
+        <div class="bg-green-600 p-6 rounded-xl shadow-sm text-center">
             <h3 class="text-lg font-bold">📦 Total Orders</h3>
-            <p class="text-3xl font-semibold"><?= count($salesData) ?></p>
+            <p class="text-3xl font-semibold">
+                <?= !empty($salesData) ? array_sum(array_column($salesData, 'total_quantity')) : 0 ?>
+            </p>
         </div>
-        <div class="bg-yellow-500 p-6 rounded-xl shadow-lg text-center">
-            <h3 class="text-lg font-bold">🏆 Top Product</h3>
-            <p class="text-2xl font-semibold truncate"> <?= $salesData[0]['product_name'] ?? 'N/A' ?></p>
+
+        <div class="bg-yellow-500 p-6 rounded-xl shadow-sm text-center">
+            <h3 class="text-lg font-bold">🏆 Top Category</h3>
+            <p class="text-2xl font-semibold truncate">
+                <?php
+                if ($timePeriod === 'product') {
+                    echo $salesData[0]['product_name'] ?? 'N/A';
+                } elseif ($timePeriod === 'payment_method') {
+                    echo $salesData[0]['method'] ?? 'N/A';
+                } elseif ($timePeriod === 'status') {
+                    echo $salesData[0]['status'] ?? 'N/A';
+                } else {
+                    echo 'N/A';
+                }
+                ?>
+            </p>
         </div>
-        <div class="bg-red-500 p-6 rounded-xl shadow-lg text-center">
+
+        <div class="bg-red-500 p-6 rounded-xl shadow-sm text-center">
             <h3 class="text-lg font-bold">📈 Highest Revenue</h3>
-            <p class="text-3xl font-semibold">$<?= number_format(max($revenues), 2) ?></p>
+            <p class="text-3xl font-semibold">
+                $<?= !empty($revenues) ? number_format(max($revenues), 2) : '0.00' ?>
+            </p>
         </div>
     </div>
 
+    <!-- Biểu đồ tỷ lệ doanh thu -->
+    <div class="mt-6">
+        <canvas id="salesPieChart" class="w-3/5 mx-auto max-h-96"></canvas>
+    </div>
+
     <!-- Bảng thống kê doanh thu -->
-    <div class="overflow-x-auto mb-6 mt-6">
-        <table class="min-w-full mx-auto bg-white border border-gray-200 rounded-lg shadow-md">
-            <thead class="bg-gray-200 text-gray-800 text-center">
+    <div class="mb-6 mt-6">
+        <table class="min-w-full mx-auto border border-gray-300 rounded-xl shadow-sm">
+            <thead class="bg-blue-500 text-white text-center">
                 <tr>
-                    <th class="px-6 py-3 border-b">Category</th>
-                    <th class="px-6 py-3 border-b">Total Quantity</th>
-                    <th class="px-6 py-3 border-b">Total Sales</th>
+                    <th class="px-4 py-3 border-b border-gray-300">Category</th>
+                    <th class="px-4 py-3 border-b border-gray-300">Total Quantity</th>
+                    <th class="px-4 py-3 border-b border-gray-300">Total Sales</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="bg-white divide-y divide-gray-200">
                 <?php if (!empty($salesData)): ?>
-                    <?php foreach ($salesData as $sales): ?>
-                        <tr class="hover:bg-gray-100">
-                            <td class="px-6 py-4 border-b text-center font-medium">
-                                <?= htmlspecialchars($sales[$timePeriod === 'payment_method' ? 'method' : ($timePeriod === 'product' ? 'product_name' : 'date')]) ?>
+                    <?php foreach ($salesData as $index => $sales): ?>
+                        <tr class="<?= $index % 2 === 0 ? 'bg-gray-100' : 'bg-white' ?> hover:bg-gray-200">
+                            <td class="px-4 py-3 text-center font-semibold text-gray-700">
+                                <?= htmlspecialchars(
+                                    $sales[$timePeriod === 'payment_method' ? 'method' : ($timePeriod === 'product' ? 'product_name' : ($timePeriod === 'status' ? 'status' : 'date'))]
+                                ) ?>
                             </td>
-                            <td class="px-6 py-4 border-b text-center text-blue-600 font-bold">
+                            <td class="px-4 py-3 text-center text-blue-600 font-bold">
                                 <?= number_format($sales['total_quantity']) ?>
                             </td>
-                            <td class="px-6 py-4 border-b text-center text-green-600 font-bold">
+                            <td class="px-4 py-3 text-center text-green-600 font-bold">
                                 $<?= number_format($sales['revenue'], 2) ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="3" class="px-6 py-4 border-b text-center text-gray-500">No sales data available</td>
+                        <td colspan="3" class="px-4 py-3 text-center text-gray-500">No sales data available</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-    <!-- Biểu đồ doanh thu -->
-    <div class="mt-6">
-        <canvas id="salesChart" class="min-w-full mx-auto max-h-96"></canvas>
-    </div>
 </div>
 
 <!-- Nút quay lại -->
@@ -116,23 +145,37 @@ foreach ($salesData as $sales) {
         onclick="window.location.href='/admin'">⬅ Back to Admin</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    var labels = <?= json_encode($labels); ?>;
-    var revenues = <?= json_encode($revenues); ?>;
+<?php
+// Đánh số thứ tự cho labels
+$numberedLabels = array_map(function ($label, $index) {
+    return ($index + 1) . ". " . $label;
+}, $labels, array_keys($labels));
+?>
 
-    var ctx = document.getElementById('salesChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+<script>
+    var ctxPie = document.getElementById('salesPieChart').getContext('2d');
+    new Chart(ctxPie, {
+        type: 'doughnut',
         data: {
-            labels: labels,
+            labels: <?= json_encode($numberedLabels); ?>, // Nhãn có số thứ tự
             datasets: [{
-                label: 'Total Sales ($)',
-                data: revenues,
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 2,
-                hoverBackgroundColor: 'rgba(255, 99, 132, 0.6)'
+                data: <?= json_encode($revenues); ?>,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)', // Đỏ
+                    'rgba(54, 162, 235, 0.5)', // Xanh dương
+                    'rgba(255, 206, 86, 0.5)', // Vàng
+                    'rgba(75, 192, 192, 0.5)', // Xanh ngọc
+                    'rgba(153, 102, 255, 0.5)', // Tím
+                    'rgba(255, 159, 64, 0.5)', // Cam
+                    'rgba(46, 204, 113, 0.5)', // Xanh lá cây
+                    'rgba(231, 76, 60, 0.5)', // Đỏ sậm
+                    'rgba(241, 196, 15, 0.5)', // Vàng sáng
+                    'rgba(52, 152, 219, 0.5)' // Xanh biển
+                ],
+                hoverOffset: 8
             }]
         },
         options: {
@@ -140,9 +183,19 @@ foreach ($salesData as $sales) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'top'
+                    position: 'right'
+                },
+                datalabels: {
+                    color: '#000', // Màu chữ
+                    font: {
+                        size: 10
+                    },
+                    formatter: (value, context) => {
+                        return context.dataIndex + 1; // Hiển thị số thứ tự
+                    }
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels] // Kích hoạt plugin hiển thị số
     });
 </script>

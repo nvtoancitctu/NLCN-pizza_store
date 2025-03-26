@@ -31,8 +31,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Kiểm tra kết quả đăng ký
         if (strpos($result, 'successful') !== false) {
             $_SESSION['success'] = "Registration successful! You can now log in.";
-            unset($_SESSION['csrf_token']); // Xóa token sau khi đăng ký thành công
-            header("Location: /login");
+
+            // Gửi mail chào mừng khách hàng mới
+            header("Location: /index.php?page=send-email-welcome&user_email=" . urlencode($email) . "&csrf_token=" . $_SESSION['csrf_token']);
             exit();
         } else {
             $error = $result;

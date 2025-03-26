@@ -78,6 +78,9 @@ switch ($page) {
     case 'register':
         include '../app/views/pages/register.php';
         break;
+    case 'send-email-welcome':
+        include '../app/views/pages/send-email-welcome.php';
+        break;
     case 'list':
         include '../app/views/admin/list.php';
         break;

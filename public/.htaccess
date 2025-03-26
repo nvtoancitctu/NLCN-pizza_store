@@ -8,6 +8,7 @@ RewriteRule ^register$ /index.php?page=register [L]
 RewriteRule ^account$ /index.php?page=account [L]
 RewriteRule ^send-otp$ /index.php?page=send-otp [L]
 RewriteRule ^reset-password$ /index.php?page=reset-password [L]
+
 # Trang sản phẩm
 RewriteRule ^products$ /index.php?page=products [L]
 RewriteRule ^toggle-favorite$ /index.php?page=toggle-favorite [L]

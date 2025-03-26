@@ -79,9 +79,10 @@ if (!$to) {
 $message = "
 <div style='font-family: Arial, sans-serif; line-height: 1.6;'>
     <h2 style='color: blue;'>UPDATE ORDER STATUS</h2>
-        <p><strong>📌 Order ID:</strong> #$order_id</p>
-        <p><strong>📦 Order Total:</strong> $" . $orderDetails['final_total'] . "</p>
-        <p><strong>🕒 Order Date:</strong> " . $orderDetails['created_at'] . "</p>
+        <p><strong>📌 Order ID      :</strong> #$order_id</p>
+        <p><strong>📦 Order Total   :</strong> $" . $orderDetails['final_total'] . "</p>
+        <p><strong>🕒 Order Datetime:</strong> " . $orderDetails['created_at'] . "</p>
+        <p><strong>🚚 Shipping time :</strong> " . $orderDetails['status_at'] . "</p>
     <hr>";
 
 if ($order_status === 'completed') {

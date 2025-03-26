@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     die('Invalid CSRF token');
   }
 
-  $email = $_POST['email'];
+  $email = trim($_POST['email']);
   $password = $_POST['password'];
 
   $result = $userController->login($email, $password);

@@ -37,8 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   // Check CSRF token
   if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
     die('Invalid CSRF token');
-  } else {
-    unset($_SESSION['csrf_token']);
   }
 
   // Lấy thông tin từ form
@@ -75,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   $cartController->clearCart($user_id);
 
   // Sau khi tạo đơn hàng thành công, tự động gửi email thông báo đến khách hàng
-  header("Location: /index.php?page=send-email&order_id=$order_id");
+  header("Location: /index.php?page=send-email&order_id=$order_id&csrf_token=" . $_SESSION['csrf_token']);
   exit();
 }
 

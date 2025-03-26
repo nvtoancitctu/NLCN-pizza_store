@@ -137,7 +137,7 @@ if (isset($_SESSION['success'])) {
                 <select name="order_id" class="w-full p-3 border border-gray-300 rounded-lg" required>
                     <option value="">Select an order</option>
                     <?php foreach ($orders as $order): ?>
-                        <?php if ($order['note'] !== 'feedbacked'): ?> <!-- Chỉ hiển thị đơn chưa feedback -->
+                        <?php if ($order['note'] !== 'feedbacked' && $order['status'] === 'completed'): ?> <!-- Chỉ hiển thị đơn chưa feedback -->
                             <?php
                             $hasValidOrders = true; // Đánh dấu là có đơn hợp lệ
                             $orderdetails = $orderController->getOrderDetailsByOrderId($order['id']);

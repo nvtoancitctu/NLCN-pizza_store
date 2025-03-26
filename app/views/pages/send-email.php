@@ -38,6 +38,12 @@ function sendEmail($to, $subject, $message)
 
 //------------------------------------------------------------------------//
 
+// Kiểm tra CSRF Token hợp lệ
+if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) {
+    http_response_code(403);
+    exit("<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>");
+}
+
 // Đảm bảo có order_id
 if (!isset($_GET['order_id'])) {
     header("Location: /login");

@@ -638,64 +638,68 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
 
 <!--------------------------------------- Quản lý tài khoản --------------------------------------->
 <?php
-// Cập nhật số ngày khóa tài khoản
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
-    // Kiểm tra token CSRF
+    // Kiểm tra CSRF Token hợp lệ
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         http_response_code(403);
-        echo "<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>";
+        exit("<h1 class='text-center mt-5'>Forbidden: Invalid CSRF token</h1>");
+    }
+
+    $user_id = intval($_POST['user_id']); // Chuyển đổi thành số nguyên để tránh injection
+
+    // Lấy email trước khi xóa
+    $stmt = $conn->prepare("SELECT email FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $userEmail = $stmt->fetchColumn(); // Lấy email của user
+
+    // Trường hợp: Khóa tài khoản bao nhiêu ngày?
+    if (isset($_POST['block_user'])) {
+        $days = max(1, intval($_POST['days'])); // Đảm bảo days >= 1
+        $userController->blockUser($user_id, $days);
+
+        // Gửi mail cho người dùng
+        $_SESSION['success'] = "User (ID: $user_id) is blocked for $days days successfully.";
+        header("Location: /index.php?page=send-email_user&user_email=" . urlencode($userEmail) . "&type=block&days=$days&csrf_token=" . $_SESSION['csrf_token']);
         exit();
     }
 
-    $user_id = $_POST['user_id'];
-
-    // Trường hợp khóa tài khoản
-    if (isset($_POST['block_user'])) {
-        $_POST['days'] = intval($_POST['days']);
-        $days = $_POST['days'];
-
-        if ($days > 0) {
-            $userController->blockUser($user_id, $days);
-            $_SESSION['success'] = "User (ID: $user_id) is blocked for $days days successfully.";
-
-            // Gửi thông báo đến người dùng bị khóa
-            $message = "Your account has been blocked for $days days due to policy violations.";
-            $userController->addNotification($user_id, $message);
-        } else {
-            $_SESSION['success'] = "Please enter a valid block duration (minimum 1 day).";
-        }
-    }
-    // Trường hợp kiểm tra block
-    elseif (isset($_POST['check_block'])) {
-        $message = $userController->checkblockUser($user_id);
-        $_SESSION['success'] = $message;
-    }
-    // Trường hợp mở khóa tài khoản
-    elseif (isset($_POST['unblock'])) {
-        $result = $userController->unblockUser($user_id);
-        if ($result) {
+    // Trường hợp: Mở khóa tài khoản
+    if (isset($_POST['unblock'])) {
+        if ($userController->unblockUser($user_id)) {
             $_SESSION['success'] = "User (ID: $user_id) has been unblocked successfully.";
 
-            // Gửi thông báo đến người dùng về việc mở khóa
-            $message = "Your account has been unblocked. You can now access your account again.";
-            $userController->addNotification($user_id, $message);
+            // Gửi email cho người dùng
+            header("Location: /index.php?page=send-email_user&user_email=" . urlencode($userEmail) . "&type=unblock&csrf_token=" . $_SESSION['csrf_token']);
+            exit();
         } else {
-            $_SESSION['success'] = "Failed to unblock user has ID: $user_id.";
+            $_SESSION['success'] = "Failed to unblock user (ID: $user_id).";
         }
     }
-    // Trường hợp xóa tài khoản
-    elseif (isset($_POST['delete_user'])) {
-        $userController->deleteUser($user_id);
-        $_SESSION['success'] = "User (ID: $user_id) has been deleted successfully.";
-    } else {
-        $_SESSION['success'] = "Invalid action.";
+
+    // Trường hợp: Xóa tài khoản
+    if (isset($_POST['delete_user'])) {
+
+        if ($userController->deleteUser($user_id)) {
+            $_SESSION['success'] = "User (ID: $user_id) has been deleted successfully.";
+
+            // Gửi email cho người dùng
+            header("Location: /index.php?page=send-email_user&user_email=" . urlencode($userEmail) . "&type=delete&csrf_token=" . $_SESSION['csrf_token']);
+            exit();
+        } else {
+            $_SESSION['success'] = "Failed to delete user (ID: $user_id).";
+        }
     }
 
+    // Reset CSRF token ngay trước khi điều hướng hoặc xử lý
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    header("Location: " . $_SERVER['HTTP_REFERER']);
+
+    // Các trường hợp sai sẽ điều hướng về admin:
+    header("Location: /admin");
     exit();
 }
+
 ?>
 
 <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
@@ -709,74 +713,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 </div>
 
 <!-- Form Block User (mặc định ẩn) -->
-<div id="block-user-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
-    <form action="/admin/list" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-green-400">
+<div id="block-user-form" class="space-y-8 mb-8 hidden mx-auto w-full lg:w-10/12">
+    <form action="/admin/list" method="POST"
+        class="space-y-8 bg-white p-8 rounded-xl shadow-lg border-2 border-yellow-400">
+
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
         <input type="hidden" name="user_id" id="blockUserId">
 
-        <!-- Grid 2 cột -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Cột 1: Name, Email, Phone, Address -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-blue-700 font-semibold">Name</label>
-                    <input type="text" id="blockUserName" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-blue-700 font-semibold">Email</label>
-                    <input type="text" id="blockUserEmail" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-blue-700 font-semibold">Phone</label>
-                    <input type="text" id="blockUserPhone" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-blue-700 font-semibold">Address</label>
-                    <input type="text" id="blockUserAddress" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
+        <!-- Grid 3 cột trên màn lớn, 2 cột trên màn nhỏ -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Name -->
+            <div>
+                <label class="block text-blue-700 font-semibold">Name</label>
+                <input type="text" id="blockUserName" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
             </div>
 
-            <!-- Cột 2: Email, Phone, Address, Block Days -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-blue-700 font-semibold">User ID</label>
-                    <input type="text" id="blockUserDisplayId" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-blue-700 font-semibold">Role</label>
-                    <input type="text" id="blockUserRole" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-blue-700 font-semibold">Blocked Until</label>
-                    <input type="text" id="blockUserBlockedUntil" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
-                </div>
-                <div>
-                    <label class="block text-red-500 font-semibold">Block Days</label>
-                    <input type="number" name="days" id="blockDays" min="1" class="w-full p-3 border border-gray-300 rounded-md">
-                </div>
+            <!-- Email -->
+            <div>
+                <label class="block text-blue-700 font-semibold">Email</label>
+                <input type="text" id="blockUserEmail" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+            </div>
+
+            <!-- Phone -->
+            <div>
+                <label class="block text-blue-700 font-semibold">Phone</label>
+                <input type="text" id="blockUserPhone" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+            </div>
+
+            <!-- Address -->
+            <div>
+                <label class="block text-blue-700 font-semibold">Address</label>
+                <input type="text" id="blockUserAddress" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+            </div>
+
+            <!-- User ID -->
+            <div>
+                <label class="block text-blue-700 font-semibold">User ID</label>
+                <input type="text" id="blockUserDisplayId" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+            </div>
+
+            <!-- Role -->
+            <div>
+                <label class="block text-blue-700 font-semibold">Role</label>
+                <input type="text" id="blockUserRole" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+            </div>
+
+            <!-- Blocked Until -->
+            <div>
+                <label class="block text-blue-700 font-semibold">Blocked Until</label>
+                <input type="text" id="blockUserBlockedUntil" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+            </div>
+
+            <!-- Block Days -->
+            <div>
+                <label class="block text-red-500 font-semibold">Block Days</label>
+                <input type="number" name="days" id="blockDays" min="1" value="1"
+                    class="w-full h-12 p-3 border border-gray-300 rounded-lg">
             </div>
         </div>
-        <!-- Nút Confirm và Cancel -->
-        <div class="flex justify-center space-x-4 mt-6">
-            <button type="submit" name="block_user" class="bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-lg shadow-md">Confirm</button>
-            <button type="button" id="cancelBlock" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
-            <button type="submit" name="check_block" class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-6 rounded-lg shadow-md">Check</button>
+
+        <!-- Nút Confirm & Cancel -->
+        <div class="flex justify-center space-x-6 mt-6">
+            <button type="submit" name="block_user"
+                class="bg-red-500 hover:bg-red-600 text-white py-3 px-8 rounded-lg shadow-lg text-lg">Confirm</button>
+            <button type="button" id="cancelBlock"
+                class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-8 rounded-lg shadow-lg text-lg">Cancel</button>
         </div>
     </form>
 </div>
 
 <div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <!-- Bảng danh sách người dùng -->
-    <div class="table-responsive">
+    <div class="overflow-x-auto">
         <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
             <thead>
-                <tr class="bg-gray-100 text-gray-800 text-center">
-                    <th class="px-3 py-2 border-b">ID</th>
-                    <th class="px-3 py-2 border-b">Name</th>
-                    <th class="px-3 py-2 border-b">Email</th>
-                    <th class="px-3 py-2 border-b">Created At</th>
-                    <th class="px-3 py-2 border-b">Blocked Until</th>
-                    <th class="px-3 py-2 border-b">Action</th>
+                <tr class="bg-blue-100 text-blue-900 text-center font-semibold">
+                    <th class="px-4 py-3 border-b">ID</th>
+                    <th class="px-4 py-3 border-b">Name</th>
+                    <th class="px-4 py-3 border-b">Email</th>
+                    <th class="px-4 py-3 border-b">Created At</th>
+                    <th class="px-4 py-3 border-b">Blocked Until</th>
+                    <th class="px-4 py-3 border-b">Action</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -786,38 +804,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
                 if (count($users) > 0):
                     foreach ($users as $user) : ?>
-                        <tr class="hover:bg-gray-50 text-center">
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['id']) ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['name']) ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['email']) ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($user['created_at']) ?></td>
-                            <td class="px-3 py-2 border-b text-red-500 font-bold"><?= htmlspecialchars($user['blocked_until'] ?? 'NULL') ?></td>
-                            <td class="px-3 py-2 border-b">
-                                <div class="flex justify-center items-center space-x-2">
+                        <tr class="hover:bg-gray-50 text-center border-b">
+                            <td class="px-4 py-3"><?= htmlspecialchars($user['id']) ?></td>
+                            <td class="px-4 py-3 text-left"><?= htmlspecialchars($user['name']) ?></td>
+                            <td class="px-4 py-3 text-left"><?= htmlspecialchars($user['email']) ?></td>
+                            <td class="px-4 py-3"><?= htmlspecialchars($user['created_at']) ?></td>
+                            <td class="px-4 py-3 <?= $user['blocked_until'] ? 'text-red-500 font-bold' : 'text-gray-500' ?>">
+                                <?= htmlspecialchars($user['blocked_until'] ?? 'Not Blocked') ?>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex justify-center items-center gap-2">
                                     <!-- Nút khóa (Block) -->
-                                    <button class="block-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+                                    <button class="block-btn bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md"
                                         data-id="<?= htmlspecialchars($user['id']) ?>"
                                         data-name="<?= htmlspecialchars($user['name']) ?>"
                                         data-email="<?= htmlspecialchars($user['email']) ?>"
                                         data-role="<?= htmlspecialchars($user['role']) ?>"
-                                        data-phone="<?= htmlspecialchars($user['phone'] ?? 'NULL') ?>"
-                                        data-address="<?= htmlspecialchars($user['address'] ?? 'NULL') ?>"
-                                        data-block="<?= htmlspecialchars($user['blocked_until'] ?? 'NULL') ?>">
+                                        data-phone="<?= htmlspecialchars($user['phone'] ?? 'N/A') ?>"
+                                        data-address="<?= htmlspecialchars($user['address'] ?? 'N/A') ?>"
+                                        data-block="<?= htmlspecialchars($user['blocked_until'] ?? 'N/A') ?>">
                                         <i class="fas fa-lock"></i>
                                     </button>
-
                                     <!-- Nút mở khóa (Unblock) -->
-                                    <form action="/admin/list" method="POST" onsubmit="return confirm('Are you sure want to continute this action?');">
+                                    <form action="/admin" method="POST"
+                                        class="inline-flex items-center gap-2"
+                                        onsubmit="return confirm('Are you sure want to continue this action?');">
+
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
 
                                         <button type="submit" name="unblock" title="Unblock"
-                                            class="unblock-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md ml-2">
+                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md">
                                             <i class="fas fa-unlock"></i>
                                         </button>
 
                                         <button type="submit" name="delete_user" title="Delete User"
-                                            class="block-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md ml-2">
+                                            class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
@@ -827,7 +849,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="6" class="text-center text-gray-500 py-4"></td>
+                        <td colspan="6" class="text-center text-gray-500 py-4">No users found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -871,7 +893,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 blockUserPhone.value = userPhone;
                 blockUserAddress.value = userAddress;
                 blockUserBlockedUntil.value = (blockedUntil !== "NULL" && blockedUntil) ? blockedUntil : "Not Blocked";
-                blockDays.value = ""; // Reset ngày block
+                blockDays.value = 1; // Reset ngày block
 
                 // Hiển thị form block
                 blockForm.classList.remove("hidden");

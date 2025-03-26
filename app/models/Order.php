@@ -448,33 +448,39 @@ class Order
             case 'daily':
                 // Thống kê theo ngày
                 $query = "SELECT DATE(created_at) AS date, SUM(total) AS revenue, SUM(total_quantity) AS total_quantity
-                      FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
-                      GROUP BY DATE(created_at)";
+                        FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
+                        GROUP BY DATE(created_at)";
                 break;
             case 'monthly':
                 // Thống kê theo tháng
                 $query = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS date, SUM(total) AS revenue, SUM(total_quantity) AS total_quantity
-                      FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
-                      GROUP BY DATE_FORMAT(created_at, '%Y-%m')";
+                        FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
+                        GROUP BY DATE_FORMAT(created_at, '%Y-%m')";
                 break;
             case 'yearly':
                 // Thống kê theo năm
                 $query = "SELECT YEAR(created_at) AS date, SUM(total) AS revenue, SUM(total_quantity) AS total_quantity
-                      FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
-                      GROUP BY YEAR(created_at)";
+                        FROM (SELECT created_at, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
+                        GROUP BY YEAR(created_at)";
                 break;
             case 'payment_method':
                 // Thống kê theo phương thức thanh toán
                 $query = "SELECT payment_method AS method, SUM(total) AS revenue, SUM(total_quantity) AS total_quantity
-                      FROM (SELECT payment_method, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
-                      GROUP BY payment_method";
+                        FROM (SELECT payment_method, total, (SELECT SUM(quantity) FROM order_items WHERE order_id = orders.id) AS total_quantity FROM orders) AS sub
+                        GROUP BY payment_method";
                 break;
             case 'product':
                 // Thống kê theo sản phẩm
                 $query = "SELECT oi.product_id, p.name AS product_name, SUM(oi.quantity * oi.price) AS revenue, SUM(oi.quantity) AS total_quantity
-                      FROM order_items oi
-                      JOIN products p ON oi.product_id = p.id
-                      GROUP BY oi.product_id";
+                        FROM order_items oi
+                        JOIN products p ON oi.product_id = p.id
+                        GROUP BY oi.product_id";
+                break;
+            case 'status':
+                // Thống kê theo trạng thái đơn hàng
+                $query = "SELECT status, COUNT(status) AS total_quantity, SUM(total) AS revenue
+                        FROM orders
+                        GROUP BY status";
                 break;
             default:
                 throw new Exception("Invalid time period provided.");
