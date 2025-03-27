@@ -79,10 +79,24 @@ if (!$to) {
 $message = "
 <div style='font-family: Arial, sans-serif; line-height: 1.6;'>
     <h2 style='color: blue;'>UPDATE ORDER STATUS</h2>
-        <p><strong>📌 Order ID      :</strong> #$order_id</p>
-        <p><strong>📦 Order Total   :</strong> $" . $orderDetails['final_total'] . "</p>
-        <p><strong>🕒 Order Datetime:</strong> " . $orderDetails['created_at'] . "</p>
-        <p><strong>🚚 Shipping time :</strong> " . $orderDetails['status_at'] . "</p>
+    <table style='width: 100%; border-collapse: collapse;'>
+        <tr>
+            <td style='padding: 5px; font-weight: bold;'>📌 Order ID</td>
+            <td style='padding: 5px;'>: #$order_id</td>
+        </tr>
+        <tr>
+            <td style='padding: 5px; font-weight: bold;'>📦 Order Total</td>
+            <td style='padding: 5px;'>: $" . $orderDetails['final_total'] . "</td>
+        </tr>
+        <tr>
+            <td style='padding: 5px; font-weight: bold;'>🕒 Order Datetime</td>
+            <td style='padding: 5px;'>: " . $orderDetails['created_at'] . "</td>
+        </tr>
+        <tr>
+            <td style='padding: 5px; font-weight: bold;'>🚚 Shipping time</td>
+            <td style='padding: 5px;'>: " . $orderDetails['status_at'] . "</td>
+        </tr>
+    </table>
     <hr>";
 
 if ($order_status === 'completed') {

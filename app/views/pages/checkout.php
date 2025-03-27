@@ -94,109 +94,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
     <!-- Bố cục chia thành hai cột -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-      <!-- Cột bên trái: Thông tin giỏ hàng và địa chỉ giao hàng -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Cột bên trái: Thông tin đơn hàng & địa chỉ giao hàng -->
       <div class="space-y-6">
-
-        <!-- Thông tin giỏ hàng -->
+        <!-- Thông tin đơn hàng -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-          <!-- <h2 class="text-xl font-bold mb-4 text-gray-800">Your Cart</h2> -->
-          <div class="space-y-4">
+          <h2 class="text-xl font-bold mb-4 text-gray-800">Order Details</h2>
+          <div class="space-y-2">
             <?php foreach ($cartItems as $item): ?>
-              <div class="flex items-center justify-between border-b pb-4">
-                <div class="flex items-center space-x-4">
-                  <img src="/images/product/<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>"
-                    class="w-12 h-12 rounded-lg object-cover">
-                  <div>
-                    <p class="font-semibold text-gray-800"><?= htmlspecialchars($item['name']) ?></p>
-                    <p class="text-sm text-gray-600">Quantity: <?= htmlspecialchars($item['quantity']) ?> (<?= htmlspecialchars($item['size']) ?>)</p>
-                  </div>
-                </div>
-                <p class="font-semibold text-gray-800">
-                  $<?= number_format($item['total_price'], 2) ?>
-                </p>
-              </div>
+              <p class="text-gray-800">
+                <?= htmlspecialchars($item['name']) ?> (<?= htmlspecialchars($item['quantity']) ?> x <?= htmlspecialchars($item['size']) ?>) -
+                $<?= number_format($item['total_price'], 2) ?>
+              </p>
             <?php endforeach; ?>
           </div>
         </div>
 
         <!-- Thông tin giao hàng -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-          <h2 class="text-xl font-bold mb-2 text-gray-800">Shipping Address</h2>
-
-          <!-- Ô nhập địa chỉ -->
-          <textarea name="address" id="address"
-            class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
-
-          <!-- Nút sử dụng vị trí hiện tại -->
-          <button type="button" onclick="getLocation()"
-            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 mt-2 rounded-lg transition duration-200 w-full">
+          <h2 class="text-xl font-bold mb-4 text-gray-800">Shipping Address</h2>
+          <textarea name="address" id="address" rows="3" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
+          <button type="button" onclick="getLocation()" class="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-200">
             Use Current Location
           </button>
-
-          <!-- Hiển thị tọa độ -->
-          <div class="mt-2 text-gray-700 flex justify-between text-sm">
+          <div class="mt-3 flex justify-between text-sm text-gray-700">
             <p><strong>Latitude:</strong> <span id="latitude">N/A</span></p>
             <p><strong>Longitude:</strong> <span id="longitude">N/A</span></p>
           </div>
-
-          <!-- Link đến Google Maps -->
-          <p class="mt-2 text-center text-sm text-gray-600">
-            <input type="hidden" name="shipping_link" id="map_url"> <!-- Input ẩn chứa link Google Maps -->
-            <a name="shipping_link" id="mapLink" href="#" target="_blank" class="text-blue-500 underline hidden">Google Maps</a>
-          </p>
+          <div class="mt-2 text-center">
+            <input type="hidden" name="shipping_link" id="map_url">
+            <a id="mapLink" href="#" target="_blank" class="text-blue-500 underline hidden">View on Google Maps</a>
+          </div>
         </div>
-
-        <!-- JavaScript để lấy và hiển thị vị trí -->
-        <script>
-          function getLocation() {
-            if (navigator.geolocation) {
-              navigator.geolocation.getCurrentPosition(position => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-
-                document.getElementById("latitude").textContent = lat;
-                document.getElementById("longitude").textContent = lon;
-
-                // Tạo link Google Maps
-                const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-
-                // Cập nhật vào thẻ <a> để có thể click
-                const mapLink = document.getElementById("mapLink");
-                mapLink.href = mapUrl;
-                mapLink.classList.remove("hidden"); // Hiển thị link
-
-                // Lưu link vào input ẩn để gửi lên server
-                document.getElementById("map_url").value = mapLink;
-              }, showError);
-            } else {
-              alert("Geolocation is not supported by this browser.");
-            }
-          }
-
-          function showError(error) {
-            switch (error.code) {
-              case error.PERMISSION_DENIED:
-                alert("User denied the request for Geolocation.");
-                break;
-              case error.POSITION_UNAVAILABLE:
-                alert("Location information is unavailable.");
-                break;
-              case error.TIMEOUT:
-                alert("The request to get user location timed out.");
-                break;
-              case error.UNKNOWN_ERROR:
-                alert("An unknown error occurred.");
-                break;
-            }
-          }
-        </script>
 
         <!-- Áp dụng Voucher Code -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-          <h2 class="text-xl font-bold mb-2 text-gray-800">Voucher Code</h2>
+          <h2 class="text-xl font-bold mb-4 text-gray-800">Voucher Code</h2>
           <select name="voucher_code" id="voucher_code" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" onchange="updateDiscount()">
             <option value="" data-discount="0">-- Select a voucher --</option>
             <?php foreach ($userVouchers as $voucher): ?>
@@ -205,8 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
                   data-discount="<?= $voucher['discount_amount'] ?>"
                   data-min-order="<?= $voucher['min_order_value'] ?>"
                   title="<?= htmlspecialchars($voucher['description']) ?>">
-                  <?= htmlspecialchars($voucher['code']) ?>
-                  (<?= $voucher['discount_amount'] < 1 ? '-' . ($voucher['discount_amount'] * 100) . '%' : '-$' . number_format($voucher['discount_amount'], 2) ?>)
+                  <?= htmlspecialchars($voucher['code']) ?> (<?= $voucher['discount_amount'] < 1 ? '-' . ($voucher['discount_amount'] * 100) . '%' : '-$' . number_format($voucher['discount_amount'], 2) ?>)
                 </option>
               <?php endif; ?>
             <?php endforeach; ?>
@@ -214,34 +146,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
         </div>
       </div>
 
-      <!-- Cột bên phải: Tổng số tiền và thanh toán -->
+      <!-- Cột bên phải: Thanh toán & Tóm tắt đơn hàng -->
       <div class="space-y-6">
-
         <!-- Lưu ý đơn hàng -->
-        <p class="text-gray-800 p-2 text-sm">
-          <strong>NOTE: </strong>All orders with an invoice under $100 will have a shipping fee of $1.50.
-        </p>
+        <div class="p-4 bg-gray-50 rounded-lg border">
+          <p class="text-sm text-gray-800"><strong>NOTE:</strong> Orders under $100 will incur a shipping fee of $1.50.</p>
+        </div>
 
         <!-- Phương thức thanh toán -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
-          <h2 class="text-xl font-bold mb-2 text-gray-800">Payment Method</h2>
+          <h2 class="text-xl font-bold mb-4 text-gray-800">Payment Method</h2>
           <select name="payment_method" id="payment_method" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required onchange="toggleBankTransfer()">
             <option value="" selected disabled hidden>-- Select Payment Method --</option>
             <option value="bank_transfer">Bank Transfer</option>
             <option value="cash_on_delivery">Cash on Delivery</option>
           </select>
 
-          <!-- QR Code + Upload hình -->
+          <!-- QR Code & Upload hình (chỉ hiển thị khi chọn chuyển khoản) -->
           <div id="bank_transfer_section" class="hidden mt-4 bg-white p-4 rounded-lg shadow">
             <p class="font-semibold text-gray-800">Scan QR Code to Pay:</p>
             <img src="/images/qr-code.png" alt="QR Code" class="w-3/5 h-auto mx-auto my-2">
-
             <label class="block text-gray-700 font-semibold mt-4">Upload Payment Proof:</label>
             <input type="file" name="image" id="image" class="w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
           </div>
         </div>
 
-        <!-- Tổng số tiền -->
+        <!-- Tóm tắt đơn hàng -->
         <?php
         $shippingFee = ($totalAmount >= 100) ? 0 : 1.5;
         $totalWithShipping = $totalAmount + $shippingFee;
@@ -249,56 +179,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
           <div class="space-y-3">
-
-            <!-- Giá trị của đơn hàng -->
             <div class="flex justify-between">
               <p class="text-gray-700">Subtotal</p>
               <p class="font-semibold text-gray-800">$<?= number_format($totalAmount, 2) ?></p>
             </div>
-
-            <!-- Chi phí vận chuyển -->
             <div class="flex justify-between">
               <p class="text-gray-700">Shipping</p>
               <p class="font-semibold text-gray-800">
                 <?= ($shippingFee == 0) ? "<span class='text-green-500 font-bold'>FREE</span>" : "$" . number_format($shippingFee, 2) ?>
               </p>
             </div>
-
-            <!-- Giảm giá voucher -->
             <div class="flex justify-between">
               <p class="text-gray-700">Voucher Discount</p>
               <p id="discount_value" class="font-semibold text-green-500">
                 - <?= $voucherDiscount < 1 ? ($totalAmount * $voucherDiscount) . '$' : '$' . number_format($voucherDiscountAmount, 2) ?>
               </p>
             </div>
-
-            <!-- Tổng giá đơn hàng cuối cùng -->
             <div class="flex justify-between border-t pt-3">
               <p class="text-gray-700 font-bold">Total</p>
-              <p id="total_price" class="font-bold text-red-500">
-                $<?= number_format(max($totalWithShipping, 0), 2) ?>
-              </p>
+              <p id="total_price" class="font-bold text-red-500">$<?= number_format(max($totalWithShipping, 0), 2) ?></p>
             </div>
-
           </div>
         </div>
 
-        <input type="hidden" name="checkout" value="1">
-
         <!-- Nút thao tác -->
-        <div class="space-x-2 flex justify-between">
-          <button type="button" onclick="window.location.href='/cart'"
-            class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 w-full">
+        <div class="flex space-x-2">
+          <button type="button" onclick="window.location.href='/cart'" class="w-1/2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition duration-200">
             Cancel
           </button>
-          <button type="submit" onclick="confirmCheckout(event)"
-            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 w-full">
+          <button type="submit" onclick="confirmCheckout(event)" class="w-1/2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-lg transition duration-200">
             Place Order
           </button>
         </div>
-
       </div>
     </div>
+
+    <!-- JavaScript: Lấy vị trí & xử lý lỗi -->
+    <script>
+      function getLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            document.getElementById("latitude").textContent = lat;
+            document.getElementById("longitude").textContent = lon;
+
+            // Tạo link Google Maps
+            const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+            const mapLink = document.getElementById("mapLink");
+            mapLink.href = mapUrl;
+            mapLink.classList.remove("hidden"); // Hiển thị link
+
+            // Lưu link vào input ẩn để gửi lên server
+            document.getElementById("map_url").value = mapUrl;
+          }, showError);
+        } else {
+          alert("Geolocation is not supported by this browser.");
+        }
+      }
+
+      function showError(error) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            alert("User denied the request for Geolocation.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            alert("Location information is unavailable.");
+            break;
+          case error.TIMEOUT:
+            alert("The request to get user location timed out.");
+            break;
+          case error.UNKNOWN_ERROR:
+            alert("An unknown error occurred.");
+            break;
+        }
+      }
+    </script>
+    <input type="hidden" name="checkout" value="1">
+
   </form>
 </div>
 

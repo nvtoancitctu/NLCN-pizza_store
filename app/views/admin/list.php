@@ -2,6 +2,7 @@
 
 // Kiểm tra quyền admin
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    $_SESSION['error'] = "You must login at admin page before access.";
     header("Location: /login");
     exit();
 }
@@ -282,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
     }
 }
 ?>
-
+<!-- Breadcrumb -->
 <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
     <div class="flex-grow border-t-2 border-gray-700"></div>
     <h1 class="mx-6 text-3xl md:text-4xl font-extrabold text-gray-700 drop-shadow-lg whitespace-nowrap">
@@ -654,15 +655,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     $stmt->execute([$user_id]);
     $userEmail = $stmt->fetchColumn(); // Lấy email của user
 
-    // Trường hợp: Khóa tài khoản bao nhiêu ngày?
+    // Xử lý trường hợp cập nhật và khóa tài khoản
     if (isset($_POST['block_user'])) {
-        $days = max(1, intval($_POST['days'])); // Đảm bảo days >= 1
-        $userController->blockUser($user_id, $days);
+        $days = max(1, intval($_POST['days'])); // đảm bảo days >= 1
 
-        // Gửi mail cho người dùng
-        $_SESSION['success'] = "User (ID: $user_id) is blocked for $days days successfully.";
-        header("Location: /index.php?page=send-email_user&user_email=" . urlencode($userEmail) . "&type=block&days=$days&csrf_token=" . $_SESSION['csrf_token']);
-        exit();
+        // Lấy các thông tin từ form (các trường đã có name trong form)
+        $data = [
+            'name'          => trim($_POST['name'] ?? ''),
+            'email'         => trim($_POST['email'] ?? ''),
+            'phone'         => trim($_POST['phone'] ?? ''),
+            'address'       => trim($_POST['address'] ?? ''),
+            'role'          => trim($_POST['role'] ?? ''),
+            'blocked_until' => trim($_POST['blocked_until'] ?? ''), // Ngày theo định dạng YYYY-MM-DD
+        ];
+
+        // Cập nhật thông tin người dùng
+        $updateSuccess = $userController->updateUser($user_id, $data);
+
+        // Khóa tài khoản trong $days ngày (giả sử hàm blockUser đã được định nghĩa)
+        $blockSuccess = $userController->blockUser($user_id, $days);
+
+        if ($updateSuccess && $blockSuccess) {
+            $_SESSION['success'] = "User (ID: $user_id) info updated and blocked for $days days successfully.";
+            // Redirect đến trang gửi email thông báo (đảm bảo đường dẫn và các tham số phù hợp)
+            header("Location: /index.php?page=send-email_user&user_email=" . urlencode($userEmail) . "&type=block&days=$days&csrf_token=" . $_SESSION['csrf_token']);
+            exit();
+        } else {
+            $_SESSION['error'] = "Failed to update and block user (ID: $user_id).";
+        }
     }
 
     // Trường hợp: Mở khóa tài khoản
@@ -714,70 +734,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 
 <!-- Form Block User (mặc định ẩn) -->
 <div id="block-user-form" class="space-y-8 mb-8 hidden mx-auto w-full lg:w-10/12">
-    <form action="/admin/list" method="POST"
-        class="space-y-8 bg-white p-8 rounded-xl shadow-lg border-2 border-yellow-400">
-
+    <form action="" method="POST" class="space-y-8 bg-white p-8 rounded-xl shadow-lg border-2 border-yellow-400">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+        <!-- Input ẩn chứa user_id -->
         <input type="hidden" name="user_id" id="blockUserId">
 
-        <!-- Grid 3 cột trên màn lớn, 2 cột trên màn nhỏ -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- User ID (hiển thị, không gửi) -->
+            <div>
+                <label class="block text-blue-700 font-semibold">User ID</label>
+                <input type="text" id="blockUserDisplayId" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" disabled>
+            </div>
+
+            <!-- Role (hiển thị, không chỉnh sửa) -->
+            <div>
+                <label class="block text-blue-700 font-semibold">Role</label>
+                <input type="text" id="blockUserRole" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" disabled>
+            </div>
+
+            <!-- Blocked Until (hiển thị, không chỉnh sửa) -->
+            <div>
+                <label class="block text-blue-700 font-semibold">Unblock Date</label>
+                <input type="text" id="blockUserBlockedUntil" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" disabled>
+            </div>
+
             <!-- Name -->
             <div>
                 <label class="block text-blue-700 font-semibold">Name</label>
-                <input type="text" id="blockUserName" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+                <input type="text" name="name" id="blockUserName" class="w-full h-12 p-3 border border-gray-300 rounded-lg" required>
             </div>
 
             <!-- Email -->
             <div>
                 <label class="block text-blue-700 font-semibold">Email</label>
-                <input type="text" id="blockUserEmail" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+                <input type="email" name="email" id="blockUserEmail" class="w-full h-12 p-3 border border-gray-300 rounded-lg" required>
             </div>
 
-            <!-- Phone -->
-            <div>
-                <label class="block text-blue-700 font-semibold">Phone</label>
-                <input type="text" id="blockUserPhone" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+            <!-- Block Days và Blocked Until trên cùng một dòng -->
+            <div class="flex items-center space-x-4">
+                <!-- Block Days -->
+                <div class="flex flex-col">
+                    <label class="text-red-500 font-semibold">Block Days</label>
+                    <input type="number" name="days" id="blockDays" min="1" value="1"
+                        class="w-24 h-12 p-3 border border-gray-300 rounded-lg">
+                </div>
+
+                <!-- Blocked Until -->
+                <div class="flex flex-col">
+                    <label class="text-blue-700 font-semibold text-center">Blocked Until</label>
+                    <div id="blockUntilDate"
+                        class="flex justify-center items-center text-gray-800 bg-gray-100 w-48 h-12 p-3 rounded-md border border-gray-300 text-sm">
+                        Chưa có dữ liệu
+                    </div>
+                </div>
             </div>
 
             <!-- Address -->
             <div>
                 <label class="block text-blue-700 font-semibold">Address</label>
-                <input type="text" id="blockUserAddress" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
+                <input type="text" name="address" id="blockUserAddress" class="w-full h-12 p-3 border border-gray-300 rounded-lg" required>
             </div>
 
-            <!-- User ID -->
+            <!-- Phone -->
             <div>
-                <label class="block text-blue-700 font-semibold">User ID</label>
-                <input type="text" id="blockUserDisplayId" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
-            </div>
-
-            <!-- Role -->
-            <div>
-                <label class="block text-blue-700 font-semibold">Role</label>
-                <input type="text" id="blockUserRole" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
-            </div>
-
-            <!-- Blocked Until -->
-            <div>
-                <label class="block text-blue-700 font-semibold">Blocked Until</label>
-                <input type="text" id="blockUserBlockedUntil" class="w-full h-12 p-3 border border-gray-300 rounded-lg bg-gray-100" required>
-            </div>
-
-            <!-- Block Days -->
-            <div>
-                <label class="block text-red-500 font-semibold">Block Days</label>
-                <input type="number" name="days" id="blockDays" min="1" value="1"
-                    class="w-full h-12 p-3 border border-gray-300 rounded-lg">
+                <label class="block text-blue-700 font-semibold">Phone</label>
+                <input type="text" name="phone" id="blockUserPhone" class="w-full h-12 p-3 border border-gray-300 rounded-lg" required>
             </div>
         </div>
 
-        <!-- Nút Confirm & Cancel -->
         <div class="flex justify-center space-x-6 mt-6">
-            <button type="submit" name="block_user"
-                class="bg-red-500 hover:bg-red-600 text-white py-3 px-8 rounded-lg shadow-lg text-lg">Confirm</button>
-            <button type="button" id="cancelBlock"
-                class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-8 rounded-lg shadow-lg text-lg">Cancel</button>
+            <button type="submit" name="block_user" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg shadow-lg">Confirm</button>
+            <button type="button" id="cancelBlock" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg shadow-lg">Cancel</button>
         </div>
     </form>
 </div>
@@ -892,17 +919,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                 blockUserRole.value = userRole;
                 blockUserPhone.value = userPhone;
                 blockUserAddress.value = userAddress;
-                blockUserBlockedUntil.value = (blockedUntil !== "NULL" && blockedUntil) ? blockedUntil : "Not Blocked";
-                blockDays.value = 1; // Reset ngày block
+                // Nếu không có ngày block, để rỗng để admin tự nhập
+                blockUserBlockedUntil.value = (blockedUntil && blockedUntil !== "NULL") ? blockedUntil : "";
+                blockDays.value = 1; // Reset số ngày block
 
-                // Hiển thị form block
+                // Hiển thị form
                 blockForm.classList.remove("hidden");
             });
         });
 
         cancelBlock.addEventListener("click", function() {
-            blockForm.classList.add("hidden"); // Ẩn form khi bấm cancel
+            blockForm.classList.add("hidden");
         });
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const blockDaysInput = document.getElementById("blockDays");
+        const blockUntilDateSpan = document.getElementById("blockUntilDate");
+
+        function updateBlockedUntil() {
+            let days = parseInt(blockDaysInput.value) || 1;
+            let now = new Date();
+            now.setDate(now.getDate() + days); // Cộng số ngày block vào thời gian hiện tại
+
+            // Lấy thông tin ngày và giờ
+            let year = now.getFullYear();
+            let month = String(now.getMonth() + 1).padStart(2, "0"); // Định dạng MM
+            let day = String(now.getDate()).padStart(2, "0"); // Định dạng DD
+            let hours = String(now.getHours()).padStart(2, "0"); // Giờ HH
+            let minutes = String(now.getMinutes()).padStart(2, "0"); // Phút MM
+            let seconds = String(now.getSeconds()).padStart(2, "0"); // Giây SS
+
+            // Hiển thị ngày và giờ theo định dạng YYYY-MM-DD HH:MM:SS
+            let formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            blockUntilDateSpan.textContent = formattedDateTime;
+        }
+
+        // Gọi hàm khi trang tải lần đầu
+        updateBlockedUntil();
+
+        // Gọi hàm mỗi khi người dùng thay đổi số ngày block
+        blockDaysInput.addEventListener("input", updateBlockedUntil);
     });
 </script>
 

@@ -41,6 +41,12 @@ class UserController
     return $this->userModel->checkblockUser($userId);
   }
 
+  // Cập nhật User
+  public function updateUser($user_id, $data)
+  {
+    return $this->userModel->updateUser($user_id, $data);
+  }
+
   // Xóa tài khoản
   public function deleteUser($userId)
   {
