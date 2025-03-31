@@ -47,8 +47,12 @@ class Order
         $query = "INSERT INTO orders (user_id, total, payment_method, address, shipping_link, images, voucher_id) VALUES (?, 0, ?, ?, ?, ?, NULL)";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$user_id, $payment_method, $address, $shipping_link, $image]);
-
         $order_id = $this->conn->lastInsertId();
+
+        // Cập nhật địa chỉ của user trong bảng users
+        $updateQuery = "UPDATE users SET address = ? WHERE id = ?";
+        $updateStmt = $this->conn->prepare($updateQuery);
+        $updateStmt->execute([$address, $user_id]);
 
         // Nếu có hình ảnh, đổi tên ảnh theo định dạng: order_id + "_" + YYYY-MM-DD + extension
         if (!empty($image)) {

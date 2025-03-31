@@ -108,6 +108,9 @@ switch ($page) {
     case 'statistics':
         include '../app/views/admin/statistics.php';
         break;
+    case 'exportPDF':
+        include '../app/views/admin/exportPDF.php';
+        break;
     case 'export-products':
         include '../app/views/admin/export-products.php';
         break;

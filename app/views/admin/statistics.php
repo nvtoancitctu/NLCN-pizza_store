@@ -9,6 +9,16 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
 // Kiểm tra xem có giá trị time_period từ POST không
 $timePeriod = isset($_POST['time_period']) ? $_POST['time_period'] : 'daily';
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $timePeriod = $_POST['time_period'] ?? 'daily';
+
+    // Nếu người dùng bấm Export PDF
+    if (isset($_POST['export_pdf'])) {
+        header("Location: ../index.php?page=exportPDF&time_period=" . urlencode($timePeriod));
+        exit;
+    }
+}
+
 // Khởi tạo OrderController và lấy thời gian lựa chọn
 $statisticsController = new OrderController($conn);
 
@@ -37,6 +47,13 @@ foreach ($salesData as $sales) {
 
 ?>
 
+<?php if (!empty($_SESSION['success'])): ?>
+    <script>
+        alert(<?= json_encode($_SESSION['success']) ?>);
+    </script>
+    <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+
 <h1 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">📊 Sales Statistics</h1>
 
 <!-- Form chọn khoảng thời gian -->
@@ -52,6 +69,10 @@ foreach ($salesData as $sales) {
         <option value="product" <?= $timePeriod === 'product' ? 'selected' : '' ?>>Product</option>
         <option value="status" <?= $timePeriod === 'status' ? 'selected' : '' ?>>Order Status</option>
     </select>
+
+    <button type="submit" name="export_pdf" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all duration-200 mt-4">
+        📄 Export PDF
+    </button>
 </form>
 
 <!-- Thống kê tổng quan -->
