@@ -12,13 +12,6 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Kiểm tra và lấy thông báo thành công từ session
-$success = '';
-if (isset($_SESSION['success'])) {
-    $success = $_SESSION['success'];
-    unset($_SESSION['success']);
-}
-
 // Lấy danh mục sản phẩm
 $categories = $productController->getAllCategoryNamesExceptPizza();
 
@@ -52,10 +45,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
 $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
 ?>
 
-<!-- Hiển thị thông báo thành công nếu có -->
-<?php if (!empty($success)): ?>
+<!-- Hiển thị thông báo lỗi hoặc thành công nếu có -->
+<?php
+$message = '';
+$messageType = ''; // Để xác định loại thông báo (error hay success)
+if (!empty($_SESSION['error'])) {
+    $message = $_SESSION['error'];
+    $messageType = 'error';
+    unset($_SESSION['error']);
+} elseif (!empty($_SESSION['success'])) {
+    $message = $_SESSION['success'];
+    $messageType = 'success';
+    unset($_SESSION['success']);
+}
+?>
+
+<!-- Hiển thị thông báo -->
+<?php if (!empty($message)): ?>
+    <div class="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 <?= $messageType === 'error' ? 'bg-red-100 border border-red-400 text-red-700' : 'bg-green-100 border border-green-400 text-green-700' ?>">
+        <span><?= htmlspecialchars($message) ?></span>
+        <button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>
+    </div>
+<?php endif; ?>
+
+<!-- Script tự động ẩn (đặt ở cuối trang hoặc ngoài vòng lặp) -->
+<?php if (!empty($message)): ?>
     <script>
-        alert("<?= addslashes($success) ?>");
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const elements = document.querySelectorAll('.fixed');
+                if (elements.length > 0) {
+                    elements.forEach(element => element.remove());
+                }
+            }, 5000);
+        });
     </script>
 <?php endif; ?>
 
@@ -165,6 +188,7 @@ $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
 
                                     <!-- Nút Delete -->
                                     <form action="/admin/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
                                         <button type="submit" class="btn btn-danger" title="Delete Product">
                                             <i class="fas fa-trash-alt"></i> <!-- Icon Delete -->
@@ -274,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
                 exit();
             }
         } else {
-            $_SESSION['success'] = "Failed to update order (ID: $order_id).";
+            $_SESSION['error'] = "Failed to update order (ID: $order_id).";
         }
 
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -543,7 +567,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
 
         $_SESSION['success'] = "Feedback #$id has been responded to successfully.";
     } else {
-        $_SESSION['success'] = "Invalid feedback ID or response cannot be empty.";
+        $_SESSION['error'] = "Invalid feedback ID or response cannot be empty.";
     }
     header("Location: " . $_SERVER['HTTP_REFERER']);
     exit;
@@ -694,7 +718,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
             header("Location: /index.php?page=send-email_user&user_email=" . urlencode($userEmail) . "&type=unblock&csrf_token=" . $_SESSION['csrf_token']);
             exit();
         } else {
-            $_SESSION['success'] = "Failed to unblock user (ID: $user_id).";
+            $_SESSION['error'] = "Failed to unblock user (ID: $user_id).";
         }
     }
 
@@ -708,7 +732,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
             header("Location: /index.php?page=send-email_user&user_email=" . urlencode($userEmail) . "&type=delete&csrf_token=" . $_SESSION['csrf_token']);
             exit();
         } else {
-            $_SESSION['success'] = "Failed to delete user (ID: $user_id).";
+            $_SESSION['error'] = "Failed to delete user (ID: $user_id).";
         }
     }
 
@@ -792,13 +816,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
             <!-- Address -->
             <div>
                 <label class="block text-blue-700 font-semibold">Address</label>
-                <input type="text" name="address" id="blockUserAddress" class="w-full h-12 p-3 border border-gray-300 rounded-lg" required>
+                <input type="text" name="address" id="blockUserAddress" class="w-full h-12 p-3 border border-gray-300 rounded-lg">
             </div>
 
             <!-- Phone -->
             <div>
                 <label class="block text-blue-700 font-semibold">Phone</label>
-                <input type="text" name="phone" id="blockUserPhone" class="w-full h-12 p-3 border border-gray-300 rounded-lg" required>
+                <input type="text" name="phone" id="blockUserPhone" class="w-full h-12 p-3 border border-gray-300 rounded-lg">
             </div>
         </div>
 

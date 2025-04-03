@@ -70,109 +70,158 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 ?>
 
-<h1 class="text-4xl font-extrabold text-center my-6 text-blue-700">Edit Product</h1>
-<div class="flex justify-center mb-8">
-    <div class="w-full max-w-4xl rounded-lg border-2 border-blue-700 bg-gray-50 shadow-lg p-6">
-        <form action="/admin/edit-product/id=<?= htmlspecialchars($product['id']) ?>" method="POST" enctype="multipart/form-data"
-            class="bg-gray-50 border border-gray-400 rounded-lg px-8 pt-6 pb-8">
-            <!-- CSRF Token -->
-            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+<!-- Edit Product Section -->
+<div class="container mx-auto">
+    <!-- Tiêu đề -->
+    <h1 class="text-4xl font-extrabold text-center my-8 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-yellow-600">
+        Edit Product
+    </h1>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Cột 1 -->
-                <div>
-                    <div class="mb-4">
-                        <label for="name" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-tag mr-2"></i>Product Name</label>
-                        <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>"
-                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="price" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-dollar-sign mr-2"></i>Price</label>
-                        <input type="number" name="price" value="<?= htmlspecialchars($product['price']) ?>"
-                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" step="0.01" placeholder="Enter price (e.g., 15.50)" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="category_id" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-list mr-2"></i>Category</label>
-                        <select name="category_id" class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?= htmlspecialchars($category['id']) ?>" <?= $category['id'] == $product['category_id'] ? 'selected' : '' ?>><?= htmlspecialchars($category['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label for="stock_quantity" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-boxes mr-2"></i>Stock Quantity</label>
-                        <input type="number" name="stock_quantity" value="<?= htmlspecialchars($product['stock_quantity']) ?>"
-                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" required>
-                    </div>
-                </div>
-                <!-- Cột 2 -->
-                <div>
-                    <div class="mb-4">
-                        <label for="note" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-sticky-note mr-2"></i>Note</label>
-                        <input type="text" name="note" value="<?= htmlspecialchars($product['note']) ?>"
-                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="discount" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-percentage mr-2"></i>Discount Price</label>
-                        <input type="number" name="discount" value="<?= htmlspecialchars($product['discount']) ?>"
-                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" step="0.01" placeholder="Enter discount (e.g., 15.50)">
-                    </div>
-                    <div class="mb-4">
-                        <label for="discount_end_time" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-clock mr-2"></i>Discount End Time (UTC)</label>
-                        <input type="datetime-local" id="discount_end_time" name="discount_end_time" value="<?= htmlspecialchars($product['discount_end_time']) ?>"
-                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-blue-700 text-sm font-medium mb-2">
-                            <i class="fas fa-image mr-2"></i>Product Image
-                        </label>
-                        <div class="flex items-center gap-6">
-                            <!-- Ảnh cũ -->
-                            <?php if (!empty($product['image'])): ?>
-                                <img src="/images/product/<?= htmlspecialchars($product['image']) ?>" alt="Product Image"
-                                    class="w-32 h-32 object-cover border rounded-lg shadow">
-                            <?php else: ?>
-                                <p class="text-sm text-gray-600">No image uploaded.</p>
-                            <?php endif; ?>
+    <div class="flex justify-center mb-12">
+        <div class="w-full max-w-5xl rounded-xl border-2 border-yellow-300 p-8 bg-white shadow-sm">
+            <form action="/admin/edit-product/id=<?= htmlspecialchars($product['id']) ?>" method="POST" enctype="multipart/form-data" class="space-y-2">
+                <!-- CSRF Token -->
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
-                            <!-- Mũi tên -->
-                            <i class="fas fa-arrow-right text-gray-500 text-2xl"></i>
-
-                            <!-- Preview ảnh mới -->
-                            <img id="image-preview" class="hidden w-32 h-32 object-cover rounded-lg border">
-                        </div>
-                        <!-- Upload ảnh mới -->
-                        <div class="flex items-center mt-2">
-                            <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)">
-                            <label for="image"
-                                class="mr-2 border border-gray-200 rounded-lg px-4 py-2 text-gray-600 cursor-pointer hover:bg-blue-100 flex items-center space-x-2">
-                                <i class="fas fa-upload"></i>
-                                <span>Upload</span>
+                <!-- Grid 2 cột -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Cột 1 -->
+                    <div class="space-y-6">
+                        <!-- Product Name -->
+                        <div>
+                            <label for="name" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-tag mr-2"></i> Product Name
                             </label>
-                            <span id="file-name" class="text-gray-500">No file chosen</span>
+                            <input type="text" name="name" value="<?= htmlspecialchars($product['name']) ?>"
+                                class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" required>
+                        </div>
+
+                        <!-- Price -->
+                        <div>
+                            <label for="price" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-dollar-sign mr-2"></i> Price
+                            </label>
+                            <input type="number" name="price" value="<?= htmlspecialchars($product['price']) ?>"
+                                class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" min="0" step="0.01" placeholder="e.g., 15.50" required>
+                        </div>
+
+                        <!-- Category -->
+                        <div>
+                            <label for="category_id" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-list mr-2"></i> Category
+                            </label>
+                            <select name="category_id" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" required>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?= htmlspecialchars($category['id']) ?>" <?= $category['id'] == $product['category_id'] ? 'selected' : '' ?>><?= htmlspecialchars($category['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Stock Quantity -->
+                        <div>
+                            <label for="stock_quantity" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-boxes mr-2"></i> Stock Quantity
+                            </label>
+                            <input type="number" name="stock_quantity" value="<?= htmlspecialchars($product['stock_quantity']) ?>"
+                                class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" min="0" required>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label for="description" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-align-left mr-2"></i> Description
+                            </label>
+                            <textarea name="description" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+                                rows="5"><?= htmlspecialchars($product['description']) ?></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Cột 2 -->
+                    <div class="space-y-6">
+                        <!-- Note -->
+                        <div>
+                            <label for="note" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-sticky-note mr-2"></i> Note
+                            </label>
+                            <input type="text" name="note" value="<?= htmlspecialchars($product['note']) ?>"
+                                class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200">
+                        </div>
+
+                        <!-- Discount Price -->
+                        <div>
+                            <label for="discount" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-percentage mr-2"></i> Discount Price
+                            </label>
+                            <input type="number" name="discount" value="<?= htmlspecialchars($product['discount']) ?>"
+                                class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" min="0" step="0.01" placeholder="e.g., 15.50">
+                        </div>
+
+                        <!-- Discount End Time -->
+                        <div>
+                            <label for="discount_end_time" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-clock mr-2"></i> Discount End Time (UTC)
+                            </label>
+                            <input type="datetime-local" id="discount_end_time" name="discount_end_time" value="<?= htmlspecialchars($product['discount_end_time']) ?>"
+                                class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200">
+                        </div>
+
+                        <!-- Product Image -->
+                        <div>
+                            <label class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-image mr-2"></i> Product Image
+                            </label>
+                            <div class="flex items-center gap-6 mb-4">
+                                <!-- Ảnh cũ -->
+                                <?php if (!empty($product['image'])): ?>
+                                    <div class="flex flex-col items-center">
+                                        <img src="/images/product/<?= htmlspecialchars($product['image']) ?>" alt="Product Image" class="w-40 h-40 object-cover rounded-lg shadow-md">
+                                        <span class="text-gray-600 text-sm mt-2">Current Image</span>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-40 h-40 flex items-center justify-center border border-gray-300 rounded-lg">
+                                            <span class="text-gray-600 text-sm">No image</span>
+                                        </div>
+                                        <span class="text-gray-600 text-sm mt-2">Current Image</span>
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- Mũi tên -->
+                                <i class="fas fa-arrow-right text-gray-500 text-2xl"></i>
+
+                                <!-- Preview ảnh mới -->
+                                <div class="flex flex-col items-center">
+                                    <img id="image-preview" class="hidden w-40 h-40 object-cover rounded-lg shadow-md">
+                                    <span class="text-gray-600 text-sm mt-2">New Image Preview</span>
+                                </div>
+                            </div>
+                            <!-- Upload ảnh mới -->
+                            <div class="flex items-center gap-4">
+                                <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)">
+                                <label for="image" class="border border-gray-300 rounded-lg px-4 py-2 text-blue-600 cursor-pointer hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
+                                    <i class="fas fa-upload mr-2"></i> Upload New Image
+                                </label>
+                                <span id="file-name" class="text-gray-600 text-sm">No file chosen</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- Textarea Description -->
-            <div class="mb-4">
-                <label for="description" class="block text-blue-700 text-sm font-medium mb-2"><i class="fas fa-align-left mr-2"></i>Description</label>
-                <textarea name="description" class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"><?= htmlspecialchars($product['description']) ?></textarea>
-            </div>
-            <!-- Button Actions -->
-            <div class="flex justify-center space-x-4">
-                <button type="button" class="flex items-center bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all duration-200"
-                    onclick="window.location.href='/admin/list'">
-                    <i class="fas fa-arrow-left mr-2"></i> Back to Admin
-                </button>
-                <button type="submit" class="flex items-center bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200">
-                    <i class="fas fa-save mr-2"></i> Update
-                </button>
-            </div>
-        </form>
+
+                <!-- Button Actions -->
+                <div class="flex justify-center space-x-4">
+                    <button type="button" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-lg hover:from-gray-600 hover:to-gray-700 flex items-center transition-all duration-300 shadow-md" onclick="window.location.href='/admin/list'">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Admin
+                    </button>
+                    <button type="submit" class="bg-gradient-to-r from-blue-500 to-green-500 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-green-600 flex items-center transition-all duration-300 shadow-md">
+                        <i class="fas fa-save mr-2"></i> Update Product
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
+<!-- Script xử lý upload ảnh (giữ nguyên) -->
 <script>
     function updateFileName(input) {
         const file = input.files[0];

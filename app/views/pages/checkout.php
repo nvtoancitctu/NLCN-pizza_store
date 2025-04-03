@@ -232,6 +232,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 
             // Lưu link vào input ẩn để gửi lên server
             document.getElementById("map_url").value = mapUrl;
+
+            // Tích hợp OSM (Nominatim) để lấy địa chỉ
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {
+                headers: {
+                  "User-Agent": "PizzaDeliveryApp/1.0 (your-email@example.com)" // Thay bằng email của bạn
+                }
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.error) {
+                  console.error("OSM Error: ", data.error);
+                  document.getElementById("address").value = "Unable to fetch address";
+                } else {
+                  const address = data.display_name;
+                  document.getElementById("address").value = address; // Điền địa chỉ vào textarea
+                }
+              })
+              .catch(error => {
+                console.error("Fetch Error: ", error);
+                document.getElementById("address").value = "Error fetching address";
+              });
           }, showError);
         } else {
           alert("Geolocation is not supported by this browser.");

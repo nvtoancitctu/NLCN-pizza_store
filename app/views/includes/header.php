@@ -41,7 +41,7 @@
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col font-medium">
+<body class="min-h-screen flex flex-col font-medium bg-gray-50">
     <!-- Nút quay về đầu trang -->
     <button id="back-to-top" class="fixed bottom-24 right-4 p-3 bg-pink-500 text-white rounded-full shadow-lg hover:bg-pink-600 transition-all duration-300 opacity-0 invisible">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

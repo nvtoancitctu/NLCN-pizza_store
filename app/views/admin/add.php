@@ -64,83 +64,129 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
 <?php endif; ?>
 
-<h1 class="text-4xl font-extrabold text-center my-6 text-blue-700">Add New Product</h1>
-<div class="flex justify-center mb-8">
-    <div class="w-full max-w-4xl rounded-lg border-2 border-blue-400 p-6 bg-white">
-        <form action="/admin/add" method="POST" enctype="multipart/form-data" class="space-y-6">
-            <!-- CSRF Token -->
-            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+<!-- Add New Product Section -->
+<div class="container mx-auto">
+    <!-- Tiêu đề -->
+    <h1 class="text-4xl font-extrabold text-center my-8 text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-yellow-600">
+        Add New Product
+    </h1>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Cột 1 -->
-                <div>
-                    <div class="mb-4 relative">
-                        <label for="name" class="block text-red-500 text-sm font-medium mb-2"><i class="fas fa-pizza-slice mr-2"></i>Product Name</label>
-                        <input type="text" name="name" class="border border-gray-200 rounded-lg w-full py-2 px-3 " required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="price" class="block text-red-500 text-sm font-medium mb-2"><i class="fas fa-dollar-sign mr-2"></i>Price</label>
-                        <input type="number" name="price" class="border border-gray-200 rounded-lg w-full py-2 px-3 " min="0.01" step="0.01" placeholder="e.g., 15.50" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="category_id" class="block text-red-500 text-sm font-medium mb-2"><i class="fas fa-list-alt mr-2"></i>Category</label>
-                        <select name="category_id" class="border border-gray-200 rounded-lg w-full py-2 px-3 " required>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?= htmlspecialchars($category['id']) ?>"> <?= htmlspecialchars($category['name']) ?> </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="">
-                        <label for="stock_quantity" class="block text-red-500 text-sm font-medium mb-2"><i class="fas fa-boxes mr-2"></i>Stock Quantity</label>
-                        <input type="number" name="stock_quantity" value="1"
-                            class="border border-gray-400 rounded-lg w-full py-2 px-3 focus:outline-none" min="1" required>
-                    </div>
-                </div>
-                <!-- Cột 2 -->
-                <div>
-                    <div class="mb-4">
-                        <label for="note" class="block text-green-500 text-sm font-medium mb-2"><i class="fas fa-sticky-note mr-2"></i>Note</label>
-                        <input type="text" name="note" class="border border-gray-200 rounded-lg w-full py-2 px-3">
-                    </div>
-                    <div class="mb-4">
-                        <label for="discount" class="block text-green-500 text-sm font-medium mb-2"><i class="fas fa-tags mr-2"></i>Discount Price</label>
-                        <input type="number" name="discount" class="border border-gray-200 rounded-lg w-full py-2 px-3 " min="0" step="0.01" placeholder="e.g., 10.00">
-                    </div>
-                    <div class="mb-4">
-                        <label for="discount_end_time" class="block text-green-500 text-sm font-medium mb-2"><i class="fas fa-clock mr-2"></i>Discount End Time</label>
-                        <input type="datetime-local" name="discount_end_time" class="border border-gray-200 rounded-lg w-full py-2 px-3 ">
-                    </div>
-                    <div class="">
-                        <label for="image" class="block text-red-500 text-sm font-medium mb-2"><i class="fas fa-image mr-2"></i>Product Image</label>
-                        <div class="flex items-center gap-4">
-                            <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)" required>
-                            <label for="image" class="border border-gray-200 rounded-lg px-4 py-2 text-gray-600 cursor-pointer hover:bg-blue-100">
-                                <i class="fas fa-upload"></i>
+    <div class="flex justify-center mb-12">
+        <div class="w-full max-w-5xl rounded-xl border-2 border-yellow-300 p-8 bg-white shadow-sm">
+            <form action="/admin/add" method="POST" enctype="multipart/form-data" class="space-y-2">
+                <!-- CSRF Token -->
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+
+                <!-- Grid 2 cột -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Cột 1 -->
+                    <div class="space-y-6">
+                        <!-- Product Name -->
+                        <div>
+                            <label for="name" class="block text-red-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-pizza-slice mr-2"></i> Product Name
                             </label>
-                            <span id="file-name" class="text-gray-500">No file chosen</span>
+                            <input type="text" name="name" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" required>
                         </div>
-                        <div class="mt-2">
-                            <img id="image-preview" class="hidden w-32 h-32 object-cover rounded-lg" />
+
+                        <!-- Price -->
+                        <div>
+                            <label for="price" class="block text-red-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-dollar-sign mr-2"></i> Price
+                            </label>
+                            <input type="number" name="price" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" min="0.01" step="0.01" placeholder="e.g., 15.50" required>
+                        </div>
+
+                        <!-- Category -->
+                        <div>
+                            <label for="category_id" class="block text-red-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-list-alt mr-2"></i> Category
+                            </label>
+                            <select name="category_id" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" required>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?= htmlspecialchars($category['id']) ?>"> <?= htmlspecialchars($category['name']) ?> </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Stock Quantity -->
+                        <div>
+                            <label for="stock_quantity" class="block text-red-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-boxes mr-2"></i> Stock Quantity
+                            </label>
+                            <input type="number" name="stock_quantity" value="1" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" min="1" required>
+                        </div>
+                    </div>
+
+                    <!-- Cột 2 -->
+                    <div class="space-y-6">
+                        <!-- Note -->
+                        <div>
+                            <label for="note" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-sticky-note mr-2"></i> Note
+                            </label>
+                            <input type="text" name="note" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200">
+                        </div>
+
+                        <!-- Discount Price -->
+                        <div>
+                            <label for="discount" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-tags mr-2"></i> Discount Price
+                            </label>
+                            <input type="number" name="discount" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200" min="0" step="0.01" placeholder="e.g., 10.00">
+                        </div>
+
+                        <!-- Discount End Time -->
+                        <div>
+                            <label for="discount_end_time" class="block text-blue-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-clock mr-2"></i> Discount End Time
+                            </label>
+                            <input type="datetime-local" name="discount_end_time" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200">
+                        </div>
+
+                        <!-- Product Image -->
+                        <div>
+                            <label for="image" class="block text-red-600 text-sm font-semibold mb-2">
+                                <i class="fas fa-image mr-2"></i> Product Image
+                            </label>
+                            <div class="flex items-center gap-4">
+                                <input type="file" name="image" id="image" class="hidden" onchange="updateFileName(this)" required>
+                                <label for="image" class="border border-gray-300 rounded-lg px-4 py-2 text-blue-600 cursor-pointer hover:bg-blue-50 transition-all duration-200">
+                                    <i class="fas fa-upload mr-2"></i> Upload Image
+                                </label>
+                                <span id="file-name" class="text-gray-600 text-sm">No file chosen</span>
+                            </div>
+                            <div class="mt-4">
+                                <img id="image-preview" class="hidden w-40 h-40 object-cover rounded-lg shadow-md" />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="mb-4">
-                <label for="description" class="block text-red-500 text-sm font-medium mb-2"><i class="fas fa-align-left mr-2"></i>Description</label>
-                <textarea name="description" class="border border-gray-200 rounded-lg w-full py-2 px-3 " placeholder="Optional" required></textarea>
-            </div>
-            <!-- Button Actions -->
-            <div class="flex justify-center space-x-4">
-                <button type="button" class="bg-green-400 text-white px-4 py-2 rounded-lg hover:bg-green-500 flex items-center transition-all duration-200" onclick="window.location.href='/admin/list'">
-                    <i class="fas fa-arrow-left mr-2"></i> Back to Admin
-                </button>
-                <button type="submit" class="bg-blue-400 text-white px-4 py-2 rounded-lg hover:bg-blue-500 flex items-center transition-all duration-200">
-                    <i class="fas fa-plus mr-2"></i> Add new product
-                </button>
-            </div>
-        </form>
+
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-red-600 text-sm font-semibold mb-2">
+                        <i class="fas fa-align-left mr-2"></i> Description
+                    </label>
+                    <textarea name="description" class="border border-gray-300 rounded-lg w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+                        rows="2" placeholder="Enter product description..." required></textarea>
+                </div>
+
+                <!-- Button Actions -->
+                <div class="flex justify-center space-x-4">
+                    <button type="button" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-lg hover:from-gray-600 hover:to-gray-700 flex items-center transition-all duration-300 shadow-md" onclick="window.location.href='/admin/list'">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Admin
+                    </button>
+                    <button type="submit" class="bg-gradient-to-r from-blue-500 to-green-500 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-green-600 flex items-center transition-all duration-300 shadow-md">
+                        <i class="fas fa-plus mr-2"></i> Add New Product
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+<!-- Script xử lý upload ảnh (giữ nguyên) -->
 <script>
     function updateFileName(input) {
         const file = input.files[0];

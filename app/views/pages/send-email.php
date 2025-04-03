@@ -31,10 +31,12 @@ function generateInvoicePDF($orderDetails, $order_id)
     $pdf->Ln(2);
 
     // Hiển thị thông tin đơn hàng
-    $pdf->SetFont('helvetica', 'B', 12);
+    $pdf->SetFont('helvetica', 'B', 14);
     $pdf->Cell(0, 10, "Invoice #$order_id", 0, 1, 'C');
     $pdf->SetFont('helvetica', '', 10);
     $pdf->Cell(0, 10, 'Order Time: ' . $orderDetails['created_at'], 0, 1, 'C');
+    $pdf->SetFont('helvetica', '', 10);
+    $pdf->Cell(0, 10, 'Shipping Address: ' . $orderDetails['address'], 0, 1, 'C');
     $pdf->Ln(5);
 
     // Bảng sản phẩm

@@ -77,6 +77,12 @@ class ProductController
     return $this->productModel->getTopRatedPizzas();
   }
 
+  // Lấy danh sách pizza bán chạy nhất
+  public function getBestSellerPizzas()
+  {
+    return $this->productModel->getBestSellerPizzas();
+  }
+
   // Lấy danh sách phản hồi từ khách hàng
   public function getCustomerTestimonials($limit = 4)
   {

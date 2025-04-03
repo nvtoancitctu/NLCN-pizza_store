@@ -26,6 +26,9 @@ if (file_exists($logoPath)) {
     $pdf->Image($logoPath, 15, 10, 30, 0, 'PNG');
 }
 
+// Thiết lập múi giờ Việt Nam
+date_default_timezone_set('Asia/Ho_Chi_Minh');
+
 // Hiển thị tên cửa hàng và ngày giờ xuất
 $pdf->SetFont('helvetica', 'B', 14);
 $pdf->Cell(0, 10, 'LOVER\'S HUT PIZZA STORE', 0, 1, 'C');
@@ -150,7 +153,7 @@ $pdf->MultiCell(0, 10, "COMMENT: $comment", 0, 'L');
 
 // Định dạng tên file PDF theo kiểu Sales_Report_{time_period}.pdf
 $pdfFileName = "sales_report_{$timePeriod}.pdf";
-$pdfPath = "D:/NLCN_Project_PizzaStore/{$pdfFileName}";
+$pdfPath = "D:/NLCN_Project_PizzaStore/public/images/sales-report/{$pdfFileName}";
 
 // Xuất file PDF
 $pdf->Output($pdfPath, 'F');

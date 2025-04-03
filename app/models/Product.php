@@ -255,19 +255,36 @@ class Product
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy danh sách pizza được đánh giá cao nhất, kèm tổng số lượng bán ra và trung bình rating
+    // Lấy danh sách 5 pizza được đánh giá cao nhất
     public function getTopRatedPizzas()
     {
         $stmt = $this->conn->prepare("SELECT 
-                                        p.name, p.image, p.description, p.category_id AS id,
-                                        ROUND(AVG(fb.rating), 1) AS avg_rating, 
-                                        SUM(oi.quantity) AS total_sales 
-                                    FROM feedback fb 
-                                    JOIN order_items oi ON fb.order_id = oi.order_id
-                                    JOIN products p ON p.id = oi.product_id
-                                    WHERE p.category_id IN (1, 2, 3)
-                                    GROUP BY p.id, p.name
-                                    ORDER BY avg_rating DESC, total_sales DESC");
+                                    p.name, p.image, p.description, p.category_id AS id,
+                                    ROUND(AVG(fb.rating), 1) AS avg_rating
+                                FROM products p
+                                JOIN order_items oi ON p.id = oi.product_id
+                                JOIN feedback fb ON fb.order_id = oi.order_id
+                                WHERE p.category_id IN (1, 2, 3)
+                                GROUP BY p.id, p.name
+                                HAVING avg_rating IS NOT NULL
+                                ORDER BY avg_rating DESC
+                                LIMIT 5");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy danh sách 5 pizza bán chạy nhất
+    public function getBestSellerPizzas()
+    {
+        $stmt = $this->conn->prepare("SELECT 
+                                    p.name, p.image, p.description, p.category_id AS id,
+                                    SUM(oi.quantity) AS total_sales 
+                                FROM products p
+                                JOIN order_items oi ON p.id = oi.product_id
+                                WHERE p.category_id IN (1, 2, 3)
+                                GROUP BY p.id, p.name
+                                ORDER BY total_sales DESC
+                                LIMIT 5");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

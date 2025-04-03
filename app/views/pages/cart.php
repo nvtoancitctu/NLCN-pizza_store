@@ -6,7 +6,7 @@ if (empty($_SESSION['csrf_token'])) {
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
-    $_SESSION['success'] = "Please log in to add items to your cart!";
+    $_SESSION['error'] = "Please log in to add items to your cart!";
     header("Location: /login");
     exit();
 }
