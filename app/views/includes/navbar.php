@@ -152,12 +152,10 @@ $nav_links = [
             </a>
 
             <!-- Nút Logout -->
-            <form method="POST" id="logout-form" onsubmit="return confirm('Are you sure you want to logout?');">
-              <button type="submit" name="logout"
-                class="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-lg transition">
-                Logout
-              </button>
-            </form>
+            <button type="button" onclick="openLogoutModal()"
+              class="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-lg transition">
+              Logout
+            </button>
           </div>
         <?php else: ?>
           <a href="/login" class="hover:text-yellow-400 transition flex items-center space-x-2">
@@ -209,9 +207,9 @@ $nav_links = [
 
               <a href="/account" class="block px-3 py-2 text-white hover:bg-yellow-400">Profile</a>
 
-              <form method="POST" id="mobile-logout-form" onsubmit="return confirm('Are you sure want to logout?');">
-                <button type="submit" name="logout" class="block w-full text-left px-3 py-2 text-white hover:bg-yellow-400">Logout</button>
-              </form>
+              <button type="button" onclick="openLogoutModal()" class="block w-full text-left px-3 py-2 text-white hover:bg-yellow-400">
+                Logout
+              </button>
             </div>
           </li>
         <?php else: ?>
@@ -231,25 +229,58 @@ $nav_links = [
       }
     </style>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        const menuButton = document.getElementById("mobile-menu-button");
-        const mobileMenu = document.getElementById("mobile-menu");
-        const userButton = document.getElementById("mobile-user-button");
-        const userDropdown = document.getElementById("mobile-user-dropdown");
-
-        // Toggle menu khi bấm nút
-        menuButton.addEventListener("click", function() {
-          mobileMenu.classList.toggle("hidden");
-        });
-
-        // Toggle dropdown user khi bấm vào tên người dùng
-        if (userButton) {
-          userButton.addEventListener("click", function() {
-            userDropdown.classList.toggle("hidden");
-          });
-        }
-      });
-    </script>
+    <!-- Modal xác nhận Logout -->
+    <div id="logoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
+      <div class="bg-white rounded-lg shadow-lg w-120 p-6">
+        <h2 class="text-base font-semibold text-center mb-4 text-gray-800">Are you sure you want to logout?</h2>
+        <form method="POST" class="flex justify-center space-x-4">
+          <button type="button" onclick="closeLogoutModal()"
+            class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">Cancel</button>
+          <button type="submit" name="logout"
+            class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Logout</button>
+        </form>
+      </div>
+    </div>
 
 </nav>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const menuButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
+    const userButton = document.getElementById("mobile-user-button");
+    const userDropdown = document.getElementById("mobile-user-dropdown");
+
+    // Toggle menu khi bấm nút
+    menuButton.addEventListener("click", function() {
+      mobileMenu.classList.toggle("hidden");
+    });
+
+    // Toggle dropdown user khi bấm vào tên người dùng
+    if (userButton) {
+      userButton.addEventListener("click", function() {
+        userDropdown.classList.toggle("hidden");
+      });
+    }
+  });
+
+  function openLogoutModal() {
+    const modal = document.getElementById("logoutModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+  function closeLogoutModal() {
+    const modal = document.getElementById("logoutModal");
+    modal.classList.remove("flex");
+    modal.classList.add("hidden");
+  }
+
+  // Đóng modal khi click ngoài modal
+  window.addEventListener("click", function(e) {
+    const modal = document.getElementById("logoutModal");
+    if (e.target === modal) {
+      closeLogoutModal();
+    }
+  });
+</script>

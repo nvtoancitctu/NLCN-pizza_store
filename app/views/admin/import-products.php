@@ -43,6 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['product_file'])) {
 
     fclose($fileHandle);
     $_SESSION['success'] = "Products have been successfully imported file.";
-    header("Location: /admin/list");
+    header("Location: /admin");
     exit();
 }

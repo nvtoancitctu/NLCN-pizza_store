@@ -34,13 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp'])) {
 
         if ($_SESSION['otp_attempts'] >= 2) {
             unset($_SESSION['reset_otp'], $_SESSION['otp_attempts']);
-            echo "<script>
-                    alert('Incorrect OTP! Please request a new OTP.');
-                    window.location.href = '/send-otp';
-                  </script>";
+            $_SESSION['error'] = "Incorrect OTP! Please request a new OTP.";
+            header("Location: /send-otp");
             exit;
         } else {
-            $_SESSION['message'] = "Incorrect OTP! You have one more attempt.";
+            $_SESSION['error'] = "Incorrect OTP! You have one more attempt.";
         }
     }
 }
@@ -55,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
     }
 
     if (!isset($_SESSION['otp_verified']) || $_SESSION['otp_verified'] !== 1) {
-        $_SESSION['message'] = "Please verify OTP first!";
+        $_SESSION['error'] = "Please verify OTP first!";
         header("Location: /send-otp");
         exit;
     }
@@ -64,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
     $confirm_password = $_POST['confirm_password'] ?? '';
 
     if ($new_password !== $confirm_password) {
-        $_SESSION['message'] = "Passwords do not match!";
+        $_SESSION['error'] = "Passwords do not match!";
     } elseif (strlen($new_password) < 6) {
-        $_SESSION['message'] = "Password must be at least 6 characters.";
+        $_SESSION['error'] = "Password must be at least 6 characters.";
     } else {
         // Mã hóa mật khẩu
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
@@ -89,12 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
 <div class="bg-gradient-to-r from-blue-50 to-blue-100">
     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
         <h2 class="text-xl font-bold text-gray-700 text-center mb-4">🔑 Reset Password</h2>
-
-        <?php if (!empty($_SESSION['message'])): ?>
-            <p class="text-red-500 text-center mb-3"><?= $_SESSION['message'];
-                                                        unset($_SESSION['message']); ?></p>
-        <?php endif; ?>
-
         <?php if ($_SESSION['otp_verified'] === 0): ?>
             <form action="" method="POST">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">

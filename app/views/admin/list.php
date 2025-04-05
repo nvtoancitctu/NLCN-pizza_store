@@ -45,43 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search'])) {
 $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
 ?>
 
-<!-- Hiển thị thông báo lỗi hoặc thành công nếu có -->
-<?php
-$message = '';
-$messageType = ''; // Để xác định loại thông báo (error hay success)
-if (!empty($_SESSION['error'])) {
-    $message = $_SESSION['error'];
-    $messageType = 'error';
-    unset($_SESSION['error']);
-} elseif (!empty($_SESSION['success'])) {
-    $message = $_SESSION['success'];
-    $messageType = 'success';
-    unset($_SESSION['success']);
-}
-?>
-
-<!-- Hiển thị thông báo -->
-<?php if (!empty($message)): ?>
-    <div class="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 <?= $messageType === 'error' ? 'bg-red-100 border border-red-400 text-red-700' : 'bg-green-100 border border-green-400 text-green-700' ?>">
-        <span><?= htmlspecialchars($message) ?></span>
-        <button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>
-    </div>
-<?php endif; ?>
-
-<!-- Script tự động ẩn (đặt ở cuối trang hoặc ngoài vòng lặp) -->
-<?php if (!empty($message)): ?>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                const elements = document.querySelectorAll('.fixed');
-                if (elements.length > 0) {
-                    elements.forEach(element => element.remove());
-                }
-            }, 5000);
-        });
-    </script>
-<?php endif; ?>
-
 <!--------------------------------------- Quản lý sản phẩm, thống kê, xuất file csv --------------------------------------->
 <h1 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">Products Management</h1>
 <div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
@@ -187,16 +150,27 @@ if (!empty($_SESSION['error'])) {
                                     </a>
 
                                     <!-- Nút Delete -->
-                                    <form action="/admin/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                    <form id="deleteForm" action="/admin/delete" method="POST">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                                        <button type="submit" class="btn btn-danger" title="Delete Product">
+                                        <button type="button" onclick="openDeleteModal()" class="btn btn-danger" title="Delete Product">
                                             <i class="fas fa-trash-alt"></i> <!-- Icon Delete -->
                                         </button>
                                     </form>
+
+                                    <!-- Modal Xác nhận Xóa Sản phẩm -->
+                                    <div id="deleteModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
+                                        <div class="bg-white p-6 rounded-lg shadow-lg w-120">
+                                            <h3 class="text-l font-semibold text-gray-800">Are you sure you want to delete this product?</h3>
+                                            <div class="mt-4 flex justify-center space-x-4">
+                                                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
+                                                <button type="button" onclick="confirmDelete()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </td>
-
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -239,6 +213,21 @@ if (!empty($_SESSION['error'])) {
 
     </div>
 </div>
+
+<script>
+    function openDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    function confirmDelete() {
+        // Submit form khi người dùng xác nhận xóa
+        document.getElementById('deleteForm').submit();
+    }
+</script>
 
 <!--------------------------------------- Quản lý đơn hàng, cập nhật trạng thái --------------------------------------->
 <?php
@@ -307,6 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
     }
 }
 ?>
+
 <!-- Breadcrumb -->
 <div class="w-full lg:w-8/12 flex items-center justify-center mx-auto my-10">
     <div class="flex-grow border-t-2 border-gray-700"></div>
@@ -441,13 +431,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
                                         data-image="<?= isset($order['images']) ? ($order['images']) : '' ?>">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <form action="/admin/delete-order" method="POST" onsubmit="return confirm('Are you sure you want to delete this order?');">
+
+                                    <form id="deleteOrderForm" action="/admin/delete-order" method="POST">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                        <button type="submit" class="btn btn-danger" title="Delete Product">
+                                        <button type="button" onclick="openDeleteOrderModal()" class="btn btn-danger" title="Delete Order">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
+
+                                    <!-- Modal Xác nhận Xóa Đơn Hàng -->
+                                    <div id="deleteOrderModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
+                                        <div class="bg-white p-6 rounded-lg shadow-lg w-120">
+                                            <h3 class="text-lg font-semibold text-gray-800">Are you sure you want to delete this order?</h3>
+                                            <div class="mt-4 flex justify-center space-x-4">
+                                                <button type="button" onclick="closeDeleteOrderModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
+                                                <button type="button" onclick="confirmDeleteOrder()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </td>
                         </tr>
@@ -491,6 +494,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 </div>
 
 <script>
+    function openDeleteOrderModal() {
+        document.getElementById('deleteOrderModal').classList.remove('hidden');
+    }
+
+    function closeDeleteOrderModal() {
+        document.getElementById('deleteOrderModal').classList.add('hidden');
+    }
+
+    function confirmDeleteOrder() {
+        // Submit form khi người dùng xác nhận xóa
+        document.getElementById('deleteOrderForm').submit();
+    }
+
     function toggleEditForm(orderId, customer, total, status, payment, image) {
         const form = document.getElementById('edit-order-form');
         document.getElementById('editOrderId').value = orderId;
@@ -689,7 +705,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
             'email'         => trim($_POST['email'] ?? ''),
             'phone'         => trim($_POST['phone'] ?? ''),
             'address'       => trim($_POST['address'] ?? ''),
-            'role'          => trim($_POST['role'] ?? ''),
             'blocked_until' => trim($_POST['blocked_until'] ?? ''), // Ngày theo định dạng YYYY-MM-DD
         ];
 
@@ -876,24 +891,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                                         data-block="<?= htmlspecialchars($user['blocked_until'] ?? 'N/A') ?>">
                                         <i class="fas fa-lock"></i>
                                     </button>
-                                    <!-- Nút mở khóa (Unblock) -->
-                                    <form action="/admin" method="POST"
-                                        class="inline-flex items-center gap-2"
-                                        onsubmit="return confirm('Are you sure want to continue this action?');">
 
+                                    <!-- Nút mở khóa (Unblock) & Xóa -->
+                                    <form id="userActionForm_<?= $user['id'] ?>" action="" method="POST" class="inline-flex items-center gap-2">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
 
-                                        <button type="submit" name="unblock" title="Unblock"
-                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md">
+                                        <button type="button" name="unblock" title="Unblock"
+                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md"
+                                            onclick="confirmAction('unblock', '<?= $user['id'] ?>')">
                                             <i class="fas fa-unlock"></i>
                                         </button>
 
-                                        <button type="submit" name="delete_user" title="Delete User"
-                                            class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md">
+                                        <button type="button" name="delete_user" title="Delete User"
+                                            class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md"
+                                            onclick="confirmAction('delete_user', '<?= $user['id'] ?>')">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
+                                </div>
+
+                                <!-- Modal Xác nhận Hành Động (ID duy nhất cho từng user) -->
+                                <div id="confirmationModal_<?= $user['id'] ?>" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
+                                    <div class="bg-white p-6 rounded-lg shadow-lg w-120">
+                                        <h3 id="confirmationMessage_<?= $user['id'] ?>" class="text-lg font-semibold text-gray-800">
+                                            <!-- Thông điệp sẽ được cập nhật động -->
+                                        </h3>
+                                        <div class="mt-4 flex justify-center space-x-4">
+                                            <button type="button" onclick="closeConfirmationModal('<?= $user['id'] ?>')"
+                                                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
+                                                Cancel
+                                            </button>
+                                            <button type="button" onclick="submitAction('<?= $user['id'] ?>')"
+                                                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                                                Yes
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -909,6 +943,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
 </div>
 
 <script>
+    // Hàm mở modal với ID người dùng
+    function confirmAction(action, userId) {
+        const modal = document.getElementById('confirmationModal_' + userId);
+        const messageEl = document.getElementById('confirmationMessage_' + userId);
+
+        if (!modal || !messageEl) {
+            console.error("Modal hoặc message không tồn tại!", userId);
+            return;
+        }
+
+        if (action === 'unblock') {
+            messageEl.textContent = "Are you sure you want to unblock this user?";
+        } else if (action === 'delete_user') {
+            messageEl.textContent = "Are you sure you want to delete this user?";
+        } else {
+            messageEl.textContent = "Are you sure you want to continue this action?";
+        }
+
+        modal.setAttribute('data-action', action);
+        modal.classList.remove('hidden');
+    }
+
+    // Hàm đóng modal
+    function closeConfirmationModal(userId) {
+        const modal = document.getElementById('confirmationModal_' + userId);
+        modal.classList.add('hidden');
+    }
+
+    function submitAction(userId) {
+        const modal = document.getElementById('confirmationModal_' + userId);
+        const action = modal.getAttribute('data-action');
+        const form = document.getElementById('userActionForm_' + userId);
+
+        // Xoá input ẩn cũ nếu có
+        let existing = document.getElementById('pendingAction_' + userId);
+        if (existing) {
+            existing.remove();
+        }
+
+        // Tạo input mới
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = action;
+        input.value = '1';
+        input.id = 'pendingAction_' + userId;
+        form.appendChild(input);
+
+        // Reset modal (ẩn modal và xoá data-action nếu cần)
+        modal.classList.add('hidden');
+        modal.removeAttribute('data-action');
+
+        // Gửi form
+        form.submit();
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         const blockButtons = document.querySelectorAll(".block-btn");
         const blockForm = document.getElementById("block-user-form");
@@ -1051,7 +1140,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
 ?>
 
 <h1 class="text-4xl font-extrabold text-center my-8 text-blue-600 drop-shadow-lg">Vouchers Management</h1>
-<div class="container mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<div class="container-fluid mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <!-- Thêm Voucher -->
     <a href="/admin/add-voucher" class="mb-4 bg-green-500 text-white px-4 py-2 rounded-lg inline-block">+ Add Voucher</a>
 
@@ -1060,7 +1149,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
         <button type="submit" name="reset-voucher" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">🔄 Reset Expiration</button>
     </form>
 
-    <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead>
             <tr class="bg-green-100 text-gray-800 text-center uppercase text-sm">
                 <th class="px-4 py-3 border-b">ID</th>
@@ -1085,17 +1174,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
                         <td class="px-4 py-3 text-purple-600 font-semibold"><?= htmlspecialchars($v['quantity']) ?></td>
                         <td class="px-4 py-3 text-red-600 font-semibold"><?= htmlspecialchars($v['expiration_date'] ?? '---') ?></td>
                         <td class="px-4 py-3">
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center gap-2">
                                 <!-- Nút edit -->
                                 <a href="/admin/edit-voucher/id=<?= $v['id'] ?>"
                                     class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">✏️</a>
-                                <!-- Nút delete -->
-                                <form action="/admin/delete-voucher" method="POST"
-                                    onsubmit="return confirm('Are you sure you want to delete this voucher?');">
-                                    <input type="hidden" name="voucher_id" value="<?= $v['id'] ?>">
-                                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
-                                        title="Delete Voucher">❌</button>
-                                </form>
+
+                                <!-- Nút xóa voucher -->
+                                <button type="button" onclick="openModal(<?= $v['id'] ?>)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg" title="Delete Voucher">❌</button>
+
+                                <!-- Modal xác nhận xóa -->
+                                <div id="deleteModal<?= $v['id'] ?>" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
+                                    <div class="bg-white p-6 rounded-lg shadow-lg w-120">
+                                        <h2 class="text-lg font-semibold">Are you sure you want to delete this voucher?</h2>
+                                        <form action="/admin/delete-voucher" method="POST" id="deleteForm<?= $v['id'] ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                                            <input type="hidden" name="voucher_id" id="voucher_id<?= $v['id'] ?>" value="<?= $v['id'] ?>">
+                                            <div class="mt-4 flex justify-center space-x-4">
+                                                <button type="button" onclick="closeModal(<?= $v['id'] ?>)" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg">Cancel</button>
+                                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Delete</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -1109,10 +1209,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
     </table>
 </div>
 
-<!-- Logout Button -->
-<form method="POST" class="flex justify-center mb-8" onsubmit="return confirm('Are you sure you want to logout?');">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-    <button type="submit" name="logout" title="Logout"
-        class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
-        Logout</button>
-</form>
+<script>
+    // Mở modal
+    function openModal(voucherId) {
+        const modal = document.getElementById('deleteModal' + voucherId);
+        const voucherInput = document.getElementById('voucher_id' + voucherId);
+
+        // Đảm bảo rằng modal và input voucher_id có giá trị đúng
+        modal.classList.remove('hidden');
+        voucherInput.value = voucherId;
+    }
+
+    // Đóng modal
+    function closeModal(voucherId) {
+        const modal = document.getElementById('deleteModal' + voucherId);
+        modal.classList.add('hidden');
+    }
+</script>
+
+<!-- Logout Button (Trigger Modal) -->
+<div class="flex justify-center mb-8">
+    <button type="button" onclick="openLogoutModal()"
+        class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow"
+        title="Logout">Logout</button>
+</div>

@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['csrf_token']) && hash_
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add') {
-        $name = htmlspecialchars(trim($_POST['name']), ENT_QUOTES, 'UTF-8');
+        $name = trim($_POST['name']);
         $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
         $order_id = filter_var($_POST['order_id'], FILTER_VALIDATE_INT);
         $user_message = htmlspecialchars(trim($_POST['message']), ENT_QUOTES, 'UTF-8');
@@ -69,19 +69,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['csrf_token']) && hash_
     exit;
 }
 
-// Kiểm tra và lấy thông báo thành công từ session
-$success = '';
-if (isset($_SESSION['success'])) {
-    $success = $_SESSION['success'];
-    unset($_SESSION['success']); // Xóa thông báo khỏi session
-}
-
 ?>
 
-<!-- Hiển thị thông báo thành công nếu có -->
-<?php if (!empty($success)): ?>
+<!-- Hiển thị thông báo lỗi hoặc thành công nếu có -->
+<?php
+$message = '';
+$messageType = ''; // Để xác định loại thông báo (error hay success)
+if (!empty($_SESSION['error'])) {
+    $message = $_SESSION['error'];
+    $messageType = 'error';
+    unset($_SESSION['error']);
+} elseif (!empty($_SESSION['success'])) {
+    $message = $_SESSION['success'];
+    $messageType = 'success';
+    unset($_SESSION['success']);
+}
+?>
+
+<?php if (!empty($message)): ?>
+    <div class="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 <?= $messageType === 'error' ? 'bg-red-100 border border-red-400 text-red-700' : 'bg-green-100 border border-green-400 text-green-700' ?>">
+        <span><?= htmlspecialchars($message) ?></span>
+        <button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>
+    </div>
     <script>
-        alert("<?= addslashes($success) ?>");
+        // Tự động ẩn thông báo sau 5 giây
+        setTimeout(() => {
+            document.querySelector('.fixed').remove();
+        }, 5000);
     </script>
 <?php endif; ?>
 
@@ -226,9 +240,13 @@ if (isset($_SESSION['success'])) {
                     </div>
 
                     <div class="mt-3">
-                        <p class="text-gray-800">
+                        <p class="text-gray-800 break-words whitespace-normal max-w-full">
                             <strong class="text-blue-500">💬 Message:</strong>
-                            <?= htmlspecialchars(!empty($feedback['message']) ? $feedback['message'] : 'No feedback') ?>
+                            <span
+                                title="<?= htmlspecialchars($feedback['message']) ?>"
+                                class="cursor-pointer hover:underline">
+                                <?= !empty($feedback['message']) ? nl2br(substr($feedback['message'], 0, 100)) . '...' : 'No feedback' ?>
+                            </span>
                         </p>
 
                         <p class="text-gray-800 mt-2">
@@ -259,7 +277,7 @@ if (isset($_SESSION['success'])) {
                     </div>
 
                     <div class="flex justify-end space-x-3 mt-4">
-                        <button onclick="openEditModal(<?= $feedback['id'] ?>, '<?= htmlspecialchars($feedback['message'], ENT_QUOTES, 'UTF-8') ?>', <?= $feedback['rating'] ?>)"
+                        <button onclick="openEditModal(<?= $feedback['id'] ?>, '<?= htmlspecialchars($feedback['message']) ?>', <?= $feedback['rating'] ?>)"
                             class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-md transition-all">
                             ✏️ Edit
                         </button>
@@ -291,7 +309,7 @@ if (isset($_SESSION['success'])) {
             <!-- Message Input -->
             <div>
                 <label class="block text-lg text-gray-700 font-medium mb-2">Message:</label>
-                <textarea name="message" id="editMessage" rows="2"
+                <textarea name="message" id="editMessage" rows="3"
                     class="w-full p-4 border border-gray-300 rounded-lg focus:border-blue-400 transition"
                     required></textarea>
             </div>
@@ -326,8 +344,15 @@ if (isset($_SESSION['success'])) {
 <script>
     function openEditModal(id, message, rating) {
         document.getElementById('editFeedbackId').value = id;
-        document.getElementById('editMessage').value = message;
+
+        // Giải mã HTML entities trong message
+        const temp = document.createElement('textarea');
+        temp.innerHTML = message;
+        const decodedMessage = temp.value;
+
+        document.getElementById('editMessage').value = decodedMessage;
         document.getElementById('editRating').value = rating;
+
         // Hiển thị Order ID trong tiêu đề
         document.getElementById("feedbackNumber").textContent = `#${id}`;
 

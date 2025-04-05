@@ -24,7 +24,7 @@ $alreadyClaimed = $checkClaim->fetchColumn();
 
 if ($alreadyClaimed > 0) {
     // Nếu đã claim thì thông báo và quay lại trang trước
-    $_SESSION['success'] = "You have already claimed this voucher ($voucherCode)!";
+    $_SESSION['error'] = "You have already claimed this voucher ($voucherCode)!";
     header("Location: " . $_SERVER['HTTP_REFERER']);
     exit;
 }
@@ -44,7 +44,7 @@ try {
     $_SESSION['success'] = "You have successfully claimed the voucher ($voucherCode)!";
 } catch (Exception $e) {
     $conn->rollBack();
-    $_SESSION['success'] = "An unexpected error occurred.";
+    $_SESSION['error'] = "An unexpected error occurred.";
 }
 
 header("Location: " . $_SERVER['HTTP_REFERER']);

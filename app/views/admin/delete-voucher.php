@@ -22,5 +22,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['voucher_id'])) {
     }
 }
 
-header("Location: " . $_SERVER['HTTP_REFERER']);
+header("Location: /admin");
 exit;

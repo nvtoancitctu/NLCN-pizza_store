@@ -66,26 +66,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $updated = $userController->updateUserProfile($user_id, $name, $phone, $address, $image);
 
     if ($updated) {
-      $message = "Profile updated successfully.";
+      $_SESSION['success'] = "Profile updated successfully.";
     } else {
-      $message = "Failed to update profile.";
+      $_SESSION['error'] = "Failed to update profile.";
     }
 
-    $_SESSION['message'] = $message;
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     header("Location: /account");
     exit();
   }
 }
 ?>
-
-<!-- Hiển thị alert bằng JavaScript nếu có thông báo -->
-<?php if (!empty($_SESSION['message'])): ?>
-  <script>
-    alert("<?= htmlspecialchars($_SESSION['message']) ?>");
-  </script>
-  <?php unset($_SESSION['message']); ?>
-<?php endif; ?>
 
 <!-- Profile Section -->
 <div class="container mx-auto w-4/5">
@@ -168,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Form Cập Nhật Thông Tin Người Dùng, mặc định bị ẩn -->
   <div id="update-profile-form" class="space-y-6 mt-4 mb-8 hidden mx-auto">
-    <form action="/account" method="POST" enctype="multipart/form-data" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-blue-200">
+    <form action="/account" method="POST" enctype="multipart/form-data" class="space-y-2 bg-white p-6 rounded-lg shadow-md border-2 border-blue-200">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
       <!-- Name, Phone -->
       <div class="flex flex-col md:flex-row justify-between">
@@ -352,7 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statusColor = $statusColors[$orderStatus] ?? 'text-gray-500';
             ?>
 
-            <div class="relative bg-white p-3 rounded-lg border-2 border-blue-100">
+            <div class="bg-white p-3 rounded-lg border-2 border-blue-100 flex items-center space-x-3">
               <div class="flex items-center space-x-3">
                 <i class="fas fa-truck <?= $statusColor ?> text-xl"></i>
                 <div>
@@ -398,27 +388,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endforeach; ?>
   <?php endif; ?>
+</div>
 
-  <script>
-    function toggleOrderDetails(orderId) {
-      var details = document.getElementById(orderId);
-      var icon = document.getElementById("icon-" + orderId);
+<script>
+  function toggleOrderDetails(orderId) {
+    var details = document.getElementById(orderId);
+    var icon = document.getElementById("icon-" + orderId);
 
-      if (details.classList.contains("hidden")) {
-        details.classList.remove("hidden");
-        icon.classList.replace("fa-chevron-down", "fa-chevron-up");
-      } else {
-        details.classList.add("hidden");
-        icon.classList.replace("fa-chevron-up", "fa-chevron-down");
-      }
+    if (details.classList.contains("hidden")) {
+      details.classList.remove("hidden");
+      icon.classList.replace("fa-chevron-down", "fa-chevron-up");
+    } else {
+      details.classList.add("hidden");
+      icon.classList.replace("fa-chevron-up", "fa-chevron-down");
     }
-  </script>
+  }
+</script>
 
-  <!-- Logout Button -->
-  <form method="POST" class="flex justify-center mb-8 mt-8" onsubmit="return confirm('Are you sure want to logout?');">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
-    <button type="submit" name="logout" title="Logout"
-      class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow">
-      Logout</button>
-  </form>
+<!-- Logout Button (Trigger Modal) -->
+<div class="flex justify-center mb-8 mt-8">
+  <button type="button" onclick="openLogoutModal()"
+    class="bg-red-500 text-white px-5 py-2 rounded-md hover:bg-red-600 transition duration-200 shadow"
+    title="Logout">Logout</button>
 </div>

@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
     <!-- Bố cục chia thành hai cột -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
       <!-- Cột bên trái: Thông tin đơn hàng & địa chỉ giao hàng -->
       <div class="space-y-6">
         <!-- Thông tin đơn hàng -->
@@ -113,7 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
         <!-- Thông tin giao hàng -->
         <div class="bg-gray-100 p-6 rounded-lg shadow-sm">
           <h2 class="text-xl font-bold mb-4 text-gray-800">Shipping Address</h2>
-          <textarea name="address" id="address" rows="3" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
+          <textarea name="address" id="address" rows="3" class="w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required
+            placeholder="Enter your shipping address..."><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
           <button type="button" onclick="getLocation()" class="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition duration-200">
             Use Current Location
           </button>
@@ -167,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
             <p class="font-semibold text-gray-800">Scan QR Code to Pay:</p>
             <img src="/images/qr-code.png" alt="QR Code" class="w-3/5 h-auto mx-auto my-2">
             <label class="block text-gray-700 font-semibold mt-4">Upload Payment Proof:</label>
-            <input type="file" name="image" id="image" class="w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <input type="file" name="image" id="image" class="w-full p-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400" required>
           </div>
         </div>
 
@@ -213,73 +214,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
         </div>
       </div>
     </div>
-
-    <!-- JavaScript: Lấy vị trí & xử lý lỗi -->
-    <script>
-      function getLocation() {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(position => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            document.getElementById("latitude").textContent = lat;
-            document.getElementById("longitude").textContent = lon;
-
-            // Tạo link Google Maps
-            const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-            const mapLink = document.getElementById("mapLink");
-            mapLink.href = mapUrl;
-            mapLink.classList.remove("hidden"); // Hiển thị link
-
-            // Lưu link vào input ẩn để gửi lên server
-            document.getElementById("map_url").value = mapUrl;
-
-            // Tích hợp OSM (Nominatim) để lấy địa chỉ
-            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {
-                headers: {
-                  "User-Agent": "PizzaDeliveryApp/1.0 (your-email@example.com)" // Thay bằng email của bạn
-                }
-              })
-              .then(response => response.json())
-              .then(data => {
-                if (data.error) {
-                  console.error("OSM Error: ", data.error);
-                  document.getElementById("address").value = "Unable to fetch address";
-                } else {
-                  const address = data.display_name;
-                  document.getElementById("address").value = address; // Điền địa chỉ vào textarea
-                }
-              })
-              .catch(error => {
-                console.error("Fetch Error: ", error);
-                document.getElementById("address").value = "Error fetching address";
-              });
-          }, showError);
-        } else {
-          alert("Geolocation is not supported by this browser.");
-        }
-      }
-
-      function showError(error) {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            alert("User denied the request for Geolocation.");
-            break;
-          case error.POSITION_UNAVAILABLE:
-            alert("Location information is unavailable.");
-            break;
-          case error.TIMEOUT:
-            alert("The request to get user location timed out.");
-            break;
-          case error.UNKNOWN_ERROR:
-            alert("An unknown error occurred.");
-            break;
-        }
-      }
-    </script>
     <input type="hidden" name="checkout" value="1">
-
   </form>
 </div>
+
+<!-- Modal Xác nhận -->
+<div id="confirmModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-120">
+    <h3 class="text-lg font-semibold text-gray-800">Are you sure you want to place an order?</h3>
+    <div class="mt-4 flex justify-center space-x-4">
+      <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
+      <button type="button" onclick="placeOrder()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Yes</button>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript: Lấy vị trí & xử lý lỗi -->
+<script>
+  function getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        document.getElementById("latitude").textContent = lat;
+        document.getElementById("longitude").textContent = lon;
+
+        // Tạo link Google Maps
+        const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+        const mapLink = document.getElementById("mapLink");
+        mapLink.href = mapUrl;
+        mapLink.classList.remove("hidden"); // Hiển thị link
+
+        // Lưu link vào input ẩn để gửi lên server
+        document.getElementById("map_url").value = mapUrl;
+
+        // Tích hợp OSM (Nominatim) để lấy địa chỉ
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`, {
+            headers: {
+              "User-Agent": "PizzaDeliveryApp/1.0 (your-email@example.com)" // Thay bằng email của bạn
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              console.error("OSM Error: ", data.error);
+              document.getElementById("address").value = "Unable to fetch address";
+            } else {
+              const address = data.display_name;
+              document.getElementById("address").value = address; // Điền địa chỉ vào textarea
+            }
+          })
+          .catch(error => {
+            console.error("Fetch Error: ", error);
+            document.getElementById("address").value = "Error fetching address";
+          });
+      }, showError);
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  }
+
+  function showError(error) {
+    switch (error.code) {
+      case error.PERMISSION_DENIED:
+        alert("User denied the request for Geolocation.");
+        break;
+      case error.POSITION_UNAVAILABLE:
+        alert("Location information is unavailable.");
+        break;
+      case error.TIMEOUT:
+        alert("The request to get user location timed out.");
+        break;
+      case error.UNKNOWN_ERROR:
+        alert("An unknown error occurred.");
+        break;
+    }
+  }
+</script>
 
 <script>
   function confirmCheckout(event) {
@@ -287,21 +298,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 
     const address = document.getElementById('address').value.trim();
     const paymentMethod = document.querySelector('select[name="payment_method"]').value;
+    const messageContainer = document.createElement('div');
 
+    // Kiểm tra địa chỉ giao hàng
     if (!address) {
-      alert("Please enter your shipping address.");
+      messageContainer.className = 'fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 bg-red-100 border border-red-400 text-red-700';
+      messageContainer.innerHTML = `<span>Please enter your shipping address.</span><button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>`;
+      document.body.appendChild(messageContainer);
+      setTimeout(() => messageContainer.remove(), 5000);
       return;
     }
 
+    // Kiểm tra phương thức thanh toán
     if (!paymentMethod) {
-      alert("Please select a payment method.");
+      messageContainer.className = 'fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 bg-red-100 border border-red-400 text-red-700';
+      messageContainer.innerHTML = `<span>Please select a payment method.</span><button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>`;
+      document.body.appendChild(messageContainer);
+      setTimeout(() => messageContainer.remove(), 5000);
       return;
     }
 
-    const confirmOrder = confirm("Are you sure want to place an order?");
-    if (confirmOrder) {
-      document.getElementById('checkout-form').submit();
+    // Nếu phương thức thanh toán là chuyển khoản, yêu cầu upload ảnh thanh toán
+    if (paymentMethod === 'bank_transfer') {
+      const imageInput = document.getElementById('image');
+      if (!imageInput.files.length) {
+        messageContainer.className = 'fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 bg-red-100 border border-red-400 text-red-700';
+        messageContainer.innerHTML = `<span>Please upload the payment proof.</span><button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>`;
+        document.body.appendChild(messageContainer);
+        setTimeout(() => messageContainer.remove(), 5000);
+        return;
+      }
     }
+
+    // Mở modal xác nhận đơn hàng
+    openConfirmModal();
+  }
+
+  function openConfirmModal() {
+    // Hiển thị modal
+    document.getElementById('confirmModal').classList.remove('hidden');
+  }
+
+  // Đóng modal xác nhận (không gửi form khi nhấn Cancel)
+  function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+  }
+
+  // Gửi form khi người dùng chọn "Yes"
+  function placeOrder() {
+    document.getElementById('checkout-form').submit(); // Gửi form sau khi xác nhận
+    closeConfirmModal(); // Đóng modal sau khi gửi form
   }
 
   function toggleBankTransfer() {

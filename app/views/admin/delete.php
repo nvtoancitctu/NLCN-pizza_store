@@ -29,5 +29,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['product_id'])) {
 }
 
 // Quay lại trang danh sách đơn hàng
-header("Location: /admin/list");
+header("Location: /admin");
 exit();

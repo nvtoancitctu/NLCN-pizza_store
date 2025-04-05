@@ -42,13 +42,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<!-- Hiển thị lỗi nếu có -->
-<?php if (!empty($error)): ?>
-    <script>
-        alert("<?= addslashes($error) ?>");
-    </script>
-<?php endif; ?>
-
 <!-- Giao diện Form Đăng Ký -->
 <div class="flex min-h-screen items-center justify-center bg-gradient-to-r from-blue-50 to-blue-100">
     <div class="w-full max-w-md bg-white shadow-xl rounded-xl p-8 mt-16 mb-16">

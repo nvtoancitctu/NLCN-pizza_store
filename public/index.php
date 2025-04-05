@@ -131,3 +131,33 @@ switch ($page) {
 // Include footer
 require_once '../app/views/includes/footer.php';
 ob_end_flush();
+?>
+
+<!-- Hiển thị thông báo lỗi hoặc thành công nếu có -->
+<?php
+$message = '';
+$messageType = ''; // Để xác định loại thông báo (error hay success)
+if (!empty($_SESSION['error'])) {
+    $message = $_SESSION['error'];
+    $messageType = 'error';
+    unset($_SESSION['error']);
+} elseif (!empty($_SESSION['success'])) {
+    $message = $_SESSION['success'];
+    $messageType = 'success';
+    unset($_SESSION['success']);
+}
+?>
+
+<!-- Hiển thị thông báo -->
+<?php if (!empty($message)): ?>
+    <div class="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 <?= $messageType === 'error' ? 'bg-red-100 border border-red-400 text-red-700' : 'bg-green-100 border border-green-400 text-green-700' ?>">
+        <span><?= htmlspecialchars($message) ?></span>
+        <button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>
+    </div>
+    <script>
+        // Tự động ẩn thông báo sau 5 giây
+        setTimeout(() => {
+            document.querySelector('.fixed').remove();
+        }, 5000);
+    </script>
+<?php endif; ?>

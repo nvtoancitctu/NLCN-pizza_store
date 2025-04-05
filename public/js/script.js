@@ -59,14 +59,32 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const handleResponse = (data) => {
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('fixed', 'top-4', 'right-4', 'z-50', 'p-4', 'rounded-lg', 'shadow-lg', 'transition-all', 'duration-300');
+
+        // Kiểm tra nếu đăng nhập chưa, hoặc thông báo thành công/lỗi
         if (data.loggedIn === false) {
             showLoginModal();
         } else if (data.success) {
-            alert("Product added to cart successfully!");
-            setTimeout(() => location.reload(), 100);
+            // Thông báo thành công
+            messageContainer.classList.add('bg-green-100', 'border', 'border-green-400', 'text-green-700');
+            messageContainer.innerHTML = `
+            <span>Product added to cart successfully!</span>
+            <button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>
+        `;
         } else {
-            alert("Cannot add to cart! The product is out of stock.");
+            // Thông báo lỗi
+            messageContainer.classList.add('bg-red-100', 'border', 'border-red-400', 'text-red-700');
+            messageContainer.innerHTML = `
+            <span>Cannot add to cart! The product is out of stock.</span>
+            <button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>
+        `;
         }
+
+        // Thêm thông báo vào body
+        document.body.appendChild(messageContainer);
+
+        setTimeout(() => location.reload(), 500);
     };
 
     addToCartButtons.forEach(button => {

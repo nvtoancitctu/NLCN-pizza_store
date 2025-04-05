@@ -15,46 +15,9 @@ $product = $productController->getProductDetails($product_id);
 
 // Lấy danh sách combo
 $Combos = $productController->listProducts(8);
-
-// Hiển thị thông báo lỗi hoặc thành công nếu có
-$message = '';
-$messageType = ''; // Để xác định loại thông báo (error hay success)
-if (!empty($_SESSION['error'])) {
-  $message = $_SESSION['error'];
-  $messageType = 'error';
-  unset($_SESSION['error']);
-} elseif (!empty($_SESSION['success'])) {
-  $message = $_SESSION['success'];
-  $messageType = 'success';
-  unset($_SESSION['success']);
-}
-
 ?>
 
-<!-- Hiển thị thông báo -->
-<?php if (!empty($message)): ?>
-  <div class="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 <?= $messageType === 'error' ? 'bg-red-100 border border-red-400 text-red-700' : 'bg-green-100 border border-green-400 text-green-700' ?>">
-    <span><?= htmlspecialchars($message) ?></span>
-    <button onclick="this.parentElement.remove()" class="ml-2 text-sm font-semibold">✕</button>
-  </div>
-<?php endif; ?>
-
-<!-- Script tự động ẩn (đặt ở cuối trang hoặc ngoài vòng lặp) -->
-<?php if (!empty($message)): ?>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const elements = document.querySelectorAll('.fixed');
-        if (elements.length > 0) {
-          elements.forEach(element => element.remove());
-        }
-      }, 5000);
-    });
-  </script>
-<?php endif; ?>
-
 <div class="container mx-auto px-12">
-
   <!-- Jumbotron -->
   <div class="bg-gradient-to-r from-blue-400 to-purple-400 shadow-lg text-white text-center p-8 md:p-16 rounded-3xl mt-12 overflow-hidden border-8 border-yellow-100">
     <!-- Nội dung chính -->
@@ -429,7 +392,9 @@ if (!empty($_SESSION['error'])) {
 
         <div class="p-6 text-center">
           <h5 class="text-xl font-bold mb-2 text-gray-800"><?php echo htmlspecialchars($product['name']); ?></h5>
-          <p class="text-xl font-semibold text-blue-500 mt-2">$<?= htmlspecialchars($product['final_price']); ?></p>
+          <p class="<?php echo ($product['final_price'] == $product['price']) ? 'text-xl font-semibold text-blue-500 mt-2' : 'text-xl font-semibold text-red-500 mt-2'; ?>">
+            $<?= htmlspecialchars($product['final_price']); ?>
+          </p>
 
           <div class="mt-2 flex justify-center">
             <form method="POST" action="add" class="add-to-cart-form" style="display:inline;">
@@ -543,19 +508,29 @@ if (!empty($_SESSION['error'])) {
       <!-- Column 1: Top 5 Rated Pizzas -->
       <div class="bg-yellow-50 rounded-2xl shadow-md border-1 border-yellow-400 p-6">
         <h3 class="text-lg font-semibold text-yellow-700 mb-4">🏆 Top 5 Pizzas of the Week</h3>
+
         <?php if (!empty($highestRatedPizzas)): ?>
           <ul class="space-y-4">
             <?php foreach ($highestRatedPizzas as $index => $pizza): ?>
               <li class="flex items-center space-x-4 transition transform hover:scale-105">
                 <span class="text-yellow-600 font-bold text-lg"><?php echo $index + 1; ?></span>
-                <img src="/images/product/<?= htmlspecialchars($pizza['image']) ?>"
-                  alt="Top Rated Pizza" class="w-16 h-16 object-cover rounded-xl shadow-md">
-                <div class="text-left">
-                  <h4 class="text-md font-bold text-gray-900"><?= htmlspecialchars($pizza['name']) ?></h4>
-                  <p class="text-yellow-600">⭐ <?= number_format($pizza['avg_rating'], 1) ?> / 5</p>
-                  <a href="/products&category_id=<?= $pizza['id'] ?>"
-                    class="text-yellow-500 hover:underline text-sm">View Details</a>
+
+                <!-- Hình ảnh sản phẩm bên trái -->
+                <div class="w-1/3 flex items-center justify-center">
+                  <img src="/images/product/<?= htmlspecialchars($pizza['image']) ?>"
+                    class="max-w-full max-h-full object-contain rounded-lg transition duration-500 ease-in-out transform hover:scale-110 cursor-pointer"
+                    alt="<?= htmlspecialchars($pizza['name']) ?>">
                 </div>
+
+                <!-- Điểm đánh giá trung bình bên phải -->
+                <div class="flex-1 flex flex-col justify-center items-start">
+                  <h4 class="text-sm font-bold text-gray-900"><?= htmlspecialchars($pizza['name']) ?></h4>
+                  <div class="flex items-center space-x-1 text-yellow-600 mt-2">
+                    <span>⭐</span>
+                    <span><?= number_format($pizza['avg_rating'], 1) ?> / 5.0</span>
+                  </div>
+                </div>
+
               </li>
             <?php endforeach; ?>
           </ul>
@@ -567,20 +542,27 @@ if (!empty($_SESSION['error'])) {
       <!-- Column 2: Top 5 Best Seller Pizzas -->
       <div class="bg-green-50 rounded-2xl shadow-md border-1 border-green-400 p-6">
         <h3 class="text-lg font-semibold text-green-700 mb-4">📈 Top 5 Best Sellers</h3>
+
         <?php if (!empty($bestSellerPizzas)): ?>
           <ul class="space-y-4">
             <?php foreach ($bestSellerPizzas as $index => $pizza): ?>
               <li class="flex items-center space-x-4 transition transform hover:scale-105">
                 <span class="text-green-600 font-bold text-lg"><?php echo $index + 1; ?></span>
-                <img src="/images/product/<?= htmlspecialchars($pizza['image']) ?>"
-                  alt="Best Seller Pizza" class="w-16 h-16 object-cover rounded-xl shadow-md">
+
+                <div class="w-1/3 flex items-center justify-center">
+                  <img src="/images/product/<?= htmlspecialchars($pizza['image']) ?>"
+                    class="max-w-full max-h-full object-contain rounded-lg transition duration-500 ease-in-out transform hover:scale-110 cursor-pointer"
+                    alt="<?= htmlspecialchars($pizza['name']) ?>">
+                </div>
+
                 <div class="flex-1 flex flex-col justify-center items-start">
-                  <h4 class="text-md font-bold text-gray-900"><?= htmlspecialchars($pizza['name']) ?></h4>
-                  <div class="flex items-center space-x-1 text-green-600">
+                  <h4 class="text-sm font-bold text-gray-900"><?= htmlspecialchars($pizza['name']) ?></h4>
+                  <div class="flex items-center space-x-1 text-green-600 mt-2">
                     <span>🔥</span>
                     <span><?= number_format($pizza['total_sales']) ?></span>
                   </div>
                 </div>
+
               </li>
             <?php endforeach; ?>
           </ul>
@@ -596,8 +578,8 @@ if (!empty($_SESSION['error'])) {
           <ul class="space-y-4">
             <?php foreach ($randomTestimonials as $review): ?>
               <li class="bg-white p-4 rounded-xl shadow-md border border-blue-300 transition transform hover:scale-105">
-                <p class="text-gray-700 italic text-sm">“<?= htmlspecialchars($review['message']) ?>”</p>
-                <p class="text-right font-semibold text-blue-700 mt-2 text-sm">- <?= htmlspecialchars($review['name']) ?></p>
+                <p class="text-gray-700 italic text-sm">“<?= nl2br($review['message']) ?>”</p>
+                <p class="text-right font-semibold text-blue-700 mt-2 text-sm">- <?= htmlspecialchars($review['name']) ?> -</p>
               </li>
             <?php endforeach; ?>
           </ul>

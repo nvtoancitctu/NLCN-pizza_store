@@ -61,14 +61,6 @@ if (isset($_GET['action'])) {
 }
 ?>
 
-<!-- Hiển thị alert bằng JavaScript nếu có thông báo -->
-<?php if (!empty($_SESSION['message'])): ?>
-    <script>
-        alert("<?= htmlspecialchars($_SESSION['message']) ?>");
-    </script>
-    <?php unset($_SESSION['message']); ?>
-<?php endif; ?>
-
 <!-- Tiêu đề chính -->
 <h1 class="text-4xl font-extrabold mt-8 text-center text-blue-700 drop-shadow-lg">
     YOUR CART
@@ -89,7 +81,7 @@ if (isset($_GET['action'])) {
 <div class="container mx-auto w-10/12">
     <?php if (!empty($cartItems)): ?>
         <!-- Bảng hiển thị sản phẩm trong giỏ hàng -->
-        <div class="bg-white shadow-xl rounded-lg overflow-hidden mb-8 border border-gray-200">
+        <div class="bg-white shadow-sm rounded-lg overflow-hidden mb-8 border-2 border-blue-300">
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse">
                     <!-- Tiêu đề bảng -->
@@ -176,7 +168,7 @@ if (isset($_GET['action'])) {
             </div>
 
             <!-- Tổng giá đơn hàng -->
-            <div class="flex justify-between items-center bg-gray-200 px-6 py-4">
+            <div class="flex justify-between items-center bg-gray-100 px-6 py-4">
                 <span class="text-lg font-bold">Total Price:</span>
                 <span class="text-2xl font-semibold text-red-600">
                     $<?= number_format(array_sum(array_column($cartItems, 'total_price')), 2) ?>

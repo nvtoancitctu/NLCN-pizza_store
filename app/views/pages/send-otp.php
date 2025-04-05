@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'])) {
         } else {
             $otp = rand(100000, 999999);
             $_SESSION['reset_otp'] = $otp;
-            $_SESSION['otp_expiry'] = time() + 10;
+            $_SESSION['otp_expiry'] = time() + 30;
             $_SESSION['reset_email'] = $email;
 
             // Send OTP email
@@ -83,10 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'])) {
                     ";
 
             if (sendEmail($email, $subject, $message)) {
-                $success = "OTP has been sent to your email!";
+                $_SESION['success'] = "OTP has been sent to your email!";
                 $showOtpForm = true;
             } else {
-                $error = "Failed to send OTP. Please try again!";
+                $_SESSION['error'] = "Failed to send OTP. Please try again!";
             }
         }
     }
@@ -96,14 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'])) {
 <div class="bg-gradient-to-r from-blue-50 to-blue-100">
     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
         <h2 class="text-xl font-bold text-gray-700 mb-4">🔑 Send OTP</h2>
-
-        <?php if (isset($error)) : ?>
-            <p class="text-red-500 mb-3"><?= $error ?></p>
-        <?php endif; ?>
-
-        <?php if (isset($success)) : ?>
-            <p class="text-green-500 mb-3"><?= $success ?></p>
-        <?php endif; ?>
 
         <!-- Form gửi OTP -->
         <?php if (!$showOtpForm) : ?>
@@ -126,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'])) {
                     class="w-full bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg">Verify OTP</button>
             </form>
             <p id="countdown" class="text-center text-red-500 mt-4">
-                OTP expires in <span id="timer">60</span> seconds.
+                OTP expires in <span id="timer">30</span> seconds.
             </p>
         <?php endif; ?>
     </div>
@@ -134,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'])) {
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        let countdown = 10;
+        let countdown = 30;
         let timerSpan = document.getElementById("timer");
 
         if (timerSpan) {

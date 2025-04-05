@@ -285,8 +285,7 @@ class User
                 name = :name, 
                 email = :email, 
                 phone = :phone, 
-                address = :address, 
-                role = :role, 
+                address = :address,  
                 blocked_until = :blocked_until
             WHERE id = :id";
 
@@ -297,7 +296,6 @@ class User
         $stmt->bindValue(':email', isset($data['email']) ? $data['email'] : '', PDO::PARAM_STR);
         $stmt->bindValue(':phone', isset($data['phone']) ? $data['phone'] : '', PDO::PARAM_STR);
         $stmt->bindValue(':address', isset($data['address']) ? $data['address'] : '', PDO::PARAM_STR);
-        $stmt->bindValue(':role', isset($data['role']) ? $data['role'] : '', PDO::PARAM_STR);
         // Nếu không có blocked_until, bạn có thể set là NULL hoặc một giá trị mặc định.
         $stmt->bindValue(':blocked_until', isset($data['blocked_until']) ? $data['blocked_until'] : null, PDO::PARAM_STR);
         $stmt->bindValue(':id', $user_id, PDO::PARAM_INT);

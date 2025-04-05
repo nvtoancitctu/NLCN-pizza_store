@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['success'] = "Product $name has been added successfully!";
     $_SESSION['limit'] = $productController->countProducts();
     $_SESSION['page'] = 1;
-    header("Location: /admin/list");
+    header("Location: /admin");
     exit();
 }
 ?>
