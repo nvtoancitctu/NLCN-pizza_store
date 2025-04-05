@@ -36,80 +36,57 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
 // Điều hướng tới các trang khác nhau
 switch ($page) {
+    // KHÁCH HÀNG
     case 'home':
         include '../app/views/pages/home.php';
         break;
     case 'claim_voucher':
         include '../app/views/pages/claim_voucher.php';
         break;
-    case 'products':
-        include '../app/views/pages/products.php';
-        break;
-    case 'toggle-favorite':
-        include '../app/views/pages/toggle_favorite.php';
-        break;
-    case 'cart':
-        include '../app/views/pages/cart.php';
-        break;
-    case 'checkout':
-        include '../app/views/pages/checkout.php';
-        break;
-    case 'send-email':
-        include '../app/views/pages/send-email.php';
-        break;
-    case 'order-success':
-        include '../app/views/pages/order-success.php';
-        break;
     case 'feedback':
         include '../app/views/pages/feedback.php';
         break;
+    //---> shoping
+    case 'products':
+        include '../app/views/pages/shop/products.php';
+        break;
+    case 'toggle-favorite':
+        include '../app/views/pages/shop/toggle_favorite.php';
+        break;
+    case 'cart':
+        include '../app/views/pages/shop/cart.php';
+        break;
+    case 'checkout':
+        include '../app/views/pages/shop/checkout.php';
+        break;
+    case 'send-email':
+        include '../app/views/pages/shop/send-email.php';
+        break;
+    case 'order-success':
+        include '../app/views/pages/shop/order-success.php';
+        break;
+    //---> authentication
     case 'login':
-        include '../app/views/pages/login.php';
+        include '../app/views/pages/auth/login.php';
         break;
     case 'send-otp':
-        include '../app/views/pages/send-otp.php';
+        include '../app/views/pages/auth/send-otp.php';
         break;
     case 'reset-password':
-        include '../app/views/pages/reset-password.php';
+        include '../app/views/pages/auth/reset-password.php';
         break;
     case 'account':
-        include '../app/views/pages/account.php';
+        include '../app/views/pages/auth/account.php';
         break;
     case 'register':
-        include '../app/views/pages/register.php';
+        include '../app/views/pages/auth/register.php';
         break;
     case 'send-email-welcome':
-        include '../app/views/pages/send-email-welcome.php';
+        include '../app/views/pages/auth/send-email-welcome.php';
         break;
+    // QUẢN TRỊ VIÊN
     case 'list':
         include '../app/views/admin/list.php';
-        break;
-    case 'add':
-        include '../app/views/admin/add.php';
-        break;
-    case 'add-voucher':
-        include '../app/views/admin/add-voucher.php';
-        break;
-    case 'edit':
-        include '../app/views/admin/edit.php';
-        break;
-    case 'edit-voucher':
-        include '../app/views/admin/edit-voucher.php';
-        break;
-    case 'delete':
-        include '../app/views/admin/delete.php';
-        break;
-    case 'delete-order':
-        include '../app/views/admin/delete-order.php';
-        break;
-    case 'delete-voucher':
-        include '../app/views/admin/delete-voucher.php';
-        break;
-    case 'statistics':
-        include '../app/views/admin/statistics.php';
-        break;
-    case 'exportPDF':
-        include '../app/views/admin/exportPDF.php';
         break;
     case 'export-products':
         include '../app/views/admin/export-products.php';
@@ -117,11 +94,42 @@ switch ($page) {
     case 'import-products':
         include '../app/views/admin/import-products.php';
         break;
-    case 'send-email_order':
-        include '../app/views/admin/send-email_order.php';
-        break;
     case 'send-email_user':
         include '../app/views/admin/send-email_user.php';
+        break;
+    //---> quản lí sản phẩm
+    case 'add':
+        include '../app/views/admin/products/add.php';
+        break;
+    case 'edit':
+        include '../app/views/admin/products/edit.php';
+        break;
+    case 'delete':
+        include '../app/views/admin/products/delete.php';
+        break;
+    //---> quản lí voucher
+    case 'add-voucher':
+        include '../app/views/admin/vouchers/add-voucher.php';
+        break;
+    case 'edit-voucher':
+        include '../app/views/admin/vouchers/edit-voucher.php';
+        break;
+    case 'delete-voucher':
+        include '../app/views/admin/vouchers/delete-voucher.php';
+        break;
+    //---> quản lí đơn hàng
+    case 'delete-order':
+        include '../app/views/admin/orders/delete-order.php';
+        break;
+    case 'send-email_order':
+        include '../app/views/admin/orders/send-email_order.php';
+        break;
+    //---> thống kê 
+    case 'statistics':
+        include '../app/views/admin/reports/statistics.php';
+        break;
+    case 'exportPDF':
+        include '../app/views/admin/reports/exportPDF.php';
         break;
     default:
         include '../app/views/pages/404.php'; // Trang lỗi 404
