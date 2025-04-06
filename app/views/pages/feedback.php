@@ -270,25 +270,25 @@ if (!empty($_SESSION['error'])) {
                         </p>
                     </div>
 
-                    <!-- Thêm ghi chú -->
-                    <div class="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 rounded-md">
-                        <strong>📌 Note:</strong> This feedback is important for improving customer experience.
-                        Please review and respond as soon as possible.
-                    </div>
+                    <?php if (empty($feedback['response'])): ?>
+                        <!-- Thêm ghi chú -->
+                        <div class="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 rounded-md">
+                            <strong>📌 Note:</strong> This feedback is important for improving customer experience.
+                            Please review and respond as soon as possible.
+                        </div>
+                    <?php endif; ?>
 
                     <div class="flex justify-end space-x-3 mt-4">
                         <button onclick="openEditModal(<?= $feedback['id'] ?>, '<?= htmlspecialchars($feedback['message']) ?>', <?= $feedback['rating'] ?>)"
                             class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-md transition-all">
                             ✏️ Edit
                         </button>
-                        <form method="POST" onsubmit="return confirm('Are you sure want to delete this feedback?');">
-                            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="feedback_id" value="<?= htmlspecialchars($feedback['id']) ?>">
-                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition-all">
-                                🗑️ Delete
-                            </button>
-                        </form>
+                        <!-- Button mở modal -->
+                        <button type="button"
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition-all"
+                            onclick="openConfirmModal(<?= $feedback['id'] ?>)">
+                            🗑️ Delete
+                        </button>
                     </div>
 
                 </div>
@@ -296,6 +296,52 @@ if (!empty($_SESSION['error'])) {
         </div>
     </div>
 <?php endif; ?>
+
+<!-- Modal Xác nhận Xóa -->
+<div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md text-center">
+        <h2 class="text-lg font-semibold mb-4">Confirm Delete</h2>
+        <p class="mb-4 text-gray-700">Are you sure you want to delete this feedback?</p>
+
+        <form method="POST" id="confirm-delete-form">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="feedback_id" id="modal-feedback-id">
+
+            <div class="flex justify-center space-x-4">
+                <button type="button"
+                    class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                    onclick="closeConfirmModal()">
+                    No
+                </button>
+
+                <button type="submit"
+                    class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                    Yes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openConfirmModal(feedbackId) {
+        document.getElementById('modal-feedback-id').value = feedbackId;
+        document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirm-modal').classList.add('hidden');
+    }
+
+    // Optional: đóng modal khi click ra ngoài
+    window.addEventListener('click', function(e) {
+        const modal = document.getElementById('confirm-modal');
+        if (e.target === modal) {
+            closeConfirmModal();
+        }
+    });
+</script>
 
 <!-- Modal chỉnh sửa feedback -->
 <div id="editModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity">
@@ -327,7 +373,7 @@ if (!empty($_SESSION['error'])) {
             </div>
 
             <!-- Buttons -->
-            <div class="flex justify-between mt-6">
+            <div class="flex justify-center space-x-4 mt-6">
                 <button type="button" onclick="closeEditModal()"
                     class="bg-gray-500 hover:bg-gray-600 text-white text-lg font-medium px-4 py-2 rounded-lg transition">
                     Cancel

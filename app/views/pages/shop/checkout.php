@@ -223,8 +223,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
   <div class="bg-white p-6 rounded-lg shadow-lg w-120">
     <h3 class="text-lg font-semibold text-gray-800">Are you sure you want to place an order?</h3>
     <div class="mt-4 flex justify-center space-x-4">
-      <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
-      <button type="button" onclick="placeOrder()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Yes</button>
+      <button type="button" onclick="closeConfirmModal()" class="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">No</button>
+      <button type="button" onclick="placeOrder()" class="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Yes</button>
     </div>
   </div>
 </div>

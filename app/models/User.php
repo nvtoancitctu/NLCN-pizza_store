@@ -212,12 +212,14 @@ class User
     // ------------------------------------------
     public function blockUser($userId, $days)
     {
+        // Tự động mở khóa các user đã hết hạn trước khi thực hiện block mới
+        $this->autoUnblockExpiredUsers();
+
         if (!is_numeric($days) || $days < 1) {
             return false; // Ngăn chặn giá trị không hợp lệ
         }
 
         date_default_timezone_set('Asia/Ho_Chi_Minh');
-
         $blockedUntil = date('Y-m-d H:i:s', strtotime("+$days days"));
 
         $query = "UPDATE users SET blocked_until = :blocked_until WHERE id = :id";
@@ -227,54 +229,38 @@ class User
         return $stmt->rowCount();
     }
 
-    // Mở khóa tài khoản người dùng bằng cách đặt lại trường blocked_until thành NULL
     public function unblockUser($user_id)
     {
+        // Tự động mở khóa các user đã hết hạn trước khi thực hiện unblock thủ công
+        $this->autoUnblockExpiredUsers();
+
         try {
             $sql = "UPDATE users SET blocked_until = NULL WHERE id = :user_id";
             $stmt = $this->conn->prepare($sql);
             $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
             $stmt->execute();
 
-            if ($stmt->rowCount() > 0) {
-                return true;
-            } else {
-                return false;
-            }
+            return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             return "Error unblocking user: " . $e->getMessage();
         }
     }
 
-    // Kiểm tra ngày giờ hết hạn của tài khoản
-    public function checkblockUser($userId)
+    public function autoUnblockExpiredUsers()
     {
-        $query = "SELECT blocked_until FROM users WHERE id = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+        $now = date('Y-m-d H:i:s');
 
-        if ($user && $user['blocked_until']) {
+        $sql = "UPDATE users 
+            SET blocked_until = NULL 
+            WHERE blocked_until IS NOT NULL 
+            AND blocked_until <= :now";
 
-            $blockedUntil = new DateTime($user['blocked_until'], new DateTimeZone('Asia/Ho_Chi_Minh'));
-            $now = new DateTime("now", new DateTimeZone('Asia/Ho_Chi_Minh'));
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':now', $now);
+        $stmt->execute();
 
-            if ($blockedUntil > $now) {
-                $interval = $now->diff($blockedUntil);
-                $daysLeft = $interval->days;
-                $hoursLeft = $interval->h;
-                $minutesLeft = $interval->i;
-
-                return "This account is still blocked. Remaining time: $daysLeft days, $hoursLeft hours, $minutesLeft minutes.";
-            } else {
-
-                $updateQuery = "UPDATE users SET blocked_until = NULL WHERE id = ?";
-                $updateStmt = $this->conn->prepare($updateQuery);
-                $updateStmt->execute([$userId]);
-                return "This account has been unlocked.";
-            }
-        }
-        return "This account is not blocked.";
+        return $stmt->rowCount();
     }
 
     // Cập nhật user

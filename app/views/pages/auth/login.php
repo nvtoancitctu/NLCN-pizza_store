@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   $result = $userController->login($email, $password);
 
   if (is_array($result) && isset($result['error'])) {
-    $error = $result['error'];
+    $_SESSION['error'] = $result['error'];
   } elseif (is_array($result) && isset($result['success'])) {
 
     // Kiểm tra role của user và điều hướng tương ứng

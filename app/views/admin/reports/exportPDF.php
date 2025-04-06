@@ -1,7 +1,7 @@
 <?php
 ob_start(); // Bắt đầu buffer để ngăn output trước khi tạo PDF
 
-require_once __DIR__ . '/../../../vendor/tecnickcom/tcpdf/tcpdf.php';
+require_once '../vendor/tecnickcom/tcpdf/tcpdf.php';
 require_once '../vendor/autoload.php'; // Nạp thư viện PHPMailer và TCPDF
 
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
@@ -68,44 +68,54 @@ foreach ($salesData as $sales) {
 $html .= '</table>';
 $pdf->writeHTML($html, true, false, true, false, '');
 
-// Tính tổng số lượng và tổng doanh thu
-$totalQuantity = array_sum(array_column($salesData, 'total_quantity'));
-$totalRevenue = array_sum(array_column($salesData, 'revenue'));
-
-// Lấy tháng và năm hiện tại
+// Tính tổng số lượng và doanh thu hiện tại (toàn bộ tháng hiện tại)
 $currentMonth = date('m');
 $currentYear = date('Y');
 
-// Lấy tháng và năm của tháng trước
+$sqlCurrent = "
+    SELECT 
+        SUM(oi.quantity) AS total_quantity, 
+        SUM(o.total) AS total_revenue
+    FROM order_items oi
+    JOIN orders o ON o.id = oi.order_id
+    WHERE MONTH(o.created_at) = :currentMonth AND YEAR(o.created_at) = :currentYear
+";
+$stmtCurrent = $conn->prepare($sqlCurrent);
+$stmtCurrent->bindParam(':currentMonth', $currentMonth, PDO::PARAM_INT);
+$stmtCurrent->bindParam(':currentYear', $currentYear, PDO::PARAM_INT);
+$stmtCurrent->execute();
+$currentData = $stmtCurrent->fetch(PDO::FETCH_ASSOC);
+
+$totalQuantity = $currentData['total_quantity'] ?? 0;
+$totalRevenue = $currentData['total_revenue'] ?? 0.0;
+
+// Lấy dữ liệu tháng trước
 $lastMonth = $currentMonth - 1;
 if ($lastMonth == 0) {
     $lastMonth = 12;
     $currentYear -= 1;
 }
 
-// Câu lệnh SQL để lấy tổng số lượng và tổng doanh thu tháng trước
-$sql = "
-    SELECT SUM(oi.quantity) AS total_quantity, 
-        (SELECT SUM(o.total) FROM orders o WHERE MONTH(o.created_at) = 2 AND YEAR(o.created_at) = 2025) AS total_revenue
+$sqlLast = "
+    SELECT 
+        SUM(oi.quantity) AS total_quantity, 
+        SUM(o.total) AS total_revenue
     FROM order_items oi
     JOIN orders o ON o.id = oi.order_id
     WHERE MONTH(o.created_at) = :lastMonth AND YEAR(o.created_at) = :lastYear
 ";
+$stmtLast = $conn->prepare($sqlLast);
+$stmtLast->bindParam(':lastMonth', $lastMonth, PDO::PARAM_INT);
+$stmtLast->bindParam(':lastYear', $currentYear, PDO::PARAM_INT);
+$stmtLast->execute();
+$lastMonthData = $stmtLast->fetch(PDO::FETCH_ASSOC);
 
-// Chuẩn bị và thực thi câu lệnh SQL
-$stmt = $conn->prepare($sql);
-$stmt->bindParam(':lastMonth', $lastMonth, PDO::PARAM_INT);
-$stmt->bindParam(':lastYear', $currentYear, PDO::PARAM_INT);
-$stmt->execute();
-
-// Lấy kết quả
-$lastMonthData = $stmt->fetch(PDO::FETCH_ASSOC);
 $lastMonthQuantity = $lastMonthData['total_quantity'] ?? 0;
-$lastMonthRevenue = $lastMonthData['total_revenue'] ?? 0;
+$lastMonthRevenue = $lastMonthData['total_revenue'] ?? 0.0;
 
 // Tính tỷ lệ tăng hoặc giảm
-$quantityGrowth = (($totalQuantity - $lastMonthQuantity * 2) / $lastMonthQuantity) * 100;
-$revenueGrowth = (($totalRevenue - $lastMonthRevenue * 2) / $lastMonthRevenue) * 100;
+$quantityGrowth = $lastMonthQuantity != 0 ? (($totalQuantity - $lastMonthQuantity) / $lastMonthQuantity) * 100 : 0;
+$revenueGrowth = $lastMonthRevenue != 0 ? (($totalRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100 : 0;
 
 // Thêm phần tổng kết vào PDF
 $pdf->SetFont('helvetica', 'B', 14);

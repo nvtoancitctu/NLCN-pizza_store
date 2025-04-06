@@ -232,12 +232,12 @@ $nav_links = [
     <!-- Modal xác nhận Logout -->
     <div id="logoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50">
       <div class="bg-white rounded-lg shadow-lg w-120 p-6">
-        <h2 class="text-base font-semibold text-center mb-4 text-gray-800">Are you sure you want to logout?</h2>
-        <form method="POST" class="flex justify-center space-x-4">
+        <h2 class="text-lg font-semibold text-center mb-4 text-gray-800">Are you sure you want to logout?</h2>
+        <form method="POST" class="flex justify-center space-x-8">
           <button type="button" onclick="closeLogoutModal()"
-            class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">Cancel</button>
+            class="bg-gray-300 text-gray-800 px-3 py-1 rounded hover:bg-gray-400 transition">Cancel</button>
           <button type="submit" name="logout"
-            class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">Logout</button>
+            class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition">Logout</button>
         </form>
       </div>
     </div>

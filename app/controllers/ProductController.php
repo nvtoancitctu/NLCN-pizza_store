@@ -144,9 +144,9 @@ class ProductController
   /**
    * Cập nhật thông tin sản phẩm
    */
-  public function updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time)
+  public function updateProduct($id, $name, $description, $price, $image, $category_id, $note, $stock_quantity, $discount, $discount_end_time)
   {
-    return $this->productModel->updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $discount, $discount_end_time);
+    return $this->productModel->updateProduct($id, $name, $description, $price, $image, $category_id, $note, $stock_quantity, $discount, $discount_end_time);
   }
 
   /**

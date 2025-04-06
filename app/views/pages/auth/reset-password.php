@@ -22,19 +22,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp'])) {
 
     // Kiểm tra CSRF token
     if ($csrf_token !== $_SESSION['csrf_token']) {
-        die("Invalid CSRF token.");
+        $_SESSION['error'] = "CSRF Token not right, please login again!";
+        header("Location: /login");
+        exit();
     }
 
     // Kiểm tra OTP
     if ($input_otp === $_SESSION['reset_otp']) {
         $_SESSION['otp_verified'] = 1; // OTP đúng
         $_SESSION['otp_attempts'] = 0; // Reset số lần nhập sai
+        $_SESSION['success'] = "OTP is correct! You can reset your password.";
     } else {
         $_SESSION['otp_attempts']++;
 
         if ($_SESSION['otp_attempts'] >= 2) {
             unset($_SESSION['reset_otp'], $_SESSION['otp_attempts']);
-            $_SESSION['error'] = "Incorrect OTP! Please request a new OTP.";
+            $_SESSION['error'] = "Incorrect OTP! Please enter again your email to request a new OTP.";
             header("Location: /send-otp");
             exit;
         } else {
@@ -83,27 +86,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password'])) {
 }
 ?>
 
-<!-- Giao diện -->
-<div class="bg-gradient-to-r from-blue-50 to-blue-100">
-    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
-        <h2 class="text-xl font-bold text-gray-700 text-center mb-4">🔑 Reset Password</h2>
+<div class="bg-gradient-to-r from-indigo-50 to-indigo-200 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-10 rounded-xl shadow-2xl w-full max-w-md text-center transform transition-all hover:scale-105">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-6">🔑 Reset Password</h2>
+
         <?php if ($_SESSION['otp_verified'] === 0): ?>
-            <form action="" method="POST">
+            <form action="" method="POST" class="space-y-4">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="text" name="otp" placeholder="Enter OTP"
-                    class="border border-gray-300 rounded-lg w-full py-2 px-4 text-center mb-3" required>
+                    class="border border-indigo-300 rounded-lg w-full py-3 px-5 text-center text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200" required>
                 <button type="submit"
-                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg">Verify OTP</button>
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition duration-300">Verify OTP</button>
             </form>
         <?php else: ?>
-            <form action="" method="POST">
+            <form action="" method="POST" class="space-y-4">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="password" name="password" placeholder="New Password"
-                    class="border border-gray-300 rounded-lg w-full py-2 px-4 mb-3" required>
+                    class="border border-indigo-300 rounded-lg w-full py-3 px-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200" required>
                 <input type="password" name="confirm_password" placeholder="Confirm Password"
-                    class="border border-gray-300 rounded-lg w-full py-2 px-4 mb-3" required>
+                    class="border border-indigo-300 rounded-lg w-full py-3 px-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200" required>
                 <button type="submit"
-                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg">Reset Password</button>
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition duration-300">Reset Password</button>
             </form>
         <?php endif; ?>
     </div>

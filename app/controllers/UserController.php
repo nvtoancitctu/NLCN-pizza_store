@@ -35,12 +35,6 @@ class UserController
     return $this->userModel->unblockUser($user_id);
   }
 
-  // Kiểm tra tài khoản có bị khóa không
-  public function checkblockUser($userId)
-  {
-    return $this->userModel->checkblockUser($userId);
-  }
-
   // Cập nhật User
   public function updateUser($user_id, $data)
   {

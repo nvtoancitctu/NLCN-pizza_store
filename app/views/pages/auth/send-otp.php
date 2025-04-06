@@ -49,14 +49,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'])) {
     }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Invalid email!";
+        $_SESSION['error'] = "Invalid email!";
     } else {
         $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if (!$user) {
-            $error = "Email not found!";
+            $_SESSION['error'] = "Email not found!";
         } else {
             $otp = rand(100000, 999999);
             $_SESSION['reset_otp'] = $otp;
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'])) {
                     ";
 
             if (sendEmail($email, $subject, $message)) {
-                $_SESION['success'] = "OTP has been sent to your email!";
+                $_SESSION['success'] = "OTP has been sent to your email!";
                 $showOtpForm = true;
             } else {
                 $_SESSION['error'] = "Failed to send OTP. Please try again!";
@@ -93,53 +93,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['email'])) {
 }
 ?>
 
-<div class="bg-gradient-to-r from-blue-50 to-blue-100">
-    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
-        <h2 class="text-xl font-bold text-gray-700 mb-4">🔑 Send OTP</h2>
+<div class="bg-gradient-to-r from-indigo-50 to-indigo-200 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-10 rounded-xl shadow-2xl w-full max-w-lg text-center transform transition-all hover:scale-105">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-6">🔑 Send OTP</h2>
 
         <!-- Form gửi OTP -->
         <?php if (!$showOtpForm) : ?>
-            <form method="POST">
+            <form method="POST" class="space-y-4">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="email" name="email" placeholder="Enter your email"
-                    class="border border-gray-300 rounded-lg w-full py-2 px-4 mb-3" required>
+                    class="border border-indigo-300 rounded-lg w-full py-3 px-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200" required>
                 <button type="submit"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg">Send OTP</button>
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition duration-300">Send OTP</button>
             </form>
         <?php endif; ?>
 
         <!-- Form nhập OTP -->
         <?php if ($showOtpForm) : ?>
-            <form id="otpForm" method="POST" action="/reset-password">
+            <form id="otpForm" method="POST" action="/reset-password" class="space-y-4">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <input type="number" name="otp" placeholder="Enter OTP"
-                    class="border border-gray-300 rounded-lg w-full py-2 px-4 text-center mb-3" required>
+                    class="border border-indigo-300 rounded-lg w-full py-3 px-5 text-center text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200" required>
                 <button type="submit"
-                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg">Verify OTP</button>
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition duration-300">Verify OTP</button>
             </form>
-            <p id="countdown" class="text-center text-red-500 mt-4">
-                OTP expires in <span id="timer">30</span> seconds.
+            <p id="countdown" class="text-center text-red-600 mt-5 font-medium">
+                OTP expires in <span id="timer" class="font-bold">30</span> seconds.
             </p>
         <?php endif; ?>
     </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        let countdown = 30;
-        let timerSpan = document.getElementById("timer");
+<!-- Modal -->
+<div id="otpExpiredModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-120 text-center">
+        <h3 class="text-lg font-semibold text-red-600 mb-4">OTP Expired</h3>
+        <p class="text-gray-700 mb-6">Your OTP has expired! A new OTP is being sent...</p>
+        <button id="closeModal" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">OK</button>
+    </div>
+</div>
 
-        if (timerSpan) {
-            let interval = setInterval(() => {
-                if (countdown > 0) {
-                    countdown--;
-                    timerSpan.textContent = countdown;
-                } else {
-                    clearInterval(interval);
-                    alert("OTP has expired! A new OTP is being sent...");
-                    location.reload(); // Reload trang để gửi lại OTP
-                }
-            }, 1000);
+<!-- JavaScript để xử lý modal và đếm ngược -->
+<script>
+    let timeLeft = 30; // Thời gian đếm ngược (giây)
+    const timerDisplay = document.getElementById('timer');
+
+    const interval = setInterval(() => {
+        if (timeLeft > 0) {
+            timeLeft--;
+            timerDisplay.textContent = timeLeft;
+        } else {
+            clearInterval(interval);
+            document.getElementById('otpExpiredModal').classList.remove('hidden');
         }
+    }, 1000);
+
+    // Đóng modal và reload trang khi nhấn nút OK
+    document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('otpExpiredModal').classList.add('hidden');
+        location.reload(); // Reload trang để gửi lại OTP
     });
 </script>

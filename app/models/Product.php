@@ -103,7 +103,7 @@ class Product
      * @param string|null $discount_end_time
      * @return bool
      */
-    public function updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $note = null, $discount = null, $discount_end_time = null)
+    public function updateProduct($id, $name, $description, $price, $image, $category_id, $stock_quantity, $note, $discount, $discount_end_time)
     {
         $query = "UPDATE " . $this->table . " SET name = ?, description = ?, price = ?, image = ?,
                                             category_id = ?, stock_quantity = ?, note = ?, discount = ?, discount_end_time = ? WHERE id = ?";
@@ -435,28 +435,27 @@ class Product
 
     public function importOrUpdateProduct($data)
     {
-        // Kiểm tra và xử lý giá trị đầu vào từ file CSV
-        $name = $data['Name'] ?? 'Unnamed Product';
-        $description = $data['Description'] ?? null;
-        $price = isset($data['Price']) ? floatval($data['Price']) : 0.0;
-        $categoryId = isset($data['Category']) ? intval($data['Category']) : null;
-        $stock_quantity = isset($data['Stock']) ? intval($data['Stock']) : 0;
-        $discount = isset($data['Discount']) && $data['Discount'] !== '' ? floatval($data['Discount']) : null;
-        $discountEndTime = isset($data['Discount End Time']) && $data['Discount End Time'] !== '' ? $data['Discount End Time'] : null;
+        // Kiểm tra và xử lý giá trị đầu vào từ file CSV (dùng key chữ thường)
+        $name = $data['name'] ?? 'Unnamed Product';
+        $description = $data['description'] ?? null;
+        $price = isset($data['price']) ? floatval($data['price']) : 0.0;
+        $categoryId = isset($data['category_id']) ? intval($data['category_id']) : null;
+        $stock_quantity = isset($data['Stock']) ? intval($data['Stock']) : 1;
+        $discount = isset($data['discount']) && $data['discount'] !== '' ? floatval($data['discount']) : null;
 
         // Kiểm tra giá trị Discount End Time và chuyển đổi định dạng nếu có
-        $discountEndTime = null;
-        if (!empty($data['Discount End Time'])) {
-            $dateTime = DateTime::createFromFormat('d/m/Y H:i', $data['Discount End Time']);
+        $discountEndTimeFormatted = null;
+        if (!empty($data['discount_end_time'])) {
+            $dateTime = DateTime::createFromFormat('d/m/Y H:i', $data['discount_end_time']);
             if ($dateTime) {
-                $discountEndTime = $dateTime->format('Y-m-d H:i:s'); // Chuyển sang format chuẩn của MySQL
+                $discountEndTimeFormatted = $dateTime->format('Y-m-d H:i:s'); // Chuyển sang format chuẩn của MySQL
             } else {
-                error_log("⚠ Lỗi chuyển đổi ngày: " . $data['Discount End Time']);
+                error_log("⚠ Lỗi chuyển đổi ngày: " . $data['discount_end_time']);
             }
         }
 
         // Kiểm tra sản phẩm có tồn tại dựa trên name & description không
-        $stmt = $this->conn->prepare("SELECT id FROM products WHERE name = :name AND description = :description");
+        $stmt = $this->conn->prepare("SELECT id FROM products WHERE name = :name OR (description = :description OR (description IS NULL AND :description IS NULL))");
         $stmt->execute([
             ':name' => $name,
             ':description' => $description
@@ -467,6 +466,8 @@ class Product
             // Nếu sản phẩm đã tồn tại, cập nhật thông tin
             $stmt = $this->conn->prepare("
             UPDATE products SET 
+                name = :name,
+                description = :description,
                 price = :price,
                 category_id = :category_id,
                 stock_quantity = :stock_quantity,
@@ -475,11 +476,13 @@ class Product
             WHERE id = :id
         ");
             $stmt->execute([
+                ':name' => $name,
+                ':description' => $description ? $description : null, // Gán giá trị null nếu description là null
                 ':price' => $price,
                 ':category_id' => $categoryId,
                 ':stock_quantity' => $stock_quantity,
                 ':discount' => $discount,
-                ':discount_end_time' => $discountEndTime,
+                ':discount_end_time' => $discountEndTimeFormatted,
                 ':id' => $existingProduct['id']
             ]);
         } else {
@@ -487,7 +490,7 @@ class Product
             $stmt = $this->conn->prepare("SELECT MAX(id) as max_id FROM products");
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            $newProductId = $result['max_id'] ? $result['max_id'] + 1 : 1; // Nếu bảng rỗng, ID bắt đầu từ 1
+            $newProductId = $result['max_id'] ? $result['max_id'] + 1 : 1;
 
             // Thêm sản phẩm mới với ID mới
             $stmt = $this->conn->prepare("
@@ -502,7 +505,7 @@ class Product
                 ':category_id' => $categoryId,
                 ':stock_quantity' => $stock_quantity,
                 ':discount' => $discount,
-                ':discount_end_time' => $discountEndTime
+                ':discount_end_time' => $discountEndTimeFormatted
             ]);
         }
     }

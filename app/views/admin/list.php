@@ -47,7 +47,7 @@ $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
 
 <!--------------------------------------- Quản lý sản phẩm, thống kê, xuất file csv --------------------------------------->
 <h1 class="text-4xl font-extrabold text-center my-10 text-blue-700 drop-shadow-lg">Products Management</h1>
-<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<div class="container-fluid mx-auto p-6 bg-white shadow-sm rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="row mb-4">
         <!-- Nút chức năng -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
@@ -128,8 +128,9 @@ $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
                         <tr class="hover:bg-gray-50" title="<?php echo htmlspecialchars($product['description']); ?>">
                             <td class="px-3 py-2 border-b text-center"><?= htmlspecialchars($product['id']) ?></td>
                             <td class="px-3 py-2 border-b text-center">
-                                <img src="/images/product/<?= htmlspecialchars($product['image']); ?>" class="w-16 h-16 object-cover mx-auto rounded-lg"
-                                    alt="<?= htmlspecialchars($product['name']); ?>">
+                                <img src="/images/product/<?= htmlspecialchars($product['image'] ?? 'logo.png') ?>"
+                                    class="w-16 h-16 object-cover mx-auto rounded-lg"
+                                    alt="<?= htmlspecialchars($product['name']) ?>">
                             </td>
                             <td class="px-3 py-2 border-b font-semibold text-gray-800"><?= htmlspecialchars($product['name']) ?></td>
                             <td class="px-3 py-2 border-b text-gray-600"><?= htmlspecialchars(substr($product['description'], 0, 20)) ?>...</td>
@@ -161,10 +162,11 @@ $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
                                     <!-- Modal Xác nhận Xóa Sản phẩm -->
                                     <div id="deleteModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
                                         <div class="bg-white p-6 rounded-lg shadow-lg w-120">
-                                            <h3 class="text-l font-semibold text-gray-800">Are you sure you want to delete this product?</h3>
-                                            <div class="mt-4 flex justify-center space-x-4">
-                                                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
-                                                <button type="button" onclick="confirmDelete()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
+                                            <h3 class="text-lg font-semibold text-gray-800">Are you sure you want to delete this product?</h3>
+                                            <p class="mt-2 text-sm text-gray-600">Product ID: <span id="modalProductId"><?= $product['id'] ?></span></p>
+                                            <div class="mt-4 flex justify-center space-x-8">
+                                                <button type="button" onclick="closeDeleteModal()" class="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
+                                                <button type="button" onclick="confirmDelete()" class="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
                                             </div>
                                         </div>
                                     </div>
@@ -309,49 +311,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 </div>
 
 <!-- Form chỉnh sửa đơn hàng (mặc định ẩn) -->
-<div id="edit-order-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-11/12">
-    <form action="/admin" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-md border-2 border-green-400">
+<div id="edit-order-form" class="space-y-6 mb-8 hidden mx-auto w-full lg:w-10/12">
+    <form action="/admin" method="POST" class="space-y-6 bg-white p-6 rounded-lg shadow-sm border-2 border-yellow-300">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
         <!-- Bố cục 2 cột -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Cột 1: Customer Name, Total Price, Status -->
-            <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Cột 1: Thông tin đơn hàng -->
+            <div class="space-y-5">
                 <div>
-                    <label for="editOrderId" class="block text-blue-700 font-semibold">Order ID</label>
-                    <input type="text" id="editOrderId" name="order_id" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                    <label for="editOrderId" class="block text-gray-700 font-semibold">Order ID</label>
+                    <input type="text" id="editOrderId" name="order_id" class="w-full p-3 border border-gray-200 rounded-md bg-gray-50 text-gray-600" readonly>
                 </div>
                 <div>
-                    <label for="editPaymentMethod" class="block text-blue-700 font-semibold">Payment Method</label>
-                    <input type="text" id="editPaymentMethod" class="w-full p-3 border border-gray-300 rounded-md bg-gray-100" readonly>
+                    <label for="editPaymentMethod" class="block text-gray-700 font-semibold">Payment Method</label>
+                    <input type="text" id="editPaymentMethod" class="w-full p-3 border border-gray-200 rounded-md bg-gray-50 text-gray-600" readonly>
                     <input type="hidden" name="payment_method" id="hiddenPaymentMethod">
                 </div>
                 <div>
-                    <label for="editCustomerName" class="block text-red-500 font-semibold">Customer Name</label>
-                    <input type="text" id="editCustomerName" name="customer_name" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <label for="editCustomerName" class="block text-gray-700 font-semibold">Customer Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="editCustomerName" name="customer_name" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400" required>
                 </div>
                 <div>
-                    <label for="editTotalPrice" class="block text-red-500 font-semibold">Total Price</label>
-                    <input type="number" step="0.01" id="editTotalPrice" name="total" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <label for="editTotalPrice" class="block text-gray-700 font-semibold">Total Price <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" id="editTotalPrice" name="total" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400" required>
                 </div>
                 <div>
-                    <label for="editStatus" class="block text-red-500 font-semibold">Status</label>
-                    <select id="editStatus" name="status" class="w-full p-3 border border-gray-300 rounded-md">
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                    <label for="editStatus" class="block text-gray-700 font-semibold">Status <span class="text-red-500">*</span></label>
+                    <select id="editStatus" name="status" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400">
+                        <option value="pending" class="text-yellow-600">Pending</option>
+                        <option value="processing" class="text-blue-600">Processing</option>
+                        <option value="completed" class="text-green-600">Completed</option>
+                        <option value="cancelled" class="text-red-600">Cancelled</option>
                     </select>
                 </div>
-
             </div>
 
             <!-- Cột 2: Bank Transfer Image -->
-            <div class="space-y-4">
+            <div class="space-y-5">
                 <div>
-                    <label class="block text-blue-700 font-semibold">Bank Transfer Image</label>
-                    <div id="bankTransferImageContainer" class="w-full flex items-center justify-center hidden" style="min-height:200px;">
-                        <img id="bankTransferImage" class="border rounded-md shadow-md h-auto w-4/12 mt-8">
+                    <label class="block text-gray-700 font-semibold">Bank Transfer Image</label>
+                    <div id="bankTransferImageContainer" class="w-full flex items-center justify-center hidden border border-gray-200 rounded-md bg-gray-50" style="min-height: 200px;">
+                        <img id="bankTransferImage" class="max-h-96 w-auto rounded-md shadow-sm">
                     </div>
                 </div>
             </div>
@@ -359,70 +360,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 
         <!-- Nút Thao Tác -->
         <div class="flex justify-center space-x-4 mt-6">
-            <button type="submit" name="edit_order" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md">Save</button>
-            <button type="button" id="cancelEdit" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-6 rounded-lg shadow-md">Cancel</button>
+            <button type="submit" name="edit_order" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-8 rounded-lg shadow-md transition duration-200">Save</button>
+            <button type="button" id="cancelEdit" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-8 rounded-lg shadow-md transition duration-200">Cancel</button>
         </div>
     </form>
 </div>
 
 <!-- Bảng đơn hàng -->
-<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<div class="container-fluid mx-auto p-6 bg-white shadow-sm rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="table-responsive">
-        <form method="POST" class="text-center mb-6">
+        <form method="POST" class="flex flex-col sm:flex-row justify-center items-center mb-6 space-y-4 sm:space-y-0 sm:space-x-6">
             <input type="hidden" name="page_order" value="1">
 
             <!-- Chọn số lượng đơn hàng hiển thị -->
-            <label for="limit_order" class="mr-2 text-lg">Orders per page:</label>
-            <select name="limit_order" id="limit_order" onchange="this.form.submit()" class="p-2 border rounded">
-                <option value="" selected disabled hidden>All</option>
-                <option value="10" <?= $limit_order == 10 ? 'selected' : '' ?>>10</option>
-                <option value="20" <?= $limit_order == 20 ? 'selected' : '' ?>>20</option>
-                <option value="50" <?= $limit_order == 50 ? 'selected' : '' ?>>50</option>
-            </select>
+            <div class="flex items-center space-x-2">
+                <label for="limit_order" class="text-gray-700 font-medium">Orders per page:</label>
+                <select name="limit_order" id="limit_order" onchange="this.form.submit()" class="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400">
+                    <option value="" selected disabled hidden>All</option>
+                    <option value="10" <?= $limit_order == 10 ? 'selected' : '' ?>>10</option>
+                    <option value="20" <?= $limit_order == 20 ? 'selected' : '' ?>>20</option>
+                    <option value="50" <?= $limit_order == 50 ? 'selected' : '' ?>>50</option>
+                </select>
+            </div>
 
             <!-- Lọc theo tên khách hàng -->
-            <label for="customer_name" class="ml-4 mr-2 text-lg">Customer:</label>
-
-            <select name="customer_name" id="customer_name" onchange="this.form.submit()" class="p-2 border rounded">
-                <option value="" <?= (empty($customerName) || $customerName === 'all') ? 'selected' : '' ?>>All</option>
-                <?php foreach ($customers as $cus): ?>
-                    <option value="<?= htmlspecialchars($cus['id']) ?>" <?= ($customerName == $cus['id']) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($cus['name']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <div class="flex items-center space-x-2">
+                <label for="customer_name" class="text-gray-700 font-medium">Customer:</label>
+                <select name="customer_name" id="customer_name" onchange="this.form.submit()" class="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400">
+                    <option value="" <?= (empty($customerName) || $customerName === 'all') ? 'selected' : '' ?>>All</option>
+                    <?php foreach ($customers as $cus): ?>
+                        <option value="<?= htmlspecialchars($cus['id']) ?>" <?= ($customerName == $cus['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($cus['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
         </form>
 
         <!-- DANH SÁCH ĐƠN HÀNG -->
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
             <thead>
-                <tr class="bg-gray-100 text-gray-800 text-center">
-                    <th class="px-3 py-2 border-b">Order ID</th>
-                    <th class="px-3 py-2 border-b">Customer</th>
-                    <th class="px-3 py-2 border-b">Total Price</th>
-                    <th class="px-3 py-2 border-b">Status</th>
-                    <th class="px-3 py-2 border-b">Created At</th>
-                    <th class="px-3 py-2 border-b">Payment Method</th>
-                    <th class="px-3 py-2 border-b">Actions</th>
+                <tr class="bg-blue-100 text-gray-700 text-center font-semibold">
+                    <th class="px-4 py-3 border-b">Order ID</th>
+                    <th class="px-4 py-3 border-b">Customer</th>
+                    <th class="px-4 py-3 border-b">Total Price</th>
+                    <th class="px-4 py-3 border-b">Status</th>
+                    <th class="px-4 py-3 border-b">Created At</th>
+                    <th class="px-4 py-3 border-b">Payment Method</th>
+                    <th class="px-4 py-3 border-b">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($orders)): ?>
                     <?php foreach ($orders as $order): ?>
-                        <tr class="hover:bg-gray-50 text-center">
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['id']) ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['customer_name']) ?></td>
-                            <td class="px-3 py-2 border-b text-green-600 font-bold">$<?= number_format($order['total'], 2) ?></td>
-                            <td class="px-3 py-2 border-b">
-                                <span class="<?= $order['status'] === 'completed' ? 'text-green-500 font-bold' : ($order['status'] === 'pending' ? 'text-yellow-500 font-bold' : ($order['status'] === 'processing' ? 'text-blue-500 font-bold' : 'text-red-500 font-bold')) ?>">
+                        <tr class="hover:bg-gray-100 text-center text-gray-600">
+                            <td class="px-4 py-3 border-b"><?= htmlspecialchars($order['id']) ?></td>
+                            <td class="px-4 py-3 border-b"><?= htmlspecialchars($order['customer_name']) ?></td>
+                            <td class="px-4 py-3 border-b text-green-600 font-semibold">$<?= number_format($order['total'], 2) ?></td>
+                            <td class="px-4 py-3 border-b">
+                                <span class="<?= $order['status'] === 'completed' ? 'text-green-600' : ($order['status'] === 'pending' ? 'text-yellow-600' : ($order['status'] === 'processing' ? 'text-blue-600' : 'text-red-600')) ?> font-semibold">
                                     <?= ucfirst($order['status']) ?>
                                 </span>
                             </td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['created_at']) ?></td>
-                            <td class="px-3 py-2 border-b"><?= htmlspecialchars($order['payment_method']) ?></td>
-                            <td class="px-3 py-2 border-b">
-                                <div class="d-flex justify-content-center flex-wrap">
-                                    <button type="button" class="btn btn-warning me-2 edit-btn"
+                            <td class="px-4 py-3 border-b"><?= htmlspecialchars($order['created_at']) ?></td>
+                            <td class="px-4 py-3 border-b"><?= htmlspecialchars($order['payment_method']) ?></td>
+                            <td class="px-4 py-3 border-b">
+                                <div class="flex justify-center gap-2">
+                                    <button type="button" class="btn bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-lg shadow-sm edit-btn transition duration-200"
                                         data-id="<?= $order['id'] ?>"
                                         data-customer="<?= ($order['customer_name']) ?>"
                                         data-total="<?= $order['total'] ?>"
@@ -432,32 +436,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
                                         <i class="fas fa-edit"></i>
                                     </button>
 
-                                    <form id="deleteOrderForm" action="/admin/delete-order" method="POST">
+                                    <form id="deleteOrderForm-<?= $order['id'] ?>" action="/admin/delete-order" method="POST">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                        <button type="button" onclick="openDeleteOrderModal()" class="btn btn-danger" title="Delete Order">
+                                        <button type="button" onclick="openDeleteOrderModal('<?= $order['id'] ?>')" class="btn bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg shadow-sm transition duration-200" title="Delete Order">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
 
                                     <!-- Modal Xác nhận Xóa Đơn Hàng -->
-                                    <div id="deleteOrderModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
+                                    <div id="deleteOrderModal-<?= $order['id'] ?>" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
                                         <div class="bg-white p-6 rounded-lg shadow-lg w-120">
                                             <h3 class="text-lg font-semibold text-gray-800">Are you sure you want to delete this order?</h3>
+                                            <p class="mt-2 text-sm text-gray-600">Order ID: <span class="font-semibold"><?= $order['id'] ?></span></p>
                                             <div class="mt-4 flex justify-center space-x-4">
-                                                <button type="button" onclick="closeDeleteOrderModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
-                                                <button type="button" onclick="confirmDeleteOrder()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
+                                                <button type="button" onclick="closeDeleteOrderModal('<?= $order['id'] ?>')" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition duration-200">Cancel</button>
+                                                <button type="button" onclick="confirmDeleteOrder('<?= $order['id'] ?>')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-200">Delete</button>
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="6" class="text-center text-gray-500 py-4"></td>
+                        <td colspan="7" class="text-center text-gray-500 py-4">No orders found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -469,9 +473,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
         <input type="hidden" name="limit_order" value="<?= htmlspecialchars($limit_order) ?>">
         <input type="hidden" name="customer_name" value="<?= htmlspecialchars($customerName) ?>">
 
-        <div class="flex items-center">
-            <label for="page" class="text-lg mr-2">Page:</label>
-            <select name="page_order" id="page_order" onchange="this.form.submit()" class="p-2 border rounded">
+        <div class="flex items-center space-x-2">
+            <label for="page" class="text-gray-700 font-medium">Page:</label>
+            <select name="page_order" id="page_order" onchange="this.form.submit()" class="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400">
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
                     <option value="<?= $i ?>" <?= $page_order == $i ? 'selected' : '' ?>><?= $i ?></option>
                 <?php endfor; ?>
@@ -479,32 +483,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
         </div>
 
         <button type="submit" name="page_order" value="<?= max(1, $page_order - 1) ?>"
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 <?= $page_order <= 1 ? 'cursor-not-allowed opacity-50' : '' ?>"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 <?= $page_order <= 1 ? 'cursor-not-allowed opacity-50' : '' ?>"
             <?= $page_order <= 1 ? 'disabled' : '' ?>>
             Previous
         </button>
 
         <button type="submit" name="page_order" value="<?= min($totalPages, $page_order + 1) ?>"
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300 <?= $page_order >= $totalPages ? 'cursor-not-allowed opacity-50' : '' ?>"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 <?= $page_order >= $totalPages ? 'cursor-not-allowed opacity-50' : '' ?>"
             <?= $page_order >= $totalPages ? 'disabled' : '' ?>>
             Next
         </button>
     </form>
-
 </div>
 
 <script>
-    function openDeleteOrderModal() {
-        document.getElementById('deleteOrderModal').classList.remove('hidden');
+    function openDeleteOrderModal(orderId) {
+        document.getElementById(`deleteOrderModal-${orderId}`).classList.remove('hidden');
     }
 
-    function closeDeleteOrderModal() {
-        document.getElementById('deleteOrderModal').classList.add('hidden');
+    function closeDeleteOrderModal(orderId) {
+        document.getElementById(`deleteOrderModal-${orderId}`).classList.add('hidden');
     }
 
-    function confirmDeleteOrder() {
-        // Submit form khi người dùng xác nhận xóa
-        document.getElementById('deleteOrderForm').submit();
+    function confirmDeleteOrder(orderId) {
+        document.getElementById(`deleteOrderForm-${orderId}`).submit();
     }
 
     function toggleEditForm(orderId, customer, total, status, payment, image) {
@@ -527,7 +529,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
             bankTransferImage.src = "";
         }
 
-        // Hiển thị form
         form.classList.remove('hidden');
         window.scrollTo({
             top: form.offsetTop,
@@ -556,7 +557,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_order'])) {
 <!--------------------------------------- Quản lý phản hồi --------------------------------------->
 <?php
 // Lấy danh sách phản hồi
-$stmt = $conn->query("SELECT * FROM feedback WHERE user_id != 1 ORDER BY created_at ASC");
+$stmt = $conn->query("SELECT * FROM feedback ORDER BY id ASC");
 $feedbacks = $stmt->fetchAll();
 
 // Xử lý phản hồi của admin
@@ -600,7 +601,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
     <div class="flex-grow border-t-2 border-gray-700"></div>
 </div>
 
-<div class="container mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<div class="container mx-auto p-6 bg-white shadow-sm rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <div class="overflow-x-auto">
         <table class="w-full bg-white border border-gray-200 rounded-lg shadow-md">
             <thead>
@@ -647,7 +648,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
 <!-- Modal Reponse-->
 <div id="replyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/3 p-6">
-        <h2 class="text-xl font-semibold mb-4">Reply to Feedback</h2>
+        <h2 class="text-xl font-semibold mb-4">
+            Reply to Feedback <span id="feedbackIdLabel" class="text-blue-600"></span>
+        </h2>
+
         <form method="post">
             <input type="hidden" id="replyFeedbackId" name="id">
             <label class="block mb-2 font-semibold">Customer Feedback:</label>
@@ -669,6 +673,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['response'], $_POST['id
         document.getElementById('replyFeedbackId').value = feedbackId;
         document.getElementById('replyMessage').value = message;
         document.getElementById('replyResponse').value = response;
+        document.getElementById('feedbackIdLabel').textContent = `#${feedbackId}`;
         document.getElementById('replyModal').classList.remove('hidden');
     }
 
@@ -848,7 +853,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
     </form>
 </div>
 
-<div class="container-fluid mx-auto p-6 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<div class="container-fluid mx-auto p-6 bg-white shadow-sm rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <!-- Bảng danh sách người dùng -->
     <div class="overflow-x-auto">
         <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -897,9 +902,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
 
+                                        <?php $isLocked = isset($user['blocked_until']) && strtotime($user['blocked_until']) > time(); ?>
+                                        <!-- Hiển thị nút mở khóa nếu thời hạn khóa còn hiệu lực -->
                                         <button type="button" name="unblock" title="Unblock"
-                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md"
-                                            onclick="confirmAction('unblock', '<?= $user['id'] ?>')">
+                                            class="<?= $isLocked ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed' ?> text-white px-3 py-2 rounded-md"
+                                            <?= $isLocked ? "onclick=\"confirmAction('unblock', '{$user['id']}')\"" : 'disabled' ?>>
                                             <i class="fas fa-unlock"></i>
                                         </button>
 
@@ -917,6 +924,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
                                         <h3 id="confirmationMessage_<?= $user['id'] ?>" class="text-lg font-semibold text-gray-800">
                                             <!-- Thông điệp sẽ được cập nhật động -->
                                         </h3>
+                                        <p class="mt-2 text-sm text-gray-600">User ID: <span class="font-semibold"><?= $user['id'] ?></span></p>
                                         <div class="mt-4 flex justify-center space-x-4">
                                             <button type="button" onclick="closeConfirmationModal('<?= $user['id'] ?>')"
                                                 class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">
@@ -1140,7 +1148,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
 ?>
 
 <h1 class="text-4xl font-extrabold text-center my-8 text-blue-600 drop-shadow-lg">Vouchers Management</h1>
-<div class="container-fluid mx-auto p-6 mb-8 bg-white shadow-xl rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
+<div class="container-fluid mx-auto p-6 mb-8 bg-white shadow-sm rounded-lg w-full lg:w-11/12 border-2 border-blue-600">
     <!-- Thêm Voucher -->
     <a href="/admin/add-voucher" class="mb-4 bg-green-500 text-white px-4 py-2 rounded-lg inline-block">+ Add Voucher</a>
 
@@ -1186,6 +1194,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset-voucher'])) {
                                 <div id="deleteModal<?= $v['id'] ?>" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
                                     <div class="bg-white p-6 rounded-lg shadow-lg w-120">
                                         <h2 class="text-lg font-semibold">Are you sure you want to delete this voucher?</h2>
+                                        <p class="mt-2 text-sm text-gray-600">Voucher ID: <span class="font-semibold"><?= $v['id'] ?></span></p>
                                         <form action="/admin/delete-voucher" method="POST" id="deleteForm<?= $v['id'] ?>">
                                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                             <input type="hidden" name="voucher_id" id="voucher_id<?= $v['id'] ?>" value="<?= $v['id'] ?>">

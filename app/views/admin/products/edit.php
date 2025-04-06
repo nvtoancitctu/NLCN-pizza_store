@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category_id = $_POST['category_id'];
     $stock_quantity = $_POST['stock_quantity'];
 
-    $note = trim($_POST['note']) ?? null;
+    $note = !empty($_POST['note']) ? trim($_POST['note']) : null;
     $discount = !empty($_POST['discount']) ? $_POST['discount'] : null;
     $discount_end_time = !empty($_POST['discount_end_time']) ? $_POST['discount_end_time'] : null;
 

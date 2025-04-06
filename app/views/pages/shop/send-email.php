@@ -3,7 +3,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require_once __DIR__ . '/../../../vendor/tecnickcom/tcpdf/tcpdf.php';
+require_once '../vendor/tecnickcom/tcpdf/tcpdf.php';
 require_once '../vendor/autoload.php'; // Nạp thư viện PHPMailer và TCPDF
 
 function generateInvoicePDF($orderDetails, $order_id)
@@ -42,7 +42,7 @@ function generateInvoicePDF($orderDetails, $order_id)
     // Bảng sản phẩm
     $pdf->SetFont('helvetica', '', 10);
     $html = '
-<table border="1" cellspacing="3" cellpadding="5" style="width: 100%;">
+    <table border="1" cellspacing="3" cellpadding="5" style="width: 100%;">
     <tr style="font-weight: bold; background-color: #f2f2f2; text-align: center;">
         <th style="width: 40%;">Product</th>
         <th style="width: 10%;">Qty</th>
@@ -147,19 +147,35 @@ if (!$orderDetails) {
 // Tạo hóa đơn PDF
 $pdfFilePath = generateInvoicePDF($orderDetails, $order_id);
 
-// Nội dung email
 $message = "
-    <div style='font-family: Arial, sans-serif; line-height: 1.6;'>
-        <h2 style='color: green;'>Thank you for ordering at Lover's Hut Pizza Store!</h2>
-        <p><strong>📌 Order details:</strong> (See attached invoice)</p>
-        <p><strong>🚚 Shipping Fee ($):</strong> " . ($orderDetails['shipping_fee'] > 0 ? "{$orderDetails['shipping_fee']}" : "Free") . "</p>
-        <p><strong>💰 Total Amount ($):</strong> {$orderDetails['final_total']}</p>
-        <p><strong>📍 Shipping Address:</strong> {$orderDetails['address']} <a href='{$orderDetails['shipping_link']}'>view-map</a></p>
-        <p><strong>💳 Payment Method:</strong> " . ($orderDetails['payment_method'] === 'bank_transfer' ? 'Banking' : 'COD') . "</p>
-        <hr>
-        <p style='color: green;'><strong>🚀 Your order is being processed and will be delivered soon!</strong></p>
-        <p style='font-size: 12px; color: #555;'>If you have any questions, feel free to contact us via this email.</p>
-    </div>
+            <div style='font-family: Arial, sans-serif; line-height: 1.6;'>
+                <h2 style='color: green;'>Thank you for ordering at Lover's Hut Pizza Store!</h2>
+                <table style='border-collapse: collapse; width: 100%; max-width: 1000px;'>
+                    <tr>
+                        <td style='padding: 5px; width: 20%;'><strong>📌 Order details</strong></td>
+                        <td style='padding: 5px;'>:</td>
+                        <td style='padding: 5px;'>See attached invoice</td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 5px; width: 20%;'><strong>📍 Shipping Address</strong></td>
+                        <td style='padding: 5px;'>:</td>
+                        <td style='padding: 5px;'><a href='" . htmlspecialchars($orderDetails['shipping_link']) . "'>" . htmlspecialchars($orderDetails['address']) . "</a></td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 5px; width: 20%;'><strong>💰 Total Amount ($)</strong></td>
+                        <td style='padding: 5px;'>:</td>
+                        <td style='padding: 5px;'>" . htmlspecialchars($orderDetails['final_total']) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 5px; width: 20%;'><strong>💳 Payment Method</strong></td>
+                        <td style='padding: 5px;'>:</td>
+                        <td style='padding: 5px;'>" . ($orderDetails['payment_method'] === 'bank_transfer' ? 'Banking' : 'COD') . "</td>
+                    </tr>
+                </table>
+                <hr>
+                <p style='color: green;'><strong>🚀 Your order is being processed and will be delivered soon!</strong></p>
+                <p style='font-size: 12px; color: #555;'>If you have any questions, feel free to contact us via this email.</p>
+            </div>
 ";
 
 // Gửi email kèm hóa đơn PDF

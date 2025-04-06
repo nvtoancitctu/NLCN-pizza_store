@@ -81,19 +81,19 @@ $message = "
     <h2 style='color: blue;'>UPDATE ORDER STATUS</h2>
     <table style='width: 100%; border-collapse: collapse;'>
         <tr>
-            <td style='padding: 5px; font-weight: bold;'>📌 Order ID</td>
+            <td style='padding: 5px; font-weight: bold; width: 20%;'>📌 Order ID</td>
             <td style='padding: 5px;'>: #$order_id</td>
         </tr>
         <tr>
-            <td style='padding: 5px; font-weight: bold;'>📦 Order Total</td>
-            <td style='padding: 5px;'>: $" . $orderDetails['final_total'] . "</td>
+            <td style='padding: 5px; font-weight: bold; width: 20%;'>📦 Order Total</td>
+            <td style='padding: 5px;'>: $ " . $orderDetails['final_total'] . "</td>
         </tr>
         <tr>
-            <td style='padding: 5px; font-weight: bold;'>🕒 Order Datetime</td>
+            <td style='padding: 5px; font-weight: bold; width: 20%;'>🕒 Order Datetime</td>
             <td style='padding: 5px;'>: " . $orderDetails['created_at'] . "</td>
         </tr>
         <tr>
-            <td style='padding: 5px; font-weight: bold;'>🚚 Shipping time</td>
+            <td style='padding: 5px; font-weight: bold; width: 20%;'>🚚 Shipping time</td>
             <td style='padding: 5px;'>: " . $orderDetails['status_at'] . "</td>
         </tr>
     </table>

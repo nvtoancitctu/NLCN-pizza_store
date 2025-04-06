@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         Add New Product
     </h1>
 
-    <div class="flex justify-center mb-12">
+    <div class="flex justify-center gap-4 mb-8">
         <div class="w-full max-w-5xl rounded-xl border-2 border-yellow-300 p-8 bg-white shadow-sm">
             <form action="/admin/add" method="POST" enctype="multipart/form-data" class="space-y-2">
                 <!-- CSRF Token -->
