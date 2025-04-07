@@ -2,7 +2,7 @@
 
 // Kiểm tra quyền admin
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    $_SESSION['error'] = "You must login at admin page before access.";
+    $_SESSION['error'] = "You must login by admin account to access.";
     header("Location: /login");
     exit();
 }
@@ -151,26 +151,25 @@ $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
                                     </a>
 
                                     <!-- Nút Delete -->
-                                    <form id="deleteForm" action="/admin/delete" method="POST">
+                                    <form id="deleteForm-<?= $product['id'] ?>" action="/admin/delete" method="POST">
                                         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                                         <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                                        <button type="button" onclick="openDeleteModal()" class="btn btn-danger" title="Delete Product">
+                                        <button type="button" onclick="openDeleteModal('<?= $product['id'] ?>')" class="btn btn-danger" title="Delete Product">
                                             <i class="fas fa-trash-alt"></i> <!-- Icon Delete -->
                                         </button>
                                     </form>
 
                                     <!-- Modal Xác nhận Xóa Sản phẩm -->
-                                    <div id="deleteModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
+                                    <div id="deleteModal-<?= $product['id'] ?>" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50 hidden">
                                         <div class="bg-white p-6 rounded-lg shadow-lg w-120">
                                             <h3 class="text-lg font-semibold text-gray-800">Are you sure you want to delete this product?</h3>
-                                            <p class="mt-2 text-sm text-gray-600">Product ID: <span id="modalProductId"><?= $product['id'] ?></span></p>
+                                            <p class="mt-2 text-sm text-gray-600">Product ID: <?= $product['id'] ?></p>
                                             <div class="mt-4 flex justify-center space-x-8">
-                                                <button type="button" onclick="closeDeleteModal()" class="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
-                                                <button type="button" onclick="confirmDelete()" class="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
+                                                <button type="button" onclick="closeDeleteModal('<?= $product['id'] ?>')" class="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Cancel</button>
+                                                <button type="button" onclick="confirmDelete('<?= $product['id'] ?>')" class="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
                             </td>
                         </tr>
@@ -217,17 +216,16 @@ $totalPages = max(1, ceil($totalProducts / $limit)); // Tổng số trang
 </div>
 
 <script>
-    function openDeleteModal() {
-        document.getElementById('deleteModal').classList.remove('hidden');
+    function openDeleteModal(productId) {
+        document.getElementById('deleteModal-' + productId).classList.remove('hidden');
     }
 
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.add('hidden');
+    function closeDeleteModal(productId) {
+        document.getElementById('deleteModal-' + productId).classList.add('hidden');
     }
 
-    function confirmDelete() {
-        // Submit form khi người dùng xác nhận xóa
-        document.getElementById('deleteForm').submit();
+    function confirmDelete(productId) {
+        document.getElementById('deleteForm-' + productId).submit();
     }
 </script>
 

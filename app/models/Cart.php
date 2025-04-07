@@ -188,11 +188,15 @@ class Cart
             $query = "DELETE FROM " . $this->table . " WHERE id = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->execute([$cart_id]);
+
+            $_SESSION['success'] = "Cart updated successfully!";
         } else {
             // Cập nhật size và số lượng nếu không có sản phẩm cùng size
             $query = "UPDATE " . $this->table . " SET quantity = ?, size = ? WHERE id = ?";
             $stmt = $this->conn->prepare($query);
             $stmt->execute([$quantity, $size, $cart_id]);
+
+            $_SESSION['success'] = "Cart updated successfully!";
         }
 
         // Cập nhật lại stock_quantity trong bảng products
@@ -231,7 +235,13 @@ class Cart
         // Cập nhật stock_quantity trong bảng products
         $query = "UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?";
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute([$quantity, $product_id]);
+        $result = $stmt->execute([$quantity, $product_id]);
+
+        if ($result) {
+            $_SESSION['success'] = "Cart item deleted successfully!";
+        }
+
+        return $result;
     }
 
     // /**

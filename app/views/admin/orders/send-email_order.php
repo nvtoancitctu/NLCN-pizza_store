@@ -38,14 +38,14 @@ function sendEmail($to, $subject, $message)
 
 //------------------------------------------------------------------------//
 
-
-
-// Kiểm tra đăng nhập
-if (!isset($_SESSION['user_id']) && $_SESSION['user_role'] !== 'admin') {
+// Kiểm tra quyền admin
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    $_SESSION['error'] = "You must login by admin account to access.";
     header("Location: /login");
     exit();
 }
 
+// Xác thực CSRF token
 if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) {
     http_response_code(403);
     header("Location: /admin");

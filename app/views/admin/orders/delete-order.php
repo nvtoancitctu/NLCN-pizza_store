@@ -1,5 +1,12 @@
 <?php
 
+// Kiểm tra quyền admin
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    $_SESSION['error'] = "You must login by admin account to access.";
+    header("Location: /login");
+    exit();
+}
+
 // Kiểm tra yêu cầu POST
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['order_id'])) {
 

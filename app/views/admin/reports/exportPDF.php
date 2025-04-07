@@ -4,8 +4,11 @@ ob_start(); // Bắt đầu buffer để ngăn output trước khi tạo PDF
 require_once '../vendor/tecnickcom/tcpdf/tcpdf.php';
 require_once '../vendor/autoload.php'; // Nạp thư viện PHPMailer và TCPDF
 
+// Kiểm tra quyền admin
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    die("Unauthorized access.");
+    $_SESSION['error'] = "You must login by admin account to access.";
+    header("Location: /login");
+    exit();
 }
 
 $timePeriod = $_GET['time_period'] ?? 'daily';

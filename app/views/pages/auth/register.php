@@ -5,8 +5,6 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-$error = '';    // Khởi tạo biến để lưu thông báo lỗi
-
 // Kiểm tra nếu form đã được gửi
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
@@ -23,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Kiểm tra mật khẩu xác nhận
     if ($password !== $confirm_password) {
-        $error = "Passwords do not match.";
+        $_SESSION['error'] = "Passwords do not match.";
     } else {
         // Thực hiện đăng ký người dùng
         $result = $userController->register($name, $email, $password);
@@ -36,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header("Location: /index.php?page=send-email-welcome&user_email=" . urlencode($email) . "&csrf_token=" . $_SESSION['csrf_token']);
             exit();
         } else {
-            $error = $result;
+            $_SESSION['error'] = $result;
         }
     }
 }

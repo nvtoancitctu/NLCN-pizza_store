@@ -1,7 +1,8 @@
 <?php
 
-// Kiểm tra quyền truy cập
+// Kiểm tra quyền admin
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    $_SESSION['error'] = "You must login by admin account to access.";
     header("Location: /login");
     exit();
 }

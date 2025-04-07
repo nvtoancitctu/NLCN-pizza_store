@@ -112,7 +112,7 @@ if ($user_id) {
                     <!-- Hình ảnh sản phẩm bên trái -->
                     <div class="w-1/3 flex items-center justify-center">
                         <a href="#full-img-<?= $product['id'] ?>">
-                            <img src="/images/product/<?= htmlspecialchars($product['image']) ?>"
+                            <img src="/images/product/<?= htmlspecialchars($product['image'] ?? 'logo.png') ?>"
                                 class="max-w-full max-h-full object-contain rounded-lg transition duration-500 ease-in-out transform hover:scale-110 cursor-pointer"
                                 alt="<?= htmlspecialchars($product['name']) ?>">
                         </a>

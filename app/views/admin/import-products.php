@@ -2,8 +2,9 @@
 
 // Kiểm tra quyền admin
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    http_response_code(403);
-    exit("Forbidden: You do not have permission to access this resource.");
+    $_SESSION['error'] = "You must login by admin account to access.";
+    header("Location: /login");
+    exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['product_file'])) {
