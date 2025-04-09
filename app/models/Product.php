@@ -440,7 +440,7 @@ class Product
         $description = $data['description'] ?? null;
         $price = isset($data['price']) ? floatval($data['price']) : 0.0;
         $categoryId = isset($data['category_id']) ? intval($data['category_id']) : null;
-        $stock_quantity = isset($data['Stock']) ? intval($data['Stock']) : 1;
+        $stock_quantity = isset($data['stock_quantity']) ? intval($data['stock_quantity']) : 1;
         $discount = isset($data['discount']) && $data['discount'] !== '' ? floatval($data['discount']) : null;
 
         // Kiểm tra giá trị Discount End Time và chuyển đổi định dạng nếu có
