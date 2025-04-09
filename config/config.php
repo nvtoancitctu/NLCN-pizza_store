@@ -1,7 +1,7 @@
 <?php
 // includes/config.php
 $host = 'localhost';
-$dbname = 'pizza_store';
+$dbname = 'lovers_hut';
 $username = 'root';
 $password = '';
 
