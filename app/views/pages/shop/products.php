@@ -140,7 +140,8 @@ if ($user_id) {
                                     </button>
                                 </form>
                             <?php else: ?>
-                                <button onclick="alert('Please log in to add favorites!'); window.location.href='/login';"
+                                <!-- Nút trái tim mở modal -->
+                                <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
                                     class="text-xl w-10 h-10 flex items-center justify-center rounded-full bg-gray-300 text-gray-800 hover:bg-gray-400 transition duration-300">
                                     ♥
                                 </button>
@@ -179,6 +180,23 @@ if ($user_id) {
                                     +
                                 </button>
                             </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal -->
+                <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 w-120 text-center">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Login Required</h2>
+                        <p class="text-gray-600 mb-6">Please log in to add this product to your favorites.</p>
+                        <div class="flex justify-center gap-4">
+                            <button onclick="document.getElementById('loginModal').classList.add('hidden')"
+                                class="px-4 py-2 rounded-md bg-gray-300 text-gray-800 hover:bg-gray-400 transition">
+                                Close
+                            </button>
+                            <a href="/login"
+                                class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition">
+                                Log In
+                            </a>
                         </div>
                     </div>
                 </div>
