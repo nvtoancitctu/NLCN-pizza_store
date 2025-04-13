@@ -1,4 +1,4 @@
-# E-Commerce Website in PHP MySQL (Lover's Hub Pizza Store)
+# E-Commerce Website in PHP MySQL (Lover's Hut Pizza Store)
 
 Học kỳ 2, Năm học 2024-2025
 
